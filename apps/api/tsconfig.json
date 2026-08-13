@@ -1,0 +1,27 @@
+{
+  "extends": "@ems/config-typescript/nestjs.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    // Inside dist on purpose. `nest build` wipes outDir (deleteOutDir), so a
+    // build-info file kept outside it survives and tells tsc those files are
+    // already emitted — producing a dist with files silently missing.
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"],
+      "@common/*": ["src/common/*"],
+      "@config/*": ["src/config/*"],
+      "@database/*": ["src/database/*"],
+      "@modules/*": ["src/modules/*"],
+      "@queues/*": ["src/queues/*"],
+      "@integrations/*": ["src/integrations/*"]
+    }
+  },
+  // src only. `rootDir: ./src` cannot coexist with including `test/`, and the
+  // build output must mirror src exactly — a dist containing `src/` and `test/`
+  // subdirectories would break every `main`/entryFile path.
+  // Tests are typechecked by tsconfig.spec.json.
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "src/**/*.spec.ts"]
+}

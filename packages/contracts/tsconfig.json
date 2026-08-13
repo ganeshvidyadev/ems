@@ -1,0 +1,12 @@
+{
+  "extends": "@ems/config-typescript/library.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    // The contract is the one place where `any` would silently erase the
+    // guarantee the package exists to provide.
+    "strict": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["src/**/*.spec.ts"]
+}

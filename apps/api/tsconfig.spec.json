@@ -1,0 +1,13 @@
+{
+  // Typechecks src *and* test together, which is the only way a test importing a
+  // renamed export fails CI. `rootDir` is dropped because tests deliberately live
+  // outside src; nothing is emitted from this config.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "types": ["node", "jest"]
+  },
+  "include": ["src/**/*", "test/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

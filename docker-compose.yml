@@ -1,0 +1,149 @@
+name: ems
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: ems-mysql
+    restart: unless-stopped
+    command:
+      # utf8mb4 everywhere so emoji in product titles do not corrupt.
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      # Required by the outbox relay: SELECT ... FOR UPDATE SKIP LOCKED needs
+      # row-level locking semantics, and REPEATABLE READ would make concurrent
+      # relay replicas read a stale snapshot of the pending set.
+      - --transaction-isolation=READ-COMMITTED
+      - --explicit_defaults_for_timestamp=ON
+      - --max_connections=300
+      - --innodb_buffer_pool_size=512M
+      # Binlog in ROW format is what makes 5-minute PITR possible (docs 02 §22).
+      - --binlog_format=ROW
+      - --log-bin=mysql-bin
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ems}
+      MYSQL_USER: ${MYSQL_USER:-ems}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-emspassword}
+    ports:
+      - '${MYSQL_PORT:-3306}:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./infra/docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-p${MYSQL_ROOT_PASSWORD:-rootpassword}']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: ems-redis
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - 'yes'
+      # volatile-lru, NOT allkeys-lru: carts and OTPs have no other home and must
+      # never be evicted to make room for cache entries (docs 02 §21).
+      - --maxmemory-policy
+      - volatile-lru
+      - --maxmemory
+      - 512mb
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Dedicated Redis for BullMQ.
+  #
+  # `maxmemory-policy` is server-wide, not per-database, so one instance cannot be
+  # both `volatile-lru` (right for the cache, which must shed TTL'd entries under
+  # pressure) and `noeviction` (required by BullMQ, which would otherwise lose job
+  # state and silently drop work). Selecting a different DB index does not help.
+  # Two instances is the only correct answer, and BullMQ warns loudly about this on
+  # startup for good reason.
+  redis-queue:
+    image: redis:7.4-alpine
+    container_name: ems-redis-queue
+    restart: unless-stopped
+    command:
+      - redis-server
+      # AOF everysec: a queue that loses acknowledged jobs on restart is worse than
+      # one that is briefly slower.
+      - --appendonly
+      - 'yes'
+      - --appendfsync
+      - everysec
+      - --maxmemory-policy
+      - noeviction
+      - --maxmemory
+      - 512mb
+    ports:
+      - '${REDIS_QUEUE_PORT:-6380}:6379'
+    volumes:
+      - redis-queue-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mongo:
+    image: mongo:7
+    container_name: ems-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-mongopassword}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-ems_logs}
+    ports:
+      - '${MONGO_PORT:-27017}:27017'
+    volumes:
+      - mongo-data:/data/db
+      - ./infra/docker/mongo/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: ems-mailhog
+    restart: unless-stopped
+    ports:
+      - '${MAILHOG_SMTP_PORT:-1025}:1025'
+      - '${MAILHOG_UI_PORT:-8025}:8025'
+
+  minio:
+    image: minio/minio:latest
+    container_name: ems-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin}
+    ports:
+      - '${MINIO_PORT:-9000}:9000'
+      - '${MINIO_CONSOLE_PORT:-9001}:9001'
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mysql-data:
+  redis-data:
+  redis-queue-data:
+  mongo-data:
+  minio-data:

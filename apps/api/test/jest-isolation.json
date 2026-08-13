@@ -1,0 +1,27 @@
+{
+  "rootDir": "..",
+  "testEnvironment": "node",
+  "moduleFileExtensions": [
+    "js",
+    "json",
+    "ts"
+  ],
+  "testRegex": "test/tenant-isolation/.*\\.spec\\.ts$",
+  "transform": {
+    "^.+\\.ts$": [
+      "ts-jest",
+      {
+        "tsconfig": "tsconfig.spec.json",
+        "isolatedModules": true
+      }
+    ]
+  },
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^@common/(.*)$": "<rootDir>/src/common/$1",
+    "^@database/(.*)$": "<rootDir>/src/database/$1"
+  },
+  "testTimeout": 120000,
+  "maxWorkers": 1,
+  "passWithNoTests": true
+}

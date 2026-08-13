@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Fallback theme values only.
+ *
+ * The real values are injected per request as an inline `style` on the layout's
+ * root element, from the tenant's published theme. These defaults exist so a store
+ * that is still provisioning — or whose theme failed to load — renders as a plain,
+ * readable page rather than an unstyled one.
+ */
+@layer base {
+  :root {
+    --brand: #111827;
+    --brand-foreground: #ffffff;
+    --brand-muted: #6b7280;
+    --surface: #ffffff;
+    --surface-alt: #f9fafb;
+    --ink: #111827;
+    --ink-muted: #6b7280;
+    --line: #e5e7eb;
+    --sale: #dc2626;
+    --radius: 0.5rem;
+    --content-width: 80rem;
+    --font-heading: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+
+  body {
+    background-color: var(--surface);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+  }
+}

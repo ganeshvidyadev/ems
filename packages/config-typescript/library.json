@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "EMS Library (kernel, contracts)",
+  "extends": "./base.json",
+  "compilerOptions": {
+    // CommonJS output: consumed by both NestJS (CJS) and Next.js (which handles
+    // CJS transparently). A dual ESM/CJS build would double the surface for no
+    // benefit inside a monorepo where nothing is published to a registry.
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "isolatedModules": false,
+    "lib": ["ES2023"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true
+  },
+  "include": ["src/**/*"]
+}

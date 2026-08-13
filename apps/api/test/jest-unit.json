@@ -1,0 +1,43 @@
+{
+  "rootDir": "..",
+  "testEnvironment": "node",
+  "moduleFileExtensions": [
+    "js",
+    "json",
+    "ts"
+  ],
+  "testRegex": "(src/.*\\.spec\\.ts|test/unit/.*\\.spec\\.ts)$",
+  "transform": {
+    "^.+\\.ts$": [
+      "ts-jest",
+      {
+        "tsconfig": "tsconfig.spec.json",
+        "isolatedModules": true
+      }
+    ]
+  },
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^@common/(.*)$": "<rootDir>/src/common/$1",
+    "^@config/(.*)$": "<rootDir>/src/config/$1",
+    "^@database/(.*)$": "<rootDir>/src/database/$1",
+    "^@modules/(.*)$": "<rootDir>/src/modules/$1"
+  },
+  "collectCoverageFrom": [
+    "src/**/*.ts",
+    "!src/**/*.spec.ts",
+    "!src/main.ts",
+    "!src/worker.ts",
+    "!src/database/migrations/**",
+    "!src/**/index.ts"
+  ],
+  "coverageDirectory": "coverage/unit",
+  "coverageThreshold": {
+    "./src/modules/*/domain/": {
+      "statements": 90,
+      "branches": 85,
+      "functions": 90,
+      "lines": 90
+    }
+  }
+}

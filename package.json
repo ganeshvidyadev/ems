@@ -1,0 +1,50 @@
+{
+  "name": "ems",
+  "version": "0.1.0",
+  "private": true,
+  "description": "EMS — Multi-Tenant E-Commerce Management SaaS Platform",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:api": "turbo run dev --filter=@ems/api",
+    "dev:console": "turbo run dev --filter=@ems/console",
+    "dev:storefront": "turbo run dev --filter=@ems/storefront",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
+    "test:isolation": "turbo run test:isolation",
+    "clean": "turbo run clean && rimraf node_modules",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "infra:reset": "docker compose down -v && docker compose up -d",
+    "infra:logs": "docker compose logs -f",
+    "db:migrate": "pnpm --filter @ems/api run migration:run",
+    "db:revert": "pnpm --filter @ems/api run migration:revert",
+    "db:seed": "pnpm --filter @ems/api run seed",
+    "db:reset": "pnpm run infra:reset && wait-on tcp:3306 && pnpm run db:migrate && pnpm run db:seed",
+    "keys:generate": "node scripts/generate-keys.mjs",
+    "bootstrap": "node scripts/bootstrap.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3",
+    "wait-on": "^8.0.2"
+  },
+  "prettier": {
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "printWidth": 100,
+    "tabWidth": 2,
+    "arrowParens": "always",
+    "endOfLine": "lf"
+  }
+}

@@ -19,6 +19,7 @@ out/
 *.pem
 *.key
 !**/fixtures/**/*.pem
+apps/api/keys/
 
 # Logs
 logs/
