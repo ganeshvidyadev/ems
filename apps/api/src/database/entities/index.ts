@@ -28,6 +28,14 @@ export * from './processed-event.entity';
 export * from './audit-log.entity';
 export * from './api-key.entity';
 export * from './job-run.entity';
+export * from './brand.entity';
+export * from './category.entity';
+export * from './tax.entity';
+export * from './product.entity';
+export * from './product-variant.entity';
+export * from './product-media.entity';
+export * from './product-category.entity';
+export * from './product-attribute.entity';
 
 import { TenantEntity } from './tenant.entity';
 import { TenantDomainEntity } from './tenant-domain.entity';
@@ -52,6 +60,14 @@ import { ProcessedEventEntity } from './processed-event.entity';
 import { AuditLogEntity } from './audit-log.entity';
 import { ApiKeyEntity } from './api-key.entity';
 import { JobRunEntity } from './job-run.entity';
+import { BrandEntity } from './brand.entity';
+import { CategoryEntity } from './category.entity';
+import { TaxClassEntity, TaxRateEntity } from './tax.entity';
+import { ProductEntity } from './product.entity';
+import { ProductVariantEntity } from './product-variant.entity';
+import { ProductMediaEntity } from './product-media.entity';
+import { ProductCategoryEntity } from './product-category.entity';
+import { ProductAttributeEntity, ProductAttributeValueEntity } from './product-attribute.entity';
 
 export const ALL_ENTITIES = [
   TenantEntity,
@@ -78,4 +94,14 @@ export const ALL_ENTITIES = [
   AuditLogEntity,
   ApiKeyEntity,
   JobRunEntity,
+  BrandEntity,
+  CategoryEntity,
+  TaxClassEntity,
+  TaxRateEntity,
+  ProductEntity,
+  ProductVariantEntity,
+  ProductMediaEntity,
+  ProductCategoryEntity,
+  ProductAttributeEntity,
+  ProductAttributeValueEntity,
 ];

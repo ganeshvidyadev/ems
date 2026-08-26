@@ -9,7 +9,7 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  * substitutes, and `RANGE` partitioning. Hand-written DDL also means the
  * migration is reviewable as the artifact that actually runs.
  *
- * Two deviations from the design doc, both correctness fixes:
+ * Four deviations from the design doc:
  *
  *  1. `users` uniqueness. The doc paired `UNIQUE (tenant_id, email_normalized)`
  *     with `UNIQUE (user_type, email_normalized)`. The second key would have made
@@ -23,6 +23,17 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  *     parts in a PRIMARY KEY, and NULL-distinctness would otherwise let the same
  *     grant be inserted repeatedly. Both now use a `STORED` generated scope column
  *     inside a real unique key.
+ *
+ *  3. Collation: `utf8mb4_unicode_ci` rather than MySQL 8's `utf8mb4_0900_ai_ci` —
+ *     see the comment on `charset` in `data-source.ts` for why. Applies to every
+ *     `CREATE TABLE` in this file and in every migration after it.
+ *
+ *  4. `tenant_scope` / `store_scope` drop the doc's explicit `STORED ... NOT NULL`.
+ *     MariaDB (unlike MySQL 8) rejects a `NOT NULL` clause on a `GENERATED ALWAYS AS
+ *     (...) STORED` column outright — a parse error, not a warning. Dropping it changes
+ *     nothing observable: the generating expression (`IFNULL(x, 0)`) can never itself
+ *     produce NULL, so the column is non-null in practice regardless of whether the
+ *     constraint is declared.
  */
 export class InitialSchema1785801600000 implements MigrationInterface {
   name = 'InitialSchema1785801600000';
@@ -63,7 +74,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
         KEY \`idx_tenants_trial_ends\` (\`trial_ends_at\`),
         CONSTRAINT \`chk_tenants_status\` CHECK (\`status\` IN
           ('PENDING','PROVISIONING','ACTIVE','TRIAL','PAST_DUE','SUSPENDED','CANCELLED','DELETED'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     // -----------------------------------------------------------------------
@@ -100,7 +111,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
         CONSTRAINT \`chk_tenant_domains_type\` CHECK (\`type\` IN ('SUBDOMAIN','CUSTOM')),
         CONSTRAINT \`chk_tenant_domains_ssl\` CHECK (\`ssl_status\` IN
           ('NONE','PENDING','ISSUING','ACTIVE','FAILED','EXPIRED'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     // -----------------------------------------------------------------------
@@ -143,7 +154,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
         -- 0 stands for "the platform", so one unique key covers both cases:
         -- platform users deduped by email, tenant users deduped per tenant.
         \`tenant_scope\`          BIGINT UNSIGNED GENERATED ALWAYS AS
-                                   (IFNULL(\`tenant_id\`, 0)) STORED NOT NULL,
+                                   (IFNULL(\`tenant_id\`, 0)) STORED,
         PRIMARY KEY (\`id\`),
         UNIQUE KEY \`uq_users_public_id\` (\`public_id\`),
         UNIQUE KEY \`uq_users_scope_email\` (\`tenant_scope\`, \`email_normalized\`),
@@ -160,7 +171,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
           (\`user_type\` = 'TENANT'   AND \`tenant_id\` IS NOT NULL)),
         CONSTRAINT \`chk_users_status\` CHECK (\`status\` IN
           ('PENDING_VERIFICATION','ACTIVE','SUSPENDED','LOCKED','DEACTIVATED'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     // tenants.owner_user_id → users.id, added after both tables exist.
@@ -185,7 +196,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
         UNIQUE KEY \`uq_permissions_code\` (\`code\`),
         KEY \`idx_permissions_scope\` (\`scope\`),
         CONSTRAINT \`chk_permissions_scope\` CHECK (\`scope\` IN ('TENANT','PLATFORM'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     await queryRunner.query(`
@@ -202,7 +213,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
         -- Same NULL-distinctness problem as users: without a scope column, two
         -- system roles could share a code.
         \`tenant_scope\` BIGINT UNSIGNED GENERATED ALWAYS AS
-                          (IFNULL(\`tenant_id\`, 0)) STORED NOT NULL,
+                          (IFNULL(\`tenant_id\`, 0)) STORED,
         PRIMARY KEY (\`id\`),
         UNIQUE KEY \`uq_roles_scope_code\` (\`tenant_scope\`, \`code\`),
         KEY \`idx_roles_tenant\` (\`tenant_id\`),
@@ -215,7 +226,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
         CONSTRAINT \`fk_roles_tenant\` FOREIGN KEY (\`tenant_id\`)
           REFERENCES \`tenants\` (\`id\`) ON DELETE RESTRICT,
         CONSTRAINT \`chk_roles_scope\` CHECK (\`scope\` IN ('TENANT','PLATFORM'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     await queryRunner.query(`
@@ -228,7 +239,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
           REFERENCES \`roles\` (\`id\`) ON DELETE CASCADE,
         CONSTRAINT \`fk_role_permissions_permission\` FOREIGN KEY (\`permission_id\`)
           REFERENCES \`permissions\` (\`id\`) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     await queryRunner.query(`
@@ -243,7 +254,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
         -- NULL store_id means "all stores"; 0 makes that a real key value so the
         -- same grant cannot be inserted twice.
         \`store_scope\`  BIGINT UNSIGNED GENERATED ALWAYS AS
-                          (IFNULL(\`store_id\`, 0)) STORED NOT NULL,
+                          (IFNULL(\`store_id\`, 0)) STORED,
         PRIMARY KEY (\`id\`),
         UNIQUE KEY \`uq_user_roles_user_role_store\` (\`user_id\`, \`role_id\`, \`store_scope\`),
         KEY \`idx_user_roles_role\` (\`role_id\`),
@@ -252,7 +263,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
           REFERENCES \`users\` (\`id\`) ON DELETE CASCADE,
         CONSTRAINT \`fk_user_roles_role\` FOREIGN KEY (\`role_id\`)
           REFERENCES \`roles\` (\`id\`) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     // -----------------------------------------------------------------------
@@ -284,7 +295,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
         KEY \`idx_refresh_tokens_expiry\` (\`expires_at\`),
         CONSTRAINT \`fk_refresh_tokens_user\` FOREIGN KEY (\`user_id\`)
           REFERENCES \`users\` (\`id\`) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     // -----------------------------------------------------------------------
@@ -315,7 +326,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
         KEY \`idx_outbox_aggregate\` (\`aggregate_type\`, \`aggregate_id\`),
         CONSTRAINT \`chk_outbox_status\` CHECK (\`status\` IN
           ('PENDING','DISPATCHING','DISPATCHED','FAILED','DEAD'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     await queryRunner.query(`
@@ -328,7 +339,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
         -- fails the insert instead of repeating the side effect.
         PRIMARY KEY (\`consumer_name\`, \`event_id\`),
         KEY \`idx_processed_events_cleanup\` (\`processed_at\`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     // -----------------------------------------------------------------------
@@ -366,7 +377,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
           ('USER','CUSTOMER','SYSTEM','PLATFORM_ADMIN','API_KEY')),
         CONSTRAINT \`chk_audit_logs_severity\` CHECK (\`severity\` IN
           ('INFO','WARNING','CRITICAL'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       PARTITION BY RANGE (TO_DAYS(\`created_at\`)) (
         PARTITION \`p_2026_q3\` VALUES LESS THAN (TO_DAYS('2026-10-01')),
         PARTITION \`p_2026_q4\` VALUES LESS THAN (TO_DAYS('2027-01-01')),
@@ -402,7 +413,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
         KEY \`idx_api_keys_tenant\` (\`tenant_id\`, \`revoked_at\`),
         CONSTRAINT \`fk_api_keys_tenant\` FOREIGN KEY (\`tenant_id\`)
           REFERENCES \`tenants\` (\`id\`) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     await queryRunner.query(`
@@ -432,7 +443,7 @@ export class InitialSchema1785801600000 implements MigrationInterface {
           REFERENCES \`tenants\` (\`id\`) ON DELETE CASCADE,
         CONSTRAINT \`chk_job_runs_status\` CHECK (\`status\` IN
           ('QUEUED','RUNNING','COMPLETED','COMPLETED_WITH_ERRORS','FAILED','CANCELLED'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
   }
 

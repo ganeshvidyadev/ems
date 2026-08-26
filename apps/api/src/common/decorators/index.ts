@@ -5,7 +5,7 @@ import {
   UsePipes,
   type ExecutionContext,
 } from '@nestjs/common';
-import type { ZodSchema } from 'zod';
+import type { ZodTypeAny } from 'zod';
 import { ZodValidationPipe } from '../pipes/zod-validation.pipe';
 import type { RequestContext } from '../services/request-context.service';
 
@@ -73,7 +73,7 @@ export const PlanQuota = (limitKey: string) => SetMetadata(PLAN_QUOTA_KEY, limit
 export const AllowDuringOnboarding = () => SetMetadata(ALLOW_ONBOARDING_KEY, true);
 
 /** `@Validate(schema)` — shorthand for a body-validating Zod pipe. */
-export const Validate = <T>(schema: ZodSchema<T>) =>
+export const Validate = <S extends ZodTypeAny>(schema: S) =>
   applyDecorators(UsePipes(new ZodValidationPipe(schema)));
 
 // ---------------------------------------------------------------------------

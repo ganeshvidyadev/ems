@@ -4,7 +4,7 @@ import {
   type PipeTransform,
 } from '@nestjs/common';
 import { ErrorCode } from '@ems/contracts';
-import { ZodError, type ZodSchema } from 'zod';
+import { ZodError, type ZodTypeAny, type output } from 'zod';
 import { RequestValidationError } from '../errors/api.errors';
 
 /**
@@ -17,12 +17,19 @@ import { RequestValidationError } from '../errors/api.errors';
  *
  * Used per-parameter via `@Body(new ZodValidationPipe(schema))`, or through the
  * `@Validate()` decorator helper.
+ *
+ * Typed as `ZodTypeAny` rather than `ZodSchema<T>`: `ZodSchema<T>` is `ZodType<T,
+ * ZodTypeDef, T>`, which pins the schema's *input* type equal to its *output* type. That
+ * holds for a schema with no defaults/transforms, but list-query schemas built from
+ * `listQuerySchema` coerce and default almost every field (`page` is optional on input,
+ * required on output) — accepting `ZodTypeAny` and reading the output type via `output<S>`
+ * is what lets this pipe validate those without every caller needing its own cast.
  */
 @Injectable()
-export class ZodValidationPipe<T> implements PipeTransform<unknown, T> {
-  constructor(private readonly schema: ZodSchema<T>) {}
+export class ZodValidationPipe<S extends ZodTypeAny> implements PipeTransform<unknown, output<S>> {
+  constructor(private readonly schema: S) {}
 
-  transform(value: unknown, metadata: ArgumentMetadata): T {
+  transform(value: unknown, metadata: ArgumentMetadata): output<S> {
     try {
       return this.schema.parse(value);
     } catch (error) {

@@ -46,7 +46,7 @@ export class BillingAndStores1785974400000 implements MigrationInterface {
         UNIQUE KEY \`uq_plans_code\` (\`code\`),
         KEY \`idx_plans_public\` (\`is_public\`, \`status\`, \`sort_order\`),
         CONSTRAINT \`chk_plans_status\` CHECK (\`status\` IN ('ACTIVE','ARCHIVED'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     // Quotas as ROWS, not a JSON blob: the guard reads one key on a write path, and
@@ -63,7 +63,7 @@ export class BillingAndStores1785974400000 implements MigrationInterface {
         UNIQUE KEY \`uq_plan_limits_plan_key\` (\`plan_id\`, \`limit_key\`),
         CONSTRAINT \`fk_plan_limits_plan\` FOREIGN KEY (\`plan_id\`)
           REFERENCES \`plans\` (\`id\`) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     // -----------------------------------------------------------------------
@@ -127,7 +127,7 @@ export class BillingAndStores1785974400000 implements MigrationInterface {
         CONSTRAINT \`chk_subscriptions_status\` CHECK (\`status\` IN
           ('TRIALING','ACTIVE','PAST_DUE','PAUSED','CANCELLED','EXPIRED')),
         CONSTRAINT \`chk_subscriptions_period\` CHECK (\`current_period_end\` > \`current_period_start\`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     // -----------------------------------------------------------------------
@@ -172,7 +172,7 @@ export class BillingAndStores1785974400000 implements MigrationInterface {
           REFERENCES \`subscriptions\` (\`id\`) ON DELETE RESTRICT,
         CONSTRAINT \`chk_sub_invoices_status\` CHECK (\`status\` IN
           ('DRAFT','OPEN','PAID','PARTIALLY_PAID','UNCOLLECTIBLE','VOID','REFUNDED'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     // Per-tenant invoice number allocator.
@@ -189,7 +189,7 @@ export class BillingAndStores1785974400000 implements MigrationInterface {
         PRIMARY KEY (\`tenant_id\`, \`series\`, \`fiscal_year\`),
         CONSTRAINT \`fk_invoice_sequences_tenant\` FOREIGN KEY (\`tenant_id\`)
           REFERENCES \`tenants\` (\`id\`) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     await queryRunner.query(`
@@ -229,7 +229,7 @@ export class BillingAndStores1785974400000 implements MigrationInterface {
           REFERENCES \`tenants\` (\`id\`) ON DELETE CASCADE,
         CONSTRAINT \`chk_sub_payments_status\` CHECK (\`status\` IN
           ('PENDING','AUTHORIZED','CAPTURED','FAILED','CANCELLED','REFUNDED','PARTIALLY_REFUNDED'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     // -----------------------------------------------------------------------
@@ -266,7 +266,7 @@ export class BillingAndStores1785974400000 implements MigrationInterface {
         CONSTRAINT \`fk_stores_tenant\` FOREIGN KEY (\`tenant_id\`)
           REFERENCES \`tenants\` (\`id\`) ON DELETE CASCADE,
         CONSTRAINT \`chk_stores_status\` CHECK (\`status\` IN ('DRAFT','ACTIVE','MAINTENANCE','CLOSED'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     // Key/value rather than a 90-column table: a new setting ships without a migration,
@@ -289,7 +289,7 @@ export class BillingAndStores1785974400000 implements MigrationInterface {
         KEY \`idx_store_settings_group\` (\`tenant_id\`, \`store_id\`, \`setting_group\`),
         CONSTRAINT \`fk_store_settings_store\` FOREIGN KEY (\`store_id\`)
           REFERENCES \`stores\` (\`id\`) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     await queryRunner.query(`
@@ -324,7 +324,7 @@ export class BillingAndStores1785974400000 implements MigrationInterface {
           REFERENCES \`tenants\` (\`id\`) ON DELETE CASCADE,
         CONSTRAINT \`chk_warehouses_type\` CHECK (\`type\` IN
           ('WAREHOUSE','STORE','DROPSHIP','VIRTUAL'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     // -----------------------------------------------------------------------
@@ -360,7 +360,7 @@ export class BillingAndStores1785974400000 implements MigrationInterface {
           REFERENCES \`tenants\` (\`id\`) ON DELETE CASCADE,
         CONSTRAINT \`chk_provisioning_status\` CHECK (\`status\` IN
           ('PENDING','RUNNING','COMPLETED','FAILED','SKIPPED'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     // Links a tenant to its current subscription for cheap reads on the request path.

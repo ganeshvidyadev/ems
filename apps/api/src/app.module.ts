@@ -19,6 +19,13 @@ import { SubscriptionModule } from './modules/subscription/subscription.module';
 import { ProvisioningModule } from './modules/provisioning/provisioning.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { StorageModule } from './integrations/storage/storage.module';
+import { BrandModule } from './modules/brand/brand.module';
+import { CategoryModule } from './modules/category/category.module';
+import { TaxModule } from './modules/tax/tax.module';
+import { MediaModule } from './modules/media/media.module';
+import { JobModule } from './modules/job/job.module';
+import { ProductModule } from './modules/product/product.module';
 import { QueueModule } from './queues/queue.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -66,6 +73,7 @@ import { RequestContextService } from './common/services/request-context.service
     CommonModule,
     DatabaseModule,
     LoggingModule,
+    StorageModule,
     QueueModule,
     NotificationModule,
     AuthModule,
@@ -73,6 +81,15 @@ import { RequestContextService } from './common/services/request-context.service
     SubscriptionModule,
     ProvisioningModule,
     PaymentModule,
+    // Catalog (Phase 4): brand/category/tax are simple Tier C-ish modules; JobModule backs
+    // bulk import/export status; ProductModule is the aggregate root and is `@Global()`
+    // itself (see its own file) so the queue-side import processor can reach it.
+    BrandModule,
+    CategoryModule,
+    TaxModule,
+    MediaModule,
+    JobModule,
+    ProductModule,
     HealthModule,
   ],
   providers: [

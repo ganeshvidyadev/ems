@@ -31,7 +31,12 @@ export const dataSourceOptions: DataSourceOptions = {
 
   logging: process.env.MYSQL_LOGGING === 'true' ? ['query', 'error', 'warn'] : ['error', 'warn'],
 
-  charset: 'utf8mb4_0900_ai_ci',
+  // `utf8mb4_unicode_ci`, not MySQL 8's `utf8mb4_0900_ai_ci`: the latter is a MySQL-8-only
+  // collation that MariaDB (a common local dev substitute, e.g. via XAMPP) rejects outright
+  // with "Unknown collation". `utf8mb4_unicode_ci` is understood by both MySQL 5.7+/8 and
+  // every current MariaDB, at the cost of MySQL 8's slightly more accurate Unicode 9 sort
+  // order — a trade worth making so `docker compose`-less local dev and CI both work.
+  charset: 'utf8mb4_unicode_ci',
   timezone: 'Z', // Store and read UTC; never let the driver shift datetimes.
 
   extra: {

@@ -53,7 +53,7 @@ export class AuthTokens1785888000000 implements MigrationInterface {
           REFERENCES \`users\` (\`id\`) ON DELETE CASCADE,
         CONSTRAINT \`chk_auth_tokens_purpose\` CHECK (\`purpose\` IN
           ('EMAIL_VERIFICATION','PASSWORD_RESET','EMAIL_CHANGE','MFA_CHALLENGE'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     await queryRunner.query(`
@@ -92,7 +92,7 @@ export class AuthTokens1785888000000 implements MigrationInterface {
           REFERENCES \`users\` (\`id\`) ON DELETE SET NULL,
         CONSTRAINT \`chk_user_invitations_status\` CHECK (\`status\` IN
           ('PENDING','ACCEPTED','EXPIRED','REVOKED'))
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
     // Tracks when MFA enrolment was actually confirmed, as opposed to merely

@@ -57,7 +57,7 @@ import { TenantGuardSubscriber } from './subscribers/tenant-guard.subscriber';
           migrationsRun: false,
 
           logging: db.logging ? (['query', 'error', 'warn'] as const) : (['error'] as const),
-          charset: 'utf8mb4_0900_ai_ci',
+          charset: 'utf8mb4_unicode_ci',
           timezone: 'Z',
           // Retry on boot: in Compose or Kubernetes the API frequently starts
           // before MySQL is accepting connections.

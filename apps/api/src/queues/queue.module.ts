@@ -2,6 +2,8 @@ import { Global, Module } from '@nestjs/common';
 import { OutboxRelayService } from './outbox-relay.service';
 import { QueueRegistry } from './queue.registry';
 import { ProvisioningProcessor } from './processors/provisioning.processor';
+import { MediaProcessProcessor } from './processors/media-process.processor';
+import { ProductImportProcessor } from './processors/product-import.processor';
 
 /**
  * Queue infrastructure.
@@ -15,7 +17,13 @@ import { ProvisioningProcessor } from './processors/provisioning.processor';
  */
 @Global()
 @Module({
-  providers: [QueueRegistry, OutboxRelayService, ProvisioningProcessor],
+  providers: [
+    QueueRegistry,
+    OutboxRelayService,
+    ProvisioningProcessor,
+    MediaProcessProcessor,
+    ProductImportProcessor,
+  ],
   exports: [QueueRegistry, OutboxRelayService],
 })
 export class QueueModule {}
