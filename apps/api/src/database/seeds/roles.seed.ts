@@ -58,6 +58,7 @@ export const ROLE_SPECS: readonly RoleSpec[] = [
       'platform.tenant:read',
       'platform.plan:*',
       'platform.billing:*',
+      'platform.settlement:*',
       'platform.analytics:read',
     ],
   },

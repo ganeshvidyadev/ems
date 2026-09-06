@@ -44,6 +44,7 @@ import { SeoModule } from './modules/seo/seo.module';
 import { DnsModule } from './integrations/dns/dns.module';
 import { AcmeModule } from './integrations/acme/acme.module';
 import { DomainModule } from './modules/domain/domain.module';
+import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 import { QueueModule } from './queues/queue.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -134,6 +135,11 @@ import { RequestContextService } from './common/services/request-context.service
     DnsModule,
     AcmeModule,
     DomainModule,
+    // Marketplace: sharing, commission, settlement (Phase 9). Registered after
+    // CheckoutModule in this list purely for readability — as a `@Global()`
+    // module its exports (`MarketplaceOrderService`, injected by
+    // `CheckoutService`) are available regardless of declaration order.
+    MarketplaceModule,
     HealthModule,
   ],
   providers: [

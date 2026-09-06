@@ -25,6 +25,7 @@ import type { PaymentGateway } from '../../database/entities';
 import { TaxCalculatorService } from './tax-calculator.service';
 import { ShippingCarrierFactory } from '../../integrations/shipping/shipping-carrier.factory';
 import { ShippingPincodeUnserviceableError } from '../../common/errors/api.errors';
+import { MarketplaceOrderService } from '../marketplace/marketplace-order.service';
 
 /** Used only when no warehouse origin is configured, or the carrier call itself fails —
  * checkout must degrade to a flat rate rather than hard-block on a carrier outage. */
@@ -58,6 +59,8 @@ interface PricedLine {
   allowBackorder: boolean;
   taxClassId: string | null;
   weightGrams: number;
+  /** Set when this line is a marketplace-shared product — the tenant that actually supplies it. */
+  supplierTenantId: string | null;
 }
 
 @Injectable()
@@ -77,6 +80,7 @@ export class CheckoutService {
     private readonly giftCards: GiftCardService,
     private readonly tax: TaxCalculatorService,
     private readonly shippingCarriers: ShippingCarrierFactory,
+    private readonly marketplace: MarketplaceOrderService,
     private readonly context: RequestContextService,
   ) {}
 
@@ -119,10 +123,17 @@ export class CheckoutService {
           lineTax: taxMinor,
           taxBreakup: breakup,
           lineTotal: lineSubtotal.add(taxMinor),
-          trackInventory: product.trackInventory,
+          // A marketplace line's stock lives in the *supplier's* tenant, not
+          // this one — `inventory_levels` for it doesn't even exist here.
+          // Checkout skips reservation for it entirely; the supplier's own
+          // sub-order (created post-confirmation by `MarketplaceOrderService`)
+          // is fulfilled through their existing order pipeline, which already
+          // knows how to reserve and commit their own stock.
+          trackInventory: product.supplierTenantId ? false : product.trackInventory,
           allowBackorder: product.allowBackorder,
           taxClassId: product.taxClassId ?? null,
           weightGrams: variant?.weightGrams ?? product.weightGrams ?? DEFAULT_ITEM_WEIGHT_GRAMS,
+          supplierTenantId: product.supplierTenantId ?? null,
         };
       }),
     );
@@ -386,7 +397,16 @@ export class CheckoutService {
           // case; a line genuinely split across warehouses restocks fully
           // against this one on cancellation, which is a documented simplification.
           warehouseId: allocations?.[0]?.warehouseId ?? null,
+          // Commission is computed and stamped after confirmation
+          // (`MarketplaceOrderService.processConfirmedOrder`), against a
+          // freshly-read product share rather than anything priced at cart time.
+          supplierTenantId: line.supplierTenantId,
         });
+      }
+
+      if (lines.some((line) => line.supplierTenantId)) {
+        order.isMarketplaceOrder = true;
+        await ordersRepo.save(order);
       }
 
       await historyRepo.record({
@@ -497,6 +517,11 @@ export class CheckoutService {
       correlationId: this.context.correlationId ?? null,
     });
 
+    // A no-op for a non-marketplace order (it reads the order's own items to
+    // decide) — see `MarketplaceOrderService.processConfirmedOrder`'s own
+    // doc comment for why both confirmation paths call it unconditionally.
+    await this.marketplace.processConfirmedOrder(tx, orderId);
+
     this.logger.log(`Order ${orderNumber} confirmed`);
   }
 
@@ -602,6 +627,8 @@ export class CheckoutService {
         correlationId: this.context.correlationId ?? null,
       });
 
+      await this.marketplace.processConfirmedOrder(tx, order.id);
+
       return { status: 'CAPTURED', orderId: order.publicId, orderNumber: order.orderNumber };
     });
   }
@@ -682,6 +709,9 @@ export class CheckoutService {
           : 'PARTIALLY_REFUNDED',
       });
       await ordersRepo.save(order);
+
+      // A no-op for a non-marketplace order — see the method's own doc comment.
+      await this.marketplace.reverseForRefund(tx, order.id, refund.amountMinor);
 
       return {
         id: refund.publicId,

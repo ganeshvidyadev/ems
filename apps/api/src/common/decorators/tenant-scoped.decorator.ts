@@ -77,4 +77,12 @@ export const PLATFORM_GLOBAL_ENTITIES = [
   // tenant's certificate, so there is no tenant to scope it to. `TenantDomainEntity`,
   // which tracks each tenant's own verification/SSL state, is `@TenantScoped()` as usual.
   'AcmeAccountEntity',
+
+  // Dual-tenant rows (a supplier tenant AND a reseller tenant, neither the sole
+  // "owner") — the guard subscriber's single-column model doesn't fit either.
+  // Authorization is explicit in the marketplace services instead. `SettlementEntity`
+  // is the one marketplace table with a genuine single owner (`beneficiary_tenant_id`)
+  // and IS `@TenantScoped()`, just on that column instead of the default `tenant_id`.
+  'ProductShareEntity',
+  'CommissionLedgerEntity',
 ] as const;

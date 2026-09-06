@@ -52,6 +52,9 @@ export * from './blog-post.entity';
 export * from './banner.entity';
 export * from './menu.entity';
 export * from './acme-account.entity';
+export * from './product-share.entity';
+export * from './commission-ledger.entity';
+export * from './settlement.entity';
 
 import { TenantEntity } from './tenant.entity';
 import { TenantDomainEntity } from './tenant-domain.entity';
@@ -100,6 +103,9 @@ import { BlogPostEntity } from './blog-post.entity';
 import { BannerEntity } from './banner.entity';
 import { MenuEntity, MenuItemEntity } from './menu.entity';
 import { AcmeAccountEntity } from './acme-account.entity';
+import { ProductShareEntity } from './product-share.entity';
+import { CommissionLedgerEntity } from './commission-ledger.entity';
+import { SettlementEntity } from './settlement.entity';
 
 export const ALL_ENTITIES = [
   TenantEntity,
@@ -165,4 +171,7 @@ export const ALL_ENTITIES = [
   MenuEntity,
   MenuItemEntity,
   AcmeAccountEntity,
+  ProductShareEntity,
+  CommissionLedgerEntity,
+  SettlementEntity,
 ];

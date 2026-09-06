@@ -17,6 +17,8 @@ export interface CartProductRow {
   imageUrl: string | null;
   taxClassId?: string | null;
   weightGrams?: number | null;
+  /** Set only for a marketplace-shared product — the tenant that actually owns and fulfils it. */
+  supplierTenantId?: string | null;
 }
 
 export interface CartVariantRow {
@@ -74,8 +76,9 @@ export class CartProductLookupRepository {
     })[];
 
     const row = rows[0];
-    if (!row) return null;
-    return { ...row, trackInventory: row.trackInventory === 1, allowBackorder: row.allowBackorder === 1 };
+    if (row) return { ...row, trackInventory: row.trackInventory === 1, allowBackorder: row.allowBackorder === 1 };
+
+    return this.getMarketplaceProduct('p.public_id = ?', publicId);
   }
 
   async getVariant(publicId: string): Promise<CartVariantRow | null> {
@@ -87,7 +90,11 @@ export class CartProductLookupRepository {
         LIMIT 1`,
       [publicId, this.tenantId],
     )) as CartVariantRow[];
-    return rows[0] ?? null;
+
+    const row = rows[0];
+    if (row) return row;
+
+    return this.getMarketplaceVariant('v.public_id = ?', publicId);
   }
 
   /** Same shape as `getProduct`, keyed by internal id — for callers (checkout) that already
@@ -111,6 +118,47 @@ export class CartProductLookupRepository {
     })[];
 
     const row = rows[0];
+    if (row) return { ...row, trackInventory: row.trackInventory === 1, allowBackorder: row.allowBackorder === 1 };
+
+    return this.getMarketplaceProduct('p.id = ?', id);
+  }
+
+  /**
+   * Falls back to a product owned by a **different** tenant, visible to the
+   * current (reseller) tenant only through an `ACTIVE` `product_shares` row.
+   * Priced at the share's `reseller_price_minor` override when set, else the
+   * supplier's own list price — the one place that override is applied, so
+   * every caller of `getProduct`/`getProductById` prices a marketplace item
+   * correctly with no change to its own logic.
+   *
+   * A raw query, not the ORM: `product_shares`/`products` are read across a
+   * tenant boundary on purpose, and a raw `manager.query` never triggers
+   * `TenantGuardSubscriber` (it only inspects entities TypeORM hydrates),
+   * which is exactly why every other cross-tenant lookup in this repository
+   * already uses one.
+   */
+  private async getMarketplaceProduct(productPredicate: string, productParam: string): Promise<CartProductRow | null> {
+    const rows = (await this.manager.query(
+      `SELECT p.id, p.public_id AS publicId, p.store_id AS storeId, p.name,
+              COALESCE(s.reseller_price_minor, p.price_minor) AS priceMinor,
+              p.currency, p.track_inventory AS trackInventory,
+              p.allow_backorder AS allowBackorder, p.status, p.sku, p.tax_class_id AS taxClassId,
+              p.weight_grams AS weightGrams, p.tenant_id AS supplierTenantId,
+              (SELECT url FROM product_media WHERE product_id = p.id ORDER BY is_primary DESC, position ASC LIMIT 1) AS imageUrl
+         FROM product_shares s
+         JOIN products p ON p.id = s.product_id
+        WHERE s.reseller_tenant_id = ? AND s.status = 'ACTIVE' AND ${productPredicate} AND p.deleted_at IS NULL
+        LIMIT 1`,
+      [this.tenantId, productParam],
+    )) as (Omit<CartProductRow, 'trackInventory' | 'allowBackorder'> & {
+      trackInventory: number;
+      allowBackorder: number;
+      taxClassId: string | null;
+      weightGrams: number | null;
+      supplierTenantId: string;
+    })[];
+
+    const row = rows[0];
     if (!row) return null;
     return { ...row, trackInventory: row.trackInventory === 1, allowBackorder: row.allowBackorder === 1 };
   }
@@ -123,6 +171,29 @@ export class CartProductLookupRepository {
         WHERE v.id = ? AND v.tenant_id = ? AND v.deleted_at IS NULL
         LIMIT 1`,
       [id, this.tenantId],
+    )) as CartVariantRow[];
+
+    const row = rows[0];
+    if (row) return row;
+
+    return this.getMarketplaceVariant('v.id = ?', id);
+  }
+
+  /**
+   * A variant of a marketplace-shared product — no per-variant price
+   * override exists in the schema (`product_shares.reseller_price_minor`
+   * is per-product), so this passes the supplier's own variant price
+   * through unchanged.
+   */
+  private async getMarketplaceVariant(variantPredicate: string, variantParam: string): Promise<CartVariantRow | null> {
+    const rows = (await this.manager.query(
+      `SELECT v.id, v.public_id AS publicId, v.product_id AS productId, v.sku, v.title,
+              v.price_minor AS priceMinor, v.weight_grams AS weightGrams
+         FROM product_variants v
+         JOIN product_shares s ON s.product_id = v.product_id
+        WHERE s.reseller_tenant_id = ? AND s.status = 'ACTIVE' AND ${variantPredicate} AND v.deleted_at IS NULL
+        LIMIT 1`,
+      [this.tenantId, variantParam],
     )) as CartVariantRow[];
     return rows[0] ?? null;
   }
