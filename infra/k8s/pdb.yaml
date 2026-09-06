@@ -1,0 +1,24 @@
+# Bounds how many `ems-api`/`ems-worker` pods a *voluntary* disruption (node
+# drain during a cluster upgrade, cluster-autoscaler consolidation) may take
+# down at once — orthogonal to the Deployments' own `maxUnavailable: 0`
+# rolling-update setting, which only governs a deploy the app itself
+# triggers.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ems-api
+  namespace: ems
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels: { app.kubernetes.io/name: ems-api }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ems-worker
+  namespace: ems
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: { app.kubernetes.io/name: ems-worker }

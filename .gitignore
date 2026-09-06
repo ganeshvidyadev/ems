@@ -1,6 +1,10 @@
 # Dependencies
 node_modules/
 .pnpm-store/
+# This is a pnpm workspace (pnpm-lock.yaml is the real lockfile) — npm has
+# been used as a local workaround in some dev environments and must never
+# leave its own lockfile behind for git to pick up.
+package-lock.json
 
 # Build output
 dist/

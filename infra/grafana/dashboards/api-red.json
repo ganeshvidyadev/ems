@@ -1,0 +1,87 @@
+{
+  "title": "EMS API — RED",
+  "uid": "ems-api-red",
+  "tags": ["ems", "api"],
+  "timezone": "utc",
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Rate — requests/sec by route",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[5m])) by (route)",
+          "legendFormat": "{{route}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Errors — 5xx rate by route",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "percentunit" } },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status_code=~\"5..\"}[5m])) by (route) / sum(rate(http_requests_total[5m])) by (route)",
+          "legendFormat": "{{route}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Duration — p50/p95/p99 (all routes)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Outbox lag (seconds) — the single most important health signal",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "s", "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 30, "color": "yellow" }, { "value": 120, "color": "red" }] } } },
+      "targets": [{ "expr": "ems_outbox_lag_seconds", "legendFormat": "lag" }]
+    },
+    {
+      "id": 5,
+      "title": "Queue depths (waiting) by queue",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "description": "Sourced from QueueRegistry.depths() via a bullmq-exporter sidecar once deployed — see infra/grafana/README.md.",
+      "targets": [{ "expr": "bullmq_queue_waiting_count", "legendFormat": "{{queue}}" }]
+    },
+    {
+      "id": 6,
+      "title": "Cache hit ratio",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "fieldConfig": { "defaults": { "unit": "percentunit" } },
+      "description": "Sourced from a redis_exporter sidecar's keyspace hit/miss counters once deployed — see infra/grafana/README.md.",
+      "targets": [{ "expr": "rate(redis_keyspace_hits_total[5m]) / (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m]))", "legendFormat": "{{instance}}" }]
+    },
+    {
+      "id": 7,
+      "title": "Log buffer — dropped (observability loss)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "targets": [{ "expr": "rate(ems_log_buffer_dropped_total[5m])", "legendFormat": "dropped/sec" }]
+    },
+    {
+      "id": 8,
+      "title": "Certificate expiry (days remaining)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "description": "Sourced from a blackbox_exporter probe of each verified tenant domain's TLS endpoint once deployed — see infra/grafana/README.md.",
+      "targets": [{ "expr": "(probe_ssl_earliest_cert_expiry - time()) / 86400", "legendFormat": "{{instance}}" }]
+    }
+  ]
+}

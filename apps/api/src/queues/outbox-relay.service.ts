@@ -262,13 +262,17 @@ export class OutboxRelayService implements OnApplicationBootstrap, OnApplication
    * but stock not decremented, payments captured but no confirmation sent.
    */
   async getLagSeconds(): Promise<number> {
+    // `lag` unquoted collides with MySQL's own `LAG()` window function and
+    // is rejected as a syntax error — never caught until this query actually
+    // ran for the first time, live, wiring `MetricsController`'s
+    // `ems_outbox_lag_seconds` gauge to it.
     const [result] = (await this.dataSource.query(
-      `SELECT TIMESTAMPDIFF(SECOND, MIN(created_at), NOW(3)) AS lag
+      `SELECT TIMESTAMPDIFF(SECOND, MIN(created_at), NOW(3)) AS lag_seconds
          FROM outbox_events
         WHERE status IN ('PENDING','DISPATCHING')`,
-    )) as [{ lag: number | null }];
+    )) as [{ lag_seconds: number | null }];
 
-    return result?.lag ?? 0;
+    return result?.lag_seconds ?? 0;
   }
 
   get stats(): { dispatched: number; failed: number; dead: number } {

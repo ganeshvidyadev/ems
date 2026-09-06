@@ -1,0 +1,38 @@
+# CPU-based for the API (request-driven load correlates with CPU directly);
+# the worker scales on its own queue depth instead — see the comment below —
+# since a worker can be CPU-idle while genuinely behind on a deep queue.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ems-api
+  namespace: ems
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ems-api
+  minReplicas: 3
+  maxReplicas: 12
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 65 }
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300 # don't thrash down on a momentary dip mid-traffic-spike
+      policies:
+        - { type: Pods, value: 1, periodSeconds: 120 }
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - { type: Pods, value: 2, periodSeconds: 60 }
+
+# No HorizontalPodAutoscaler for `ems-worker`: CPU doesn't track queue
+# backlog (a worker can sit CPU-idle while genuinely behind), and real
+# queue-depth scaling needs a custom-metrics adapter (e.g. KEDA's Redis
+# scaler, reading the same numbers `QueueRegistry.depths()` exposes at
+# `/metrics`) — infrastructure this environment has no cluster to install
+# and verify against. Left undeployed rather than shipping a resource that
+# would silently no-op without that adapter; `worker-deployment.yaml`'s
+# fixed `replicas: 2` is the honest baseline until KEDA is actually installed.

@@ -1,0 +1,103 @@
+name: ems
+
+# Production overlay — `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`.
+#
+# Layered on the base file rather than duplicated: the base file's mysql/redis/
+# redis-queue/mongo/minio definitions are reused as-is (this overlay only adds
+# the app services + nginx and tightens what the base file leaves dev-friendly
+# — published ports on the datastores, `latest`-ish images, no resource caps).
+#
+# This is the docker-compose analogue of the Kubernetes manifests in
+# `infra/k8s/` — the same image, the same one-shot migration-before-serving
+# ordering, the same api/worker split — for a single-box deployment or a
+# staging environment that doesn't warrant a cluster.
+
+services:
+  # The base file publishes mysql/redis/redis-queue/mongo/minio ports for
+  # local dev convenience — deliberately left as-is here rather than fought
+  # with compose merge tricks. A real deployment closes them at the
+  # network/security-group layer (see `infra/terraform`), not in compose.
+
+  migrate:
+    image: ${API_IMAGE:-ems-api}:${API_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: ems-migrate
+    env_file: .env
+    working_dir: /app/apps/api
+    # `scripts/migrate-with-lock.js` (a plain-JS script, since this image has
+    # no ts-node/typeorm-ts-node-commonjs after the Dockerfile's `--prod`
+    # install) wraps `typeorm.runMigrations()` in a MySQL `GET_LOCK` — the
+    # same guard the Kubernetes migration Job uses, so two migrate containers
+    # racing on a rolling deploy serialize instead of double-applying.
+    entrypoint: ['node', 'scripts/migrate-with-lock.js']
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: 'no'
+
+  api:
+    image: ${API_IMAGE:-ems-api}:${API_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: ems-api
+    env_file: .env
+    environment:
+      EMS_ROLE: api
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+      resources:
+        limits: { cpus: '1.0', memory: 1G }
+        reservations: { cpus: '0.25', memory: 256M }
+    healthcheck:
+      test: ['CMD', 'node', '-e', "require('http').get('http://127.0.0.1:4000/health/ready',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  worker:
+    image: ${API_IMAGE:-ems-api}:${API_IMAGE_TAG:-latest}
+    container_name: ems-worker
+    env_file: .env
+    environment:
+      EMS_ROLE: worker
+      OUTBOX_RELAY_ENABLED: 'true'
+    depends_on:
+      redis-queue:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: '1.0', memory: 1G }
+        reservations: { cpus: '0.25', memory: 256M }
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: ems-nginx
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - '${HTTP_PORT:-80}:80'
+      - '${HTTPS_PORT:-443}:443'
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./infra/nginx/snippets:/etc/nginx/snippets:ro
+      - ./infra/nginx/certs:/etc/nginx/certs:ro

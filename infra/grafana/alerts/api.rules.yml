@@ -1,0 +1,73 @@
+groups:
+  - name: ems-api
+    rules:
+      - alert: HighErrorRate
+        expr: sum(rate(http_requests_total{status_code=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) > 0.02
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: '5xx error rate above 2% for 5 minutes'
+          description: 'Current rate: {{ $value | humanizePercentage }}. See docs/runbooks/high-error-rate.md.'
+
+      - alert: HighLatencyP95
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 1
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: 'p95 latency above 1s for 10 minutes'
+          description: 'Current p95: {{ $value }}s.'
+
+      - alert: OutboxLagCritical
+        expr: ems_outbox_lag_seconds > 120
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: 'Outbox relay lag above 2 minutes — committed state and its downstream effects are drifting apart'
+          description: 'Current lag: {{ $value }}s. See docs/runbooks/queue-backlog.md.'
+
+      - alert: OutboxLagWarning
+        expr: ems_outbox_lag_seconds > 30
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: 'Outbox relay lag above 30s for 10 minutes'
+
+      - alert: LogBufferDropping
+        expr: rate(ems_log_buffer_dropped_total[5m]) > 0
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: 'Log documents are being dropped — MongoDB logging pipeline is falling behind'
+          description: 'Observability loss, not a customer-facing failure — investigate MongoDB health, but do not page on this alone.'
+
+      - alert: ApiInstanceDown
+        expr: up{job="ems-api"} == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: 'An ems-api target has been unreachable for 2 minutes'
+
+      - alert: EventLoopLagHigh
+        expr: nodejs_eventloop_lag_p99_seconds > 0.25
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: 'Node.js event loop p99 lag above 250ms — the process is CPU-starved or blocked'
+
+  - name: ems-certificates
+    rules:
+      - alert: CertificateExpiringSoon
+        expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 14
+        for: 1h
+        labels: { severity: warning }
+        annotations:
+          summary: 'A tenant TLS certificate expires in under 14 days'
+          description: '{{ $labels.instance }} — see docs/runbooks/cert-renewal-failure.md.'
+
+      - alert: CertificateExpiryImminent
+        expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 3
+        for: 15m
+        labels: { severity: critical }
+        annotations:
+          summary: 'A tenant TLS certificate expires in under 3 days'
+          description: '{{ $labels.instance }} — see docs/runbooks/cert-renewal-failure.md.'

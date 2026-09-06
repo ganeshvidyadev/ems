@@ -89,7 +89,7 @@ export const PERMISSION_SPECS: readonly PermissionSpec[] = [
   // --- Platform (super admin) --------------------------------------------
   // Never grantable to a merchant: `scope: 'PLATFORM'` and the seeder refuses to
   // attach these to any TENANT-scoped role.
-  { resource: 'platform.tenant', actions: ['read', 'create', 'update', 'suspend', 'reactivate', 'delete', 'impersonate'], scope: 'PLATFORM', description: 'Tenant management' },
+  { resource: 'platform.tenant', actions: ['read', 'create', 'update', 'suspend', 'reactivate', 'delete', 'impersonate', 'export'], scope: 'PLATFORM', description: 'Tenant management' },
   { resource: 'platform.plan', actions: CRUD, scope: 'PLATFORM', description: 'Subscription plans' },
   { resource: 'platform.template', actions: CRUD, scope: 'PLATFORM', description: 'Theme templates' },
   { resource: 'platform.user', actions: [...CRUD, 'suspend'], scope: 'PLATFORM', description: 'Platform staff accounts' },

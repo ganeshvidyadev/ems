@@ -1,0 +1,18 @@
+name: Setup Node + pnpm
+description: >
+  Installs the pinned Node/pnpm versions and runs `pnpm install --frozen-lockfile`,
+  with pnpm's store cached by lockfile hash. Every job in ci.yml uses this
+  instead of repeating the same five steps, so bumping the pnpm version is a
+  one-file change.
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+      with:
+        version: '9.15.9'
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20.18.1'
+        cache: pnpm
+    - run: pnpm install --frozen-lockfile
+      shell: bash

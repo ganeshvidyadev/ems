@@ -6,6 +6,7 @@ import {
   type ArgumentsHost,
   type ExceptionFilter,
 } from '@nestjs/common';
+import * as Sentry from '@sentry/node';
 import { CrossTenantAccessError, DomainError } from '@ems/kernel';
 import {
   ErrorCode,
@@ -75,6 +76,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         `${logContext} ${body.code}: ${body.message}`,
         exception instanceof Error ? exception.stack : String(exception),
       );
+      // A no-op when `Sentry.init()` was never called (no SENTRY_DSN
+      // configured) — safe to call unconditionally rather than threading a
+      // "is Sentry enabled" flag through every constructor of this filter.
+      Sentry.captureException(exception, {
+        tags: { correlationId, errorCode: body.code },
+        extra: { method: request.method, path: request.originalUrl, tenantId: this.context.tenantId },
+      });
     } else if (logLevel === 'warn') {
       this.logger.warn(`${logContext} ${body.code}: ${body.message}`);
     }

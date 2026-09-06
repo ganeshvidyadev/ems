@@ -9,6 +9,7 @@ import { ChannelSyncProcessor } from './processors/channel-sync.processor';
 import { NotificationProcessor } from './processors/notification.processor';
 import { AnalyticsRollupProcessor } from './processors/analytics-rollup.processor';
 import { ReportGenerationProcessor } from './processors/report-generation.processor';
+import { TenantExportProcessor } from './processors/tenant-export.processor';
 
 /**
  * Queue infrastructure.
@@ -33,6 +34,7 @@ import { ReportGenerationProcessor } from './processors/report-generation.proces
     NotificationProcessor,
     AnalyticsRollupProcessor,
     ReportGenerationProcessor,
+    TenantExportProcessor,
   ],
   exports: [QueueRegistry, OutboxRelayService],
 })

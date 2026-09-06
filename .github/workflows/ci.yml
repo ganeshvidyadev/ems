@@ -1,0 +1,326 @@
+name: CI/CD
+
+# Ordering matches docs/05-roadmap.md Phase 12 exactly: lint → typecheck →
+# unit → integration → isolation → contract → build → Trivy → e2e → staging
+# → smoke → canary prod. Each stage only runs once the previous one is
+# green — a broken lint should never burn CI minutes running the full
+# integration suite against real containers.
+#
+# `staging`/`smoke`/`canary-prod` need real cluster credentials
+# (`KUBE_CONFIG_STAGING`/`KUBE_CONFIG_PROD`) and a container registry this
+# repo is not yet wired to — they're written to the same shape every other
+# job in this file actually runs under, but will no-op/fail without those
+# secrets configured, which is a repository-settings step, not something
+# this file can supply on its own.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PNPM_VERSION: '9.15.9'
+  NODE_VERSION: '20.18.1'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm run lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm --filter @ems/kernel run build
+      - run: pnpm --filter @ems/contracts run build
+      - run: pnpm run typecheck
+
+  unit:
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm --filter @ems/kernel run build
+      - run: pnpm --filter @ems/contracts run build
+      - run: pnpm run test -- --ci
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: unit-coverage, path: apps/api/coverage, retention-days: 14 }
+
+  # Real MySQL/Redis/Mongo service containers — matching docker-compose.yml's
+  # images exactly, so a test that passes here behaves the same against the
+  # real local dev stack. `test:integration`/`test:isolation` both need a
+  # live database; unlike `unit`, these are never mocked (see this repo's own
+  # "don't mock the database in integration tests" discipline).
+  integration:
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: ems_test
+          MYSQL_USER: ems
+          MYSQL_PASSWORD: emspassword
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -prootpassword"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+      redis:
+        image: redis:7.4-alpine
+        ports: ['6379:6379']
+        options: --health-cmd="redis-cli ping" --health-interval=5s --health-retries=20
+      redis-queue:
+        image: redis:7.4-alpine
+        ports: ['6380:6379']
+        options: --health-cmd="redis-cli ping" --health-interval=5s --health-retries=20
+      mongo:
+        image: mongo:7
+        ports: ['27017:27017']
+        options: --health-cmd="mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'" --health-interval=10s --health-retries=20
+    env:
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ems_test
+      MYSQL_USER: ems
+      MYSQL_PASSWORD: emspassword
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
+      REDIS_QUEUE_HOST: 127.0.0.1
+      REDIS_QUEUE_PORT: 6380
+      MONGO_URI: mongodb://127.0.0.1:27017/ems_logs_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm --filter @ems/kernel run build
+      - run: pnpm --filter @ems/contracts run build
+      - run: pnpm --filter @ems/api run migration:run
+      - run: pnpm run test:integration
+
+  # The tenant-isolation suite (docs/05 Phase 1: "wired as a blocking CI gate
+  # from day one") — every cross-tenant access attempt must 404. This is
+  # deliberately its own job, not folded into `integration`, so a green
+  # checkmark on it means something specific and cannot be lost among
+  # unrelated integration-test noise.
+  isolation:
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: ems_test
+          MYSQL_USER: ems
+          MYSQL_PASSWORD: emspassword
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -prootpassword"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+      redis:
+        image: redis:7.4-alpine
+        ports: ['6379:6379']
+        options: --health-cmd="redis-cli ping" --health-interval=5s --health-retries=20
+      redis-queue:
+        image: redis:7.4-alpine
+        ports: ['6380:6379']
+        options: --health-cmd="redis-cli ping" --health-interval=5s --health-retries=20
+      mongo:
+        image: mongo:7
+        ports: ['27017:27017']
+        options: --health-cmd="mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'" --health-interval=10s --health-retries=20
+    env:
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ems_test
+      MYSQL_USER: ems
+      MYSQL_PASSWORD: emspassword
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
+      REDIS_QUEUE_HOST: 127.0.0.1
+      REDIS_QUEUE_PORT: 6380
+      MONGO_URI: mongodb://127.0.0.1:27017/ems_logs_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm --filter @ems/kernel run build
+      - run: pnpm --filter @ems/contracts run build
+      - run: pnpm --filter @ems/api run migration:run
+      - run: pnpm run test:isolation
+
+  # "Contract": `@ems/contracts` builds clean and its own schema tests pass —
+  # the guarantee that "the API validates with these schemas and the
+  # frontends infer their types from the same objects" (the package's own
+  # doc comment) hasn't silently broken. A dedicated Pact-style
+  # consumer/provider contract suite is not part of this repo yet; this job
+  # is the honest version of that step until one exists.
+  contract:
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm --filter @ems/kernel run build
+      - run: pnpm --filter @ems/contracts run build
+      - run: pnpm --filter @ems/contracts run test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [unit, integration, isolation, contract]
+    outputs:
+      image_tag: ${{ steps.tag.outputs.value }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: tag
+        run: echo "value=sha-${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ghcr.io/${{ github.repository }}/api:${{ steps.tag.outputs.value }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  trivy:
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ghcr.io/${{ github.repository }}/api:${{ needs.build.outputs.image_tag }}
+          severity: CRITICAL,HIGH
+          exit-code: '1' # fails the pipeline on any critical/high CVE — the Phase 12 exit criterion, enforced rather than advisory
+          ignore-unfixed: true
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: [build]
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: ems_test
+          MYSQL_USER: ems
+          MYSQL_PASSWORD: emspassword
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -prootpassword"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+      redis:
+        image: redis:7.4-alpine
+        ports: ['6379:6379']
+        options: --health-cmd="redis-cli ping" --health-interval=5s --health-retries=20
+      redis-queue:
+        image: redis:7.4-alpine
+        ports: ['6380:6379']
+        options: --health-cmd="redis-cli ping" --health-interval=5s --health-retries=20
+      mongo:
+        image: mongo:7
+        ports: ['27017:27017']
+        options: --health-cmd="mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'" --health-interval=10s --health-retries=20
+    env:
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ems_test
+      MYSQL_USER: ems
+      MYSQL_PASSWORD: emspassword
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
+      REDIS_QUEUE_HOST: 127.0.0.1
+      REDIS_QUEUE_PORT: 6380
+      MONGO_URI: mongodb://127.0.0.1:27017/ems_logs_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm --filter @ems/kernel run build
+      - run: pnpm --filter @ems/contracts run build
+      - run: pnpm --filter @ems/api run migration:run
+      - run: pnpm --filter @ems/api run seed -- --no-demo
+      - run: pnpm --filter @ems/api run test:e2e
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [e2e, trivy]
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-kubectl@v4
+      - run: |
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+          export API_IMAGE=ghcr.io/${{ github.repository }}/api
+          export API_IMAGE_TAG=${{ needs.build.outputs.image_tag }}
+          envsubst < infra/k8s/migration-job.yaml | kubectl delete -f - --ignore-not-found
+          envsubst < infra/k8s/migration-job.yaml | kubectl apply -f -
+          kubectl wait --for=condition=complete job/ems-migrate -n ems --timeout=300s
+          for f in api-deployment worker-deployment hpa pdb ingress; do
+            envsubst < infra/k8s/$f.yaml | kubectl apply -f -
+          done
+          kubectl set image deployment/ems-api api=ghcr.io/${{ github.repository }}/api:${{ needs.build.outputs.image_tag }} -n ems
+          kubectl set image deployment/ems-worker worker=ghcr.io/${{ github.repository }}/api:${{ needs.build.outputs.image_tag }} -n ems
+          kubectl rollout status deployment/ems-api -n ems --timeout=300s
+          kubectl rollout status deployment/ems-worker -n ems --timeout=300s
+
+  smoke:
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Health + one real login round-trip against staging
+        env:
+          STAGING_URL: ${{ vars.STAGING_URL }}
+          SMOKE_TEST_EMAIL: ${{ secrets.SMOKE_TEST_EMAIL }}
+          SMOKE_TEST_PASSWORD: ${{ secrets.SMOKE_TEST_PASSWORD }}
+        run: node scripts/smoke-test.mjs
+
+  # Canary: shifts a small slice of production traffic to the new image
+  # (via the ingress controller's own canary annotations, applied here
+  # rather than baked into `ingress.yaml` since a canary weight is a
+  # per-deploy value, not a standing config), watches the RED metrics
+  # Grafana already scrapes for a fixed window, then either promotes to 100%
+  # or rolls back — see `docs/runbooks/canary-rollback.md`. Requires the
+  # same real cluster credentials as `deploy-staging`; written but not
+  # exercisable without them.
+  canary-prod:
+    runs-on: ubuntu-latest
+    needs: [smoke]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-kubectl@v4
+      - run: |
+          echo "${{ secrets.KUBE_CONFIG_PROD }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+          export API_IMAGE=ghcr.io/${{ github.repository }}/api
+          export API_IMAGE_TAG=${{ needs.build.outputs.image_tag }}
+          envsubst < infra/k8s/migration-job.yaml | kubectl apply -f -
+          kubectl wait --for=condition=complete job/ems-migrate -n ems --timeout=300s
+      - run: node scripts/canary-rollout.mjs --namespace ems --deployment ems-api --error-rate-threshold 0.02 --window-seconds 300
+        env:
+          KUBECONFIG: kubeconfig
+          PROMETHEUS_URL: ${{ vars.PROMETHEUS_URL }}

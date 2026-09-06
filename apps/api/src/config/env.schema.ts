@@ -207,6 +207,8 @@ export const envSchema = z
     SWAGGER_ENABLED: booleanFromString.default('true'),
     OTEL_ENABLED: booleanFromString.default('false'),
     OTEL_EXPORTER_OTLP_ENDPOINT: optional(z.string().url()),
+    SENTRY_DSN: optional(z.string().url()),
+    SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
   })
   // Production-only tightening. These are the settings that are convenient in
   // development and dangerous in production, so the check is asserted rather

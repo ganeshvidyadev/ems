@@ -186,6 +186,8 @@ export interface Configuration {
     swaggerEnabled: boolean;
     otelEnabled: boolean;
     otelEndpoint?: string;
+    sentryDsn?: string;
+    sentryTracesSampleRate: number;
   };
 }
 
@@ -353,6 +355,8 @@ export function configuration(): Configuration {
       swaggerEnabled: env.SWAGGER_ENABLED,
       otelEnabled: env.OTEL_ENABLED,
       otelEndpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT,
+      sentryDsn: env.SENTRY_DSN,
+      sentryTracesSampleRate: env.SENTRY_TRACES_SAMPLE_RATE,
     },
   };
 

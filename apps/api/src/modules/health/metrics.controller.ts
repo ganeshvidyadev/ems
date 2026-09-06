@@ -1,9 +1,11 @@
 import { Controller, Get, Header, Optional, VERSION_NEUTRAL } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
-import { Registry, collectDefaultMetrics, Gauge } from 'prom-client';
+import { Gauge } from 'prom-client';
 import { Public } from '../../common/decorators';
 import { RawResponse } from '../../common/interceptors/response-envelope.interceptor';
 import { LogBufferService } from '../logging/log-buffer.service';
+import { MetricsRegistry } from './metrics.registry';
+import { OutboxRelayService } from '../../queues/outbox-relay.service';
 
 /**
  * Prometheus scrape endpoint.
@@ -22,12 +24,13 @@ import { LogBufferService } from '../logging/log-buffer.service';
 @Controller({ path: 'metrics', version: VERSION_NEUTRAL })
 @ApiExcludeController()
 export class MetricsController {
-  private readonly registry = new Registry();
+  private readonly registry = this.metrics.registry;
 
-  constructor(@Optional() private readonly logBuffer?: LogBufferService) {
-    this.registry.setDefaultLabels({ app: 'ems-api' });
-    collectDefaultMetrics({ register: this.registry });
-
+  constructor(
+    private readonly metrics: MetricsRegistry,
+    @Optional() private readonly logBuffer?: LogBufferService,
+    @Optional() private readonly outboxRelay?: OutboxRelayService,
+  ) {
     // Each gauge carries its own collect callback so a scrape reads live values.
     this.gauge('ems_log_buffer_depth', 'Documents waiting to be written to MongoDB', () =>
       this.logBuffer ? this.logBuffer.stats.buffered : 0,
@@ -45,9 +48,19 @@ export class MetricsController {
       'Failed MongoDB flush batches',
       () => (this.logBuffer ? this.logBuffer.stats.failedFlushes : 0),
     );
+
+    // The single most important health signal in the system (see
+    // `OutboxRelayService.getLagSeconds`'s own doc comment): rising lag means
+    // committed state and its downstream effects are drifting apart — orders
+    // placed but stock not decremented, payments captured but no
+    // confirmation sent. Async collect — the underlying query is a real
+    // `SELECT MIN(created_at)`, not an in-memory counter.
+    this.gauge('ems_outbox_lag_seconds', 'Age of the oldest undispatched outbox event', () =>
+      this.outboxRelay ? this.outboxRelay.getLagSeconds() : Promise.resolve(0),
+    );
   }
 
-  private gauge(name: string, help: string, read: () => number): void {
+  private gauge(name: string, help: string, read: () => number | Promise<number>): void {
     // Guard against double registration when the module is instantiated twice
     // (happens in tests that build the app more than once).
     if (this.registry.getSingleMetric(name)) return;
@@ -56,8 +69,8 @@ export class MetricsController {
       name,
       help,
       registers: [this.registry],
-      collect() {
-        gauge.set(read());
+      async collect() {
+        gauge.set(await read());
       },
     });
   }

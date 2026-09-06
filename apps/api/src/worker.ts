@@ -1,3 +1,4 @@
+import './tracing'; // must be first — see tracing.ts's own doc comment
 import 'reflect-metadata';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';

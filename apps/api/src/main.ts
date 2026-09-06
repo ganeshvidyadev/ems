@@ -1,3 +1,4 @@
+import './tracing'; // must be first — see tracing.ts's own doc comment
 import 'reflect-metadata';
 import { Logger, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -9,8 +10,9 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import type { DataSource } from 'typeorm';
+import * as Sentry from '@sentry/node';
 import { AppModule } from './app.module';
-import type { AppConfig } from './config/configuration';
+import type { AppConfig, Configuration } from './config/configuration';
 import { CacheService } from './common/services/cache.service';
 
 /**
@@ -51,6 +53,19 @@ async function bootstrap(): Promise<void> {
   const logger = new Logger('Bootstrap');
   const configService = app.get(ConfigService);
   const config = configService.getOrThrow<AppConfig>('app');
+  const observability = configService.getOrThrow<Configuration['observability']>('observability');
+
+  if (observability.sentryDsn) {
+    Sentry.init({
+      dsn: observability.sentryDsn,
+      environment: config.env,
+      tracesSampleRate: observability.sentryTracesSampleRate,
+      // The correlation id is already on every error's `tags` (see
+      // `GlobalExceptionFilter`) — that's the id a support ticket or a log
+      // search actually has, so it is what should be one click away from a
+      // Sentry issue, not Sentry's own event id.
+    });
+  }
 
   // -------------------------------------------------------------------------
   // Security

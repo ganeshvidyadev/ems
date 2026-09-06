@@ -1,0 +1,42 @@
+# Wildcard + SNI: `*.ems.example.com` covers `console.`/every tenant's
+# `{slug}.` subdomain in one certificate, and `ems-tenant-domain-tls` is a
+# placeholder for the per-verified-custom-domain Secrets `DomainService`'s
+# ACME flow (docs/01 §7) creates and cert-manager (or the platform's own ACME
+# client) attaches dynamically — this static Ingress only owns the wildcard
+# host; custom domains are added as additional `tls[].hosts`/`rules[].host`
+# entries by that same automation, not edited in here by hand.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ems-api
+  namespace: ems
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: '20m'
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-Frame-Options: SAMEORIGIN";
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - 'ems.example.com'
+        - '*.ems.example.com'
+      secretName: ems-wildcard-tls
+  rules:
+    - host: 'api.ems.example.com'
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: ems-api, port: { name: http } }
+    - host: '*.ems.example.com'
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: ems-api, port: { name: http } }

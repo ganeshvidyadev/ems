@@ -1,0 +1,51 @@
+# Non-secret configuration — matches `env.schema.ts` exactly; secrets (DB/Redis
+# passwords, JWT keys, encryption key, gateway credentials) live in `secret.yaml`
+# instead, never here, so this file is safe to commit and diff.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ems-api-config
+  namespace: ems
+data:
+  NODE_ENV: 'production'
+  API_PORT: '4000'
+  API_PREFIX: 'api'
+  LOG_LEVEL: 'info'
+  PLATFORM_ROOT_DOMAIN: 'ems.example.com'
+  APP_URL: 'https://api.ems.example.com'
+  CONSOLE_URL: 'https://console.ems.example.com'
+  STOREFRONT_URL: 'https://{tenant}.ems.example.com'
+
+  MYSQL_HOST: 'ems-mysql.ems-data.svc.cluster.local'
+  MYSQL_PORT: '3306'
+  MYSQL_DATABASE: 'ems'
+  MYSQL_POOL_SIZE: '20'
+  MYSQL_LOGGING: 'false'
+
+  MONGO_DATABASE: 'ems_logs'
+
+  REDIS_HOST: 'ems-redis.ems-data.svc.cluster.local'
+  REDIS_PORT: '6379'
+  REDIS_QUEUE_HOST: 'ems-redis-queue.ems-data.svc.cluster.local'
+  REDIS_QUEUE_PORT: '6379'
+
+  # `true` only on the worker Deployment — this ConfigMap is shared by both,
+  # and `worker-deployment.yaml` overrides it via its own `env:` entry (which
+  # wins over `envFrom` for the same key) so N API replicas don't all also
+  # poll the outbox.
+  OUTBOX_RELAY_ENABLED: 'false'
+  OUTBOX_RELAY_POLL_MS: '500'
+  OUTBOX_RELAY_BATCH: '100'
+
+  RATE_LIMIT_ENABLED: 'true'
+  SWAGGER_ENABLED: 'false' # env.schema.ts refuses to boot in production if this is true
+
+  PAYMENT_GATEWAY_DEFAULT: 'razorpay'
+  SHIPPING_CARRIER_DEFAULT: 'shiprocket'
+  DNS_PROVIDER_DEFAULT: 'cloudflare'
+  EBAY_ENV: 'PRODUCTION'
+  ACME_DIRECTORY_URL: 'https://acme-v02.api.letsencrypt.org/directory'
+
+  METRICS_ENABLED: 'true'
+  OTEL_ENABLED: 'true'
+  OTEL_EXPORTER_OTLP_ENDPOINT: 'http://otel-collector.ems-observability.svc.cluster.local:4318'

@@ -51,6 +51,7 @@ import { ReportModule } from './modules/report/report.module';
 import { SupportModule } from './modules/support/support.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { PlatformOpsModule } from './modules/platform-ops/platform-ops.module';
+import { TenantExportModule } from './modules/tenant-export/tenant-export.module';
 import { QueueModule } from './queues/queue.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -60,6 +61,7 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
 import { MongoLoggingInterceptor } from './common/interceptors/mongo-logging.interceptor';
 import { IdempotencyInterceptor } from './common/interceptors/idempotency.interceptor';
+import { HttpMetricsInterceptor } from './common/interceptors/http-metrics.interceptor';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
 import { TenantResolverMiddleware } from './common/middleware/tenant-resolver.middleware';
 import { RequestContextService } from './common/services/request-context.service';
@@ -153,6 +155,7 @@ import { RequestContextService } from './common/services/request-context.service
     SupportModule,
     AnalyticsModule,
     PlatformOpsModule,
+    TenantExportModule,
     HealthModule,
   ],
   providers: [
@@ -179,6 +182,11 @@ import { RequestContextService } from './common/services/request-context.service
           configService.getOrThrow<AppConfig>('app').isProduction,
         ),
     },
+    // First, so it sits outermost and its timer spans every interceptor
+    // below it — see the interceptor's own doc comment for why it hooks
+    // `response.on('finish')` rather than relying on list position for the
+    // error path too.
+    { provide: APP_INTERCEPTOR, useClass: HttpMetricsInterceptor },
     { provide: APP_INTERCEPTOR, useClass: ResponseEnvelopeInterceptor },
     { provide: APP_INTERCEPTOR, useClass: MongoLoggingInterceptor },
     // Last, so it sits closest to the controller — it stores/replays the raw
