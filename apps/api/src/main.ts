@@ -4,11 +4,38 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { getDataSourceToken } from '@nestjs/typeorm';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import type { DataSource } from 'typeorm';
 import { AppModule } from './app.module';
 import type { AppConfig } from './config/configuration';
+import { CacheService } from './common/services/cache.service';
+
+/**
+ * Is `hostname` a custom domain that has completed ownership verification?
+ *
+ * A **separate** cache key from `TenantResolverMiddleware`'s `domain:{host}` —
+ * that key answers "which tenant does this host route to" (true for any row,
+ * verified or not, since routing an unverified domain is harmless — no CORS
+ * grant follows from it). This answers a stricter question, so a stale hit on
+ * one must never leak into the other.
+ */
+async function isVerifiedCustomDomain(dataSource: DataSource, cache: CacheService, hostname: string): Promise<boolean> {
+  const cacheKey = `domain-cors:${hostname}`;
+  const cached = await cache.get<boolean>(cacheKey);
+  if (cached !== null) return cached;
+
+  const rows = (await dataSource.query(
+    `SELECT 1 FROM tenant_domains WHERE hostname = ? AND verified_at IS NOT NULL LIMIT 1`,
+    [hostname],
+  )) as unknown[];
+  const allowed = rows.length > 0;
+
+  await cache.set(cacheKey, allowed, allowed ? 600 : 60);
+  return allowed;
+}
 
 async function bootstrap(): Promise<void> {
   // Typed as the Express adapter so `app.set('trust proxy', …)` is available.
@@ -46,19 +73,30 @@ async function bootstrap(): Promise<void> {
    *
    * Reflecting the request's Origin would let any site issue credentialed requests
    * against the API on a logged-in merchant's behalf. Tenant custom domains are
-   * resolved from `tenant_domains` at request time (Phase 8); for now the two
-   * first-party apps plus configured localhost origins are permitted.
+   * resolved from `tenant_domains` at request time (Phase 8) — verified only, so
+   * adding a domain does not itself grant CORS before DNS ownership is proven.
    */
   const staticOrigins = new Set([config.consoleUrl, config.storefrontUrl, config.url]);
+  const dataSource = app.get<DataSource>(getDataSourceToken());
+  const cache = app.get(CacheService);
+
   app.enableCors({
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    origin: async (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
       // Same-origin/server-to-server requests send no Origin header.
       if (!origin) return callback(null, true);
       if (staticOrigins.has(origin)) return callback(null, true);
       if (!config.isProduction && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
         return callback(null, true);
       }
-      return callback(null, false);
+
+      try {
+        const hostname = new URL(origin).hostname.toLowerCase();
+        const allowed = await isVerifiedCustomDomain(dataSource, cache, hostname);
+        return callback(null, allowed);
+      } catch {
+        // An unparseable Origin header is never a legitimate browser request.
+        return callback(null, false);
+      }
     },
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],

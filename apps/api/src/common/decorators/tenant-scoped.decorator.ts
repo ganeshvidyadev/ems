@@ -72,4 +72,9 @@ export const PLATFORM_GLOBAL_ENTITIES = [
   // The theme gallery every tenant picks from — platform-owned, same reasoning as `PlanEntity`.
   // `TenantThemeEntity`, the tenant's own cloned/customized copy, is `@TenantScoped()` as usual.
   'ThemeTemplateEntity',
+
+  // The platform's own ACME account (Let's Encrypt) — one shared account issues every
+  // tenant's certificate, so there is no tenant to scope it to. `TenantDomainEntity`,
+  // which tracks each tenant's own verification/SSL state, is `@TenantScoped()` as usual.
+  'AcmeAccountEntity',
 ] as const;

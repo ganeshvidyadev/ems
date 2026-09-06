@@ -33,3 +33,4 @@ export * from './cms/cms.contracts.js';
 export * from './banner/banner.contracts.js';
 export * from './menu/menu.contracts.js';
 export * from './seo/seo.contracts.js';
+export * from './domain/domain.contracts.js';

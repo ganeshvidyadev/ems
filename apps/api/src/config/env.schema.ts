@@ -170,6 +170,18 @@ export const envSchema = z
     SHIPROCKET_PASSWORD: optional(z.string()),
     SHIPROCKET_WEBHOOK_SECRET: optional(z.string()),
 
+    // --- Domains, DNS & ACME (Phase 8) --------------------------------------
+    /** Let's Encrypt's staging directory by default — real-looking certs, no rate limits, untrusted by browsers. */
+    ACME_DIRECTORY_URL: z
+      .string()
+      .url()
+      .default('https://acme-staging-v02.api.letsencrypt.org/directory'),
+    ACME_ACCOUNT_EMAIL: optional(z.string().email()),
+    DNS_PROVIDER_DEFAULT: z.enum(['cloudflare', 'stub']).default('stub'),
+    CLOUDFLARE_API_TOKEN: optional(z.string()),
+    /** The DNS zone the platform's own ACME challenge CNAME delegation resolves into — see `DnsProviderPort`'s doc comment. */
+    ACME_CHALLENGE_DELEGATE_DOMAIN: optional(z.string()),
+
     // --- Observability ----------------------------------------------------
     METRICS_ENABLED: booleanFromString.default('true'),
     SWAGGER_ENABLED: booleanFromString.default('true'),
@@ -266,6 +278,20 @@ export const envSchema = z
         code: z.ZodIssueCode.custom,
         path: ['SHIPPING_CARRIER_DEFAULT'],
         message: 'The stub carrier cannot be used in production — shipments would never really dispatch',
+      });
+    }
+    if (env.DNS_PROVIDER_DEFAULT === 'stub') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['DNS_PROVIDER_DEFAULT'],
+        message: 'The stub DNS provider cannot be used in production — ACME DNS-01 challenges would never really publish',
+      });
+    }
+    if (env.ACME_DIRECTORY_URL.includes('staging')) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['ACME_DIRECTORY_URL'],
+        message: "Production must not point at Let's Encrypt staging — issued certificates would be untrusted by browsers",
       });
     }
     if (!env.RATE_LIMIT_ENABLED) {

@@ -129,6 +129,16 @@ export interface ShippingConfig {
   };
 }
 
+export interface DomainsConfig {
+  acmeDirectoryUrl: string;
+  acmeAccountEmail: string;
+  defaultDnsProvider: 'cloudflare' | 'stub';
+  cloudflare: {
+    apiToken: string;
+  };
+  challengeDelegateDomain: string;
+}
+
 export interface Configuration {
   app: AppConfig;
   database: DatabaseConfig;
@@ -137,6 +147,7 @@ export interface Configuration {
   mongo: MongoConfig;
   payment: PaymentConfig;
   shipping: ShippingConfig;
+  domains: DomainsConfig;
   jwt: JwtConfig;
   crypto: CryptoConfig;
   logging: LoggingConfig;
@@ -257,6 +268,15 @@ export function configuration(): Configuration {
         password: env.SHIPROCKET_PASSWORD ?? '',
         webhookSecret: env.SHIPROCKET_WEBHOOK_SECRET ?? '',
       },
+    },
+    domains: {
+      acmeDirectoryUrl: env.ACME_DIRECTORY_URL,
+      acmeAccountEmail: env.ACME_ACCOUNT_EMAIL ?? '',
+      defaultDnsProvider: env.DNS_PROVIDER_DEFAULT,
+      cloudflare: {
+        apiToken: env.CLOUDFLARE_API_TOKEN ?? '',
+      },
+      challengeDelegateDomain: env.ACME_CHALLENGE_DELEGATE_DOMAIN ?? '',
     },
     jwt: {
       // Decoded here so no consumer has to remember the encoding.

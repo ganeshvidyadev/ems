@@ -41,6 +41,9 @@ import { CmsModule } from './modules/cms/cms.module';
 import { BannerModule } from './modules/banner/banner.module';
 import { MenuModule } from './modules/menu/menu.module';
 import { SeoModule } from './modules/seo/seo.module';
+import { DnsModule } from './integrations/dns/dns.module';
+import { AcmeModule } from './integrations/acme/acme.module';
+import { DomainModule } from './modules/domain/domain.module';
 import { QueueModule } from './queues/queue.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -127,6 +130,10 @@ import { RequestContextService } from './common/services/request-context.service
     BannerModule,
     MenuModule,
     SeoModule,
+    // Domains, hosting, SSL (Phase 8).
+    DnsModule,
+    AcmeModule,
+    DomainModule,
     HealthModule,
   ],
   providers: [

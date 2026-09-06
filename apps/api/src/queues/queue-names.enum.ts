@@ -19,6 +19,7 @@ export const QueueName = {
   SUBSCRIPTION_BILLING: 'subscription-billing',
   ANALYTICS_ROLLUP: 'analytics-rollup',
   COMMISSION: 'commission',
+  DOMAIN_VERIFICATION: 'domain-verification',
   DEAD_LETTER: 'dead-letter',
 } as const;
 
@@ -54,6 +55,12 @@ export const QUEUE_SETTINGS: Record<QueueName, QueueSettings> = {
   [QueueName.SUBSCRIPTION_BILLING]: { concurrency: 4, attempts: 6, backoffMs: 30_000 },
   [QueueName.ANALYTICS_ROLLUP]: { concurrency: 2, attempts: 2, backoffMs: 10_000 },
   [QueueName.COMMISSION]: { concurrency: 4, attempts: 5, backoffMs: 5_000 },
+  // attempts: 1 — retries here are not BullMQ's job (a transient DNS timeout or
+  // ACME hiccup), they are DomainService's own explicit re-enqueue on a
+  // backoff schedule that reasons about the 72h ownership window and can
+  // mark the domain FAILED with a merchant-facing reason. A generic BullMQ
+  // retry would just silently retry the same instant with no such context.
+  [QueueName.DOMAIN_VERIFICATION]: { concurrency: 4, attempts: 1, backoffMs: 0 },
   [QueueName.DEAD_LETTER]: { concurrency: 1, attempts: 1, backoffMs: 0 },
 };
 

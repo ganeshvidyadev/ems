@@ -51,6 +51,7 @@ export * from './cms-page.entity';
 export * from './blog-post.entity';
 export * from './banner.entity';
 export * from './menu.entity';
+export * from './acme-account.entity';
 
 import { TenantEntity } from './tenant.entity';
 import { TenantDomainEntity } from './tenant-domain.entity';
@@ -98,6 +99,7 @@ import { CmsPageEntity } from './cms-page.entity';
 import { BlogPostEntity } from './blog-post.entity';
 import { BannerEntity } from './banner.entity';
 import { MenuEntity, MenuItemEntity } from './menu.entity';
+import { AcmeAccountEntity } from './acme-account.entity';
 
 export const ALL_ENTITIES = [
   TenantEntity,
@@ -162,4 +164,5 @@ export const ALL_ENTITIES = [
   BannerEntity,
   MenuEntity,
   MenuItemEntity,
+  AcmeAccountEntity,
 ];

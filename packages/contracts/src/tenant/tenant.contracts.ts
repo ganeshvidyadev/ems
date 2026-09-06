@@ -115,7 +115,9 @@ export const addDomainRequestSchema = z.object({
 });
 
 export const domainResponseSchema = z.object({
-  id: publicIdSchema,
+  // Not `publicIdSchema` — `tenant_domains` has no `public_id` column (docs/02's DDL
+  // never gave it one), so the internal numeric id is the only addressable key.
+  id: z.string(),
   hostname: z.string(),
   type: z.enum(DOMAIN_TYPES),
   isPrimary: z.boolean(),
@@ -123,8 +125,15 @@ export const domainResponseSchema = z.object({
   /** Present until verified, so the UI can show the exact DNS record to create. */
   verificationToken: z.string().nullable(),
   verifiedAt: z.string().nullable(),
+  isVerified: z.boolean(),
+  /** Verified AND serving HTTPS — the "safe to tell the merchant this is live" flag. */
+  isLive: z.boolean(),
   sslStatus: z.enum(SSL_STATUSES),
+  sslIssuedAt: z.string().nullable(),
   sslExpiresAt: z.string().nullable(),
+  lastCheckAt: z.string().nullable(),
+  /** Drives the exponential-backoff verification retry (docs/01 §10). */
+  checkAttempts: z.number(),
   lastError: z.string().nullable(),
   createdAt: z.string(),
 });
