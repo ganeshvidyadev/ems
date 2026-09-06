@@ -6,6 +6,9 @@ import { MediaProcessProcessor } from './processors/media-process.processor';
 import { ProductImportProcessor } from './processors/product-import.processor';
 import { DomainVerificationProcessor } from './processors/domain-verification.processor';
 import { ChannelSyncProcessor } from './processors/channel-sync.processor';
+import { NotificationProcessor } from './processors/notification.processor';
+import { AnalyticsRollupProcessor } from './processors/analytics-rollup.processor';
+import { ReportGenerationProcessor } from './processors/report-generation.processor';
 
 /**
  * Queue infrastructure.
@@ -27,6 +30,9 @@ import { ChannelSyncProcessor } from './processors/channel-sync.processor';
     ProductImportProcessor,
     DomainVerificationProcessor,
     ChannelSyncProcessor,
+    NotificationProcessor,
+    AnalyticsRollupProcessor,
+    ReportGenerationProcessor,
   ],
   exports: [QueueRegistry, OutboxRelayService],
 })

@@ -57,6 +57,11 @@ export * from './commission-ledger.entity';
 export * from './settlement.entity';
 export * from './channel.entity';
 export * from './channel-listing.entity';
+export * from './notification-template.entity';
+export * from './notification.entity';
+export * from './support-ticket.entity';
+export * from './support-ticket-message.entity';
+export * from './daily-sales-rollup.entity';
 
 import { TenantEntity } from './tenant.entity';
 import { TenantDomainEntity } from './tenant-domain.entity';
@@ -110,6 +115,11 @@ import { CommissionLedgerEntity } from './commission-ledger.entity';
 import { SettlementEntity } from './settlement.entity';
 import { ChannelEntity } from './channel.entity';
 import { ChannelListingEntity } from './channel-listing.entity';
+import { NotificationTemplateEntity } from './notification-template.entity';
+import { NotificationEntity } from './notification.entity';
+import { SupportTicketEntity } from './support-ticket.entity';
+import { SupportTicketMessageEntity } from './support-ticket-message.entity';
+import { DailySalesRollupEntity } from './daily-sales-rollup.entity';
 
 export const ALL_ENTITIES = [
   TenantEntity,
@@ -180,4 +190,9 @@ export const ALL_ENTITIES = [
   SettlementEntity,
   ChannelEntity,
   ChannelListingEntity,
+  NotificationTemplateEntity,
+  NotificationEntity,
+  SupportTicketEntity,
+  SupportTicketMessageEntity,
+  DailySalesRollupEntity,
 ];

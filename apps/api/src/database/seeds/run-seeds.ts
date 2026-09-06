@@ -4,6 +4,7 @@ import { seedPermissions } from './permissions.seed';
 import { seedRoles } from './roles.seed';
 import { seedPlans } from './plans.seed';
 import { seedThemeTemplates } from './theme-templates.seed';
+import { seedNotificationTemplates } from './notification-templates.seed';
 import { seedDemoTenants } from './demo-tenant.seed';
 
 /**
@@ -44,6 +45,10 @@ async function main(): Promise<void> {
     console.log('▶ Seeding theme templates…');
     const themeTemplates = await seedThemeTemplates(dataSource);
     console.log(`  ✔ ${themeTemplates} theme templates`);
+
+    console.log('▶ Seeding notification templates…');
+    const notificationTemplates = await seedNotificationTemplates(dataSource);
+    console.log(`  ✔ ${notificationTemplates} notification templates`);
 
     if (includeDemo) {
       console.log('▶ Seeding demo tenants…');

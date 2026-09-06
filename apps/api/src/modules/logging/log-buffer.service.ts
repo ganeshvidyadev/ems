@@ -16,7 +16,9 @@ export type LogCollection =
   | 'activity_logs'
   | 'webhook_logs'
   | 'job_logs'
-  | 'third_party_logs';
+  | 'third_party_logs'
+  | 'storefront_events'
+  | 'search_queries';
 
 interface BufferedDocument {
   collection: LogCollection;

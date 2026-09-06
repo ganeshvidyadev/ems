@@ -85,4 +85,14 @@ export const PLATFORM_GLOBAL_ENTITIES = [
   // and IS `@TenantScoped()`, just on that column instead of the default `tenant_id`.
   'ProductShareEntity',
   'CommissionLedgerEntity',
+
+  // Platform-support surface, not a per-tenant one: only `platform.support:*`
+  // permissions were ever seeded (no tenant-scoped `support:*`), so staff
+  // manage tickets across every tenant uniformly. A tenant's own "my tickets"
+  // read/write is a service-level filter on `tenantId`, not a generic scope.
+  'SupportTicketEntity',
+
+  // Join-table shape, same reasoning as `UserRoleEntity`: no `tenant_id` of its
+  // own, isolation is transitive through `ticket_id` (`support_tickets` above).
+  'SupportTicketMessageEntity',
 ] as const;

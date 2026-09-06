@@ -3,6 +3,7 @@ import { NotFoundError } from '@ems/kernel';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import type { EntityManager } from 'typeorm';
 import { RequestContextService } from '../../common/services/request-context.service';
+import { OutboxService } from '../../common/services/outbox.service';
 import type { ShipmentEntity } from '../../database/entities';
 import { ShippingCarrierFactory } from '../../integrations/shipping/shipping-carrier.factory';
 import type { TrackingResult } from '../../integrations/shipping/shipping-carrier.port';
@@ -39,6 +40,7 @@ export class ShipmentTrackingService {
     private readonly inventory: InventoryService,
     private readonly shippingCarriers: ShippingCarrierFactory,
     private readonly context: RequestContextService,
+    private readonly outbox: OutboxService,
   ) {}
 
   /** Webhook path: re-fetches authoritative tracking for the AWB the webhook named. */
@@ -110,6 +112,15 @@ export class ShipmentTrackingService {
 
       if (newTerminalStatus === 'DELIVERED') {
         await this.markOrderDelivered(tx, fresh);
+        // Gated on `newTerminalStatus`, which is only set when the DELIVERED
+        // scan was newly inserted (not a replayed duplicate) — one emit per
+        // shipment's actual delivery, never per webhook retry.
+        await this.outbox.emit(tx, {
+          aggregateType: 'SHIPMENT',
+          aggregateId: fresh.id,
+          eventType: 'shipment.delivered',
+          payload: { orderId: fresh.orderId, shipmentId: fresh.id, shipmentNumber: fresh.shipmentNumber },
+        });
       } else if (newTerminalStatus === 'RTO_DELIVERED') {
         await this.applyRtoRestock(tx, fresh);
       }

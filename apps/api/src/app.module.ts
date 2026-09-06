@@ -47,6 +47,10 @@ import { DomainModule } from './modules/domain/domain.module';
 import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 import { ChannelIntegrationModule } from './integrations/channel/channel.module';
 import { ChannelModule } from './modules/channel/channel.module';
+import { ReportModule } from './modules/report/report.module';
+import { SupportModule } from './modules/support/support.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { PlatformOpsModule } from './modules/platform-ops/platform-ops.module';
 import { QueueModule } from './queues/queue.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -145,6 +149,10 @@ import { RequestContextService } from './common/services/request-context.service
     // Multi-channel selling (Phase 10).
     ChannelIntegrationModule,
     ChannelModule,
+    ReportModule,
+    SupportModule,
+    AnalyticsModule,
+    PlatformOpsModule,
     HealthModule,
   ],
   providers: [

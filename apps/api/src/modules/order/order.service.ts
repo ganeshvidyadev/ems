@@ -4,6 +4,7 @@ import { BusinessRuleError, Money, type CurrencyCode } from '@ems/kernel';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import type { EntityManager } from 'typeorm';
 import { RequestContextService } from '../../common/services/request-context.service';
+import { OutboxService } from '../../common/services/outbox.service';
 import { OrderAlreadyFulfilledError, OrderNotCancellableError } from '../../common/errors/api.errors';
 import type { CarrierName } from '../../integrations/shipping/shipping-carrier.port';
 import { ShippingCarrierFactory } from '../../integrations/shipping/shipping-carrier.factory';
@@ -39,6 +40,7 @@ export class OrderService {
     private readonly shippingCarriers: ShippingCarrierFactory,
     private readonly warehouses: CartProductLookupRepository,
     private readonly context: RequestContextService,
+    private readonly outbox: OutboxService,
   ) {}
 
   async list(query: {
@@ -274,6 +276,22 @@ export class OrderService {
           quantity,
         });
       }
+
+      // One `shipment.dispatched` per shipment row created above — a partially
+      // fulfilled order that ships in two parcels raises this twice, correctly.
+      await this.outbox.emit(tx, {
+        aggregateType: 'SHIPMENT',
+        aggregateId: shipment.id,
+        eventType: 'shipment.dispatched',
+        payload: {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          shipmentId: shipment.id,
+          shipmentNumber: shipment.shipmentNumber,
+          carrier: shipment.carrier,
+          awbNumber: shipment.awbNumber,
+        },
+      });
 
       const allItems = await items.findByOrder(order.id);
       const allFulfilled = allItems.every((i) => i.quantityOpen === 0);

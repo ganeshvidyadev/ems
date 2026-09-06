@@ -11,6 +11,7 @@ import { BusinessRuleError, Money, NotFoundError, type CurrencyCode } from '@ems
 import { InjectEntityManager } from '@nestjs/typeorm';
 import type { EntityManager } from 'typeorm';
 import { RequestContextService } from '../../common/services/request-context.service';
+import { OutboxService } from '../../common/services/outbox.service';
 import { CartEmptyError, OrderEmptyError } from '../../common/errors/api.errors';
 import type { OrderAddressSnapshot } from '../../database/entities';
 import { CartProductLookupRepository } from '../cart/cart-product-lookup.repository';
@@ -82,6 +83,7 @@ export class CheckoutService {
     private readonly shippingCarriers: ShippingCarrierFactory,
     private readonly marketplace: MarketplaceOrderService,
     private readonly context: RequestContextService,
+    private readonly outbox: OutboxService,
   ) {}
 
   // =========================================================================
@@ -522,6 +524,13 @@ export class CheckoutService {
     // doc comment for why both confirmation paths call it unconditionally.
     await this.marketplace.processConfirmedOrder(tx, orderId);
 
+    await this.outbox.emit(tx, {
+      aggregateType: 'ORDER',
+      aggregateId: orderId,
+      eventType: 'order.placed',
+      payload: { orderNumber, storeId: order.storeId, totalMinor: order.totalMinor, currency: order.currency },
+    });
+
     this.logger.log(`Order ${orderNumber} confirmed`);
   }
 
@@ -628,6 +637,15 @@ export class CheckoutService {
       });
 
       await this.marketplace.processConfirmedOrder(tx, order.id);
+
+      // Guarded above by the `order.status === 'CONFIRMED' | ...` early return —
+      // a replayed webhook racing the client callback never reaches here twice.
+      await this.outbox.emit(tx, {
+        aggregateType: 'ORDER',
+        aggregateId: order.id,
+        eventType: 'order.placed',
+        payload: { orderNumber: order.orderNumber, storeId: order.storeId, totalMinor: order.totalMinor, currency: order.currency },
+      });
 
       return { status: 'CAPTURED', orderId: order.publicId, orderNumber: order.orderNumber };
     });

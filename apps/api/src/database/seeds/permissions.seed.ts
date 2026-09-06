@@ -106,6 +106,9 @@ export const PERMISSION_SPECS: readonly PermissionSpec[] = [
   // from the tenant-scoped `settlement:read/export` a supplier or reseller
   // holds over their own statements.
   { resource: 'platform.settlement', actions: ['read', 'run', 'approve', 'pay', 'export'], scope: 'PLATFORM', description: 'Marketplace settlement administration' },
+  // Phase 11: the queue admin — depth/failure visibility and replaying a
+  // stuck job, distinct from `platform.log`'s read-only log browsing.
+  { resource: 'platform.queue', actions: ['read', 'retry'], scope: 'PLATFORM', description: 'Background queue administration' },
 ];
 
 export interface PermissionRow {

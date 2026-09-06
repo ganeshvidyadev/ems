@@ -36,3 +36,7 @@ export * from './seo/seo.contracts.js';
 export * from './domain/domain.contracts.js';
 export * from './marketplace/marketplace.contracts.js';
 export * from './channel/channel.contracts.js';
+export * from './notification/notification.contracts.js';
+export * from './support/support.contracts.js';
+export * from './report/report.contracts.js';
+export * from './analytics/analytics.contracts.js';
