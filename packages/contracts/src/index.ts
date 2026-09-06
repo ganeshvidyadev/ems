@@ -28,3 +28,8 @@ export * from './order/order.contracts.js';
 export * from './checkout/checkout.contracts.js';
 export * from './return/return.contracts.js';
 export * from './shipment/shipment.contracts.js';
+export * from './theme/theme.contracts.js';
+export * from './cms/cms.contracts.js';
+export * from './banner/banner.contracts.js';
+export * from './menu/menu.contracts.js';
+export * from './seo/seo.contracts.js';

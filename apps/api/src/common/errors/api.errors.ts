@@ -201,3 +201,15 @@ export class ShippingPincodeUnserviceableError extends DomainError {
 export class ShippingCarrierError extends DomainError {
   readonly code = ErrorCode.SHIPPING_CARRIER_ERROR;
 }
+
+// ---------------------------------------------------------------------------
+// Theming (Phase 7)
+// ---------------------------------------------------------------------------
+
+export class PlanFeatureUnavailableError extends DomainError {
+  readonly code = ErrorCode.PLAN_FEATURE_UNAVAILABLE;
+
+  constructor(feature: string, upgradeUrl?: string) {
+    super(`'${feature}' is not available on the current plan`, { feature, upgradeUrl });
+  }
+}

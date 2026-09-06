@@ -46,6 +46,11 @@ export * from './coupon.entity';
 export * from './gift-card.entity';
 export * from './loyalty.entity';
 export * from './review.entity';
+export * from './theme.entity';
+export * from './cms-page.entity';
+export * from './blog-post.entity';
+export * from './banner.entity';
+export * from './menu.entity';
 
 import { TenantEntity } from './tenant.entity';
 import { TenantDomainEntity } from './tenant-domain.entity';
@@ -88,6 +93,11 @@ import { CouponEntity, CouponRedemptionEntity } from './coupon.entity';
 import { GiftCardEntity } from './gift-card.entity';
 import { LoyaltyTransactionEntity } from './loyalty.entity';
 import { ReviewEntity } from './review.entity';
+import { ThemeTemplateEntity, TenantThemeEntity } from './theme.entity';
+import { CmsPageEntity } from './cms-page.entity';
+import { BlogPostEntity } from './blog-post.entity';
+import { BannerEntity } from './banner.entity';
+import { MenuEntity, MenuItemEntity } from './menu.entity';
 
 export const ALL_ENTITIES = [
   TenantEntity,
@@ -145,4 +155,11 @@ export const ALL_ENTITIES = [
   GiftCardEntity,
   LoyaltyTransactionEntity,
   ReviewEntity,
+  ThemeTemplateEntity,
+  TenantThemeEntity,
+  CmsPageEntity,
+  BlogPostEntity,
+  BannerEntity,
+  MenuEntity,
+  MenuItemEntity,
 ];

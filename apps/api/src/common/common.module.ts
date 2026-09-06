@@ -2,6 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { CacheService } from './services/cache.service';
 import { CryptoService } from './services/crypto.service';
 import { HashService } from './services/hash.service';
+import { HtmlSanitizerService } from './services/html-sanitizer.service';
 import { OutboxService } from './services/outbox.service';
 import { RequestContextService } from './services/request-context.service';
 import { RedisModule } from './redis/redis.module';
@@ -18,13 +19,21 @@ import { RedisModule } from './redis/redis.module';
 @Global()
 @Module({
   imports: [RedisModule],
-  providers: [RequestContextService, CacheService, CryptoService, HashService, OutboxService],
+  providers: [
+    RequestContextService,
+    CacheService,
+    CryptoService,
+    HashService,
+    HtmlSanitizerService,
+    OutboxService,
+  ],
   exports: [
     RedisModule,
     RequestContextService,
     CacheService,
     CryptoService,
     HashService,
+    HtmlSanitizerService,
     OutboxService,
   ],
 })

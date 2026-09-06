@@ -68,4 +68,8 @@ export const PLATFORM_GLOBAL_ENTITIES = [
   // platform, shared by every tenant, and a tenant must never be able to edit them.
   'PlanEntity',
   'PlanLimitEntity',
+
+  // The theme gallery every tenant picks from — platform-owned, same reasoning as `PlanEntity`.
+  // `TenantThemeEntity`, the tenant's own cloned/customized copy, is `@TenantScoped()` as usual.
+  'ThemeTemplateEntity',
 ] as const;

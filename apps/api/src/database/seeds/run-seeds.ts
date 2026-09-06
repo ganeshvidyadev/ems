@@ -3,6 +3,7 @@ import dataSource from '../data-source';
 import { seedPermissions } from './permissions.seed';
 import { seedRoles } from './roles.seed';
 import { seedPlans } from './plans.seed';
+import { seedThemeTemplates } from './theme-templates.seed';
 import { seedDemoTenants } from './demo-tenant.seed';
 
 /**
@@ -39,6 +40,10 @@ async function main(): Promise<void> {
     console.log('▶ Seeding plans…');
     const { plans, limits } = await seedPlans(dataSource);
     console.log(`  ✔ ${plans} plans, ${limits} quota limits`);
+
+    console.log('▶ Seeding theme templates…');
+    const themeTemplates = await seedThemeTemplates(dataSource);
+    console.log(`  ✔ ${themeTemplates} theme templates`);
 
     if (includeDemo) {
       console.log('▶ Seeding demo tenants…');

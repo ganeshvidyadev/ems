@@ -36,6 +36,11 @@ import { OrderPaymentModule } from './modules/order-payment/order-payment.module
 import { OrderModule } from './modules/order/order.module';
 import { CheckoutModule } from './modules/checkout/checkout.module';
 import { ShippingModule } from './modules/shipping/shipping.module';
+import { ThemeModule } from './modules/theme/theme.module';
+import { CmsModule } from './modules/cms/cms.module';
+import { BannerModule } from './modules/banner/banner.module';
+import { MenuModule } from './modules/menu/menu.module';
+import { SeoModule } from './modules/seo/seo.module';
 import { QueueModule } from './queues/queue.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -116,6 +121,12 @@ import { RequestContextService } from './common/services/request-context.service
     // its first consumer (serviceability + rates at checkout, AWB/tracking on
     // fulfilment in OrderModule).
     ShippingModule,
+    // Website builder & theming (Phase 7).
+    ThemeModule,
+    CmsModule,
+    BannerModule,
+    MenuModule,
+    SeoModule,
     HealthModule,
   ],
   providers: [
