@@ -113,3 +113,75 @@ export class WebhookSignatureInvalidError extends DomainError {
     super(`Invalid webhook signature from ${provider}`, { provider });
   }
 }
+
+// ---------------------------------------------------------------------------
+// Commerce (Phase 5): inventory, orders, checkout, marketing
+// ---------------------------------------------------------------------------
+
+export class InventoryInsufficientError extends DomainError {
+  readonly code = ErrorCode.INVENTORY_INSUFFICIENT;
+
+  constructor(productId: string, variantId: string | null, requested: number, available: number) {
+    super(`Only ${available} of ${requested} requested units are available`, {
+      productId,
+      variantId,
+      requested,
+      available,
+    });
+  }
+}
+
+export class OrderNotCancellableError extends DomainError {
+  readonly code = ErrorCode.ORDER_NOT_CANCELLABLE;
+
+  constructor(currentStatus: string) {
+    super(`Order cannot be cancelled from status '${currentStatus}'`, { currentStatus });
+  }
+}
+
+export class OrderAlreadyFulfilledError extends DomainError {
+  readonly code = ErrorCode.ORDER_ALREADY_FULFILLED;
+}
+
+export class OrderEmptyError extends DomainError {
+  readonly code = ErrorCode.ORDER_EMPTY;
+
+  constructor() {
+    super('An order must have at least one item');
+  }
+}
+
+export class CartEmptyError extends DomainError {
+  readonly code = ErrorCode.CART_EMPTY;
+
+  constructor() {
+    super('The cart is empty');
+  }
+}
+
+export class PaymentAlreadyCapturedError extends DomainError {
+  readonly code = ErrorCode.PAYMENT_ALREADY_CAPTURED;
+}
+
+export class RefundExceedsPaymentError extends DomainError {
+  readonly code = ErrorCode.REFUND_EXCEEDS_PAYMENT;
+
+  constructor(requestedMinor: string, availableMinor: string) {
+    super(`Refund amount ${requestedMinor} exceeds the ${availableMinor} still refundable`, {
+      requestedMinor,
+      availableMinor,
+    });
+  }
+}
+
+export class CouponExpiredError extends DomainError {
+  readonly code = ErrorCode.COUPON_EXPIRED;
+}
+
+export class CouponUsageLimitReachedError extends DomainError {
+  readonly code = ErrorCode.COUPON_USAGE_LIMIT_REACHED;
+}
+
+export class CouponNotEligibleError extends DomainError {
+  readonly code = ErrorCode.COUPON_NOT_ELIGIBLE;
+}

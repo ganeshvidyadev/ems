@@ -204,13 +204,21 @@ export abstract class TenantScopedRepository<T extends ObjectLiteral> {
    * `manager.save()` is right there and looks harmless.
    */
   async transaction<R>(work: (repo: this) => Promise<R>): Promise<R> {
-    return this.manager.transaction(async (txManager) => {
-      const scoped = Object.create(this) as this;
-      Object.defineProperty(scoped, 'manager', { value: txManager });
-      Object.defineProperty(scoped, 'repository', {
-        value: txManager.getRepository(this.target),
-      });
-      return work(scoped);
-    });
+    return this.manager.transaction(async (txManager) => work(this.withManager(txManager)));
+  }
+
+  /**
+   * Binds a copy of this repository to an externally-managed transaction.
+   *
+   * For the case `.transaction()` doesn't cover: a service that already owns a
+   * `dataSource.transaction(...)` block and composes several repositories inside
+   * it, rather than delegating the whole unit of work to one repository's own
+   * `.transaction()`.
+   */
+  withManager(manager: EntityManager): this {
+    const scoped = Object.create(this) as this;
+    Object.defineProperty(scoped, 'manager', { value: manager });
+    Object.defineProperty(scoped, 'repository', { value: manager.getRepository(this.target) });
+    return scoped;
   }
 }

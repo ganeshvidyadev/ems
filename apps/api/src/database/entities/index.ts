@@ -36,6 +36,16 @@ export * from './product-variant.entity';
 export * from './product-media.entity';
 export * from './product-category.entity';
 export * from './product-attribute.entity';
+export * from './inventory.entity';
+export * from './customer.entity';
+export * from './order.entity';
+export * from './payment.entity';
+export * from './shipment.entity';
+export * from './return.entity';
+export * from './coupon.entity';
+export * from './gift-card.entity';
+export * from './loyalty.entity';
+export * from './review.entity';
 
 import { TenantEntity } from './tenant.entity';
 import { TenantDomainEntity } from './tenant-domain.entity';
@@ -68,6 +78,16 @@ import { ProductVariantEntity } from './product-variant.entity';
 import { ProductMediaEntity } from './product-media.entity';
 import { ProductCategoryEntity } from './product-category.entity';
 import { ProductAttributeEntity, ProductAttributeValueEntity } from './product-attribute.entity';
+import { InventoryLevelEntity, InventoryMovementEntity } from './inventory.entity';
+import { CustomerEntity, CustomerAddressEntity, WishlistItemEntity } from './customer.entity';
+import { OrderEntity, OrderItemEntity, OrderStatusHistoryEntity, OrderSequenceEntity } from './order.entity';
+import { PaymentEntity, RefundEntity } from './payment.entity';
+import { ShipmentEntity, ShipmentItemEntity, ShipmentEventEntity } from './shipment.entity';
+import { ReturnEntity, ReturnItemEntity } from './return.entity';
+import { CouponEntity, CouponRedemptionEntity } from './coupon.entity';
+import { GiftCardEntity } from './gift-card.entity';
+import { LoyaltyTransactionEntity } from './loyalty.entity';
+import { ReviewEntity } from './review.entity';
 
 export const ALL_ENTITIES = [
   TenantEntity,
@@ -104,4 +124,25 @@ export const ALL_ENTITIES = [
   ProductCategoryEntity,
   ProductAttributeEntity,
   ProductAttributeValueEntity,
+  InventoryLevelEntity,
+  InventoryMovementEntity,
+  CustomerEntity,
+  CustomerAddressEntity,
+  WishlistItemEntity,
+  OrderEntity,
+  OrderItemEntity,
+  OrderStatusHistoryEntity,
+  OrderSequenceEntity,
+  PaymentEntity,
+  RefundEntity,
+  ShipmentEntity,
+  ShipmentItemEntity,
+  ShipmentEventEntity,
+  ReturnEntity,
+  ReturnItemEntity,
+  CouponEntity,
+  CouponRedemptionEntity,
+  GiftCardEntity,
+  LoyaltyTransactionEntity,
+  ReviewEntity,
 ];

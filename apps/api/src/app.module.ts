@@ -26,6 +26,15 @@ import { TaxModule } from './modules/tax/tax.module';
 import { MediaModule } from './modules/media/media.module';
 import { JobModule } from './modules/job/job.module';
 import { ProductModule } from './modules/product/product.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
+import { CustomerModule } from './modules/customer/customer.module';
+import { CouponModule } from './modules/coupon/coupon.module';
+import { GiftCardModule } from './modules/gift-card/gift-card.module';
+import { LoyaltyModule } from './modules/loyalty/loyalty.module';
+import { CartModule } from './modules/cart/cart.module';
+import { OrderPaymentModule } from './modules/order-payment/order-payment.module';
+import { OrderModule } from './modules/order/order.module';
+import { CheckoutModule } from './modules/checkout/checkout.module';
 import { QueueModule } from './queues/queue.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -34,6 +43,7 @@ import { PlanQuotaGuard } from './common/guards/plan-quota.guard';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
 import { MongoLoggingInterceptor } from './common/interceptors/mongo-logging.interceptor';
+import { IdempotencyInterceptor } from './common/interceptors/idempotency.interceptor';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
 import { TenantResolverMiddleware } from './common/middleware/tenant-resolver.middleware';
 import { RequestContextService } from './common/services/request-context.service';
@@ -90,6 +100,17 @@ import { RequestContextService } from './common/services/request-context.service
     MediaModule,
     JobModule,
     ProductModule,
+    // Commerce (Phase 5): inventory first — customers/cart/checkout/orders below
+    // all depend on it for stock reservation.
+    InventoryModule,
+    CustomerModule,
+    CouponModule,
+    GiftCardModule,
+    LoyaltyModule,
+    CartModule,
+    OrderPaymentModule,
+    OrderModule,
+    CheckoutModule,
     HealthModule,
   ],
   providers: [
@@ -118,6 +139,10 @@ import { RequestContextService } from './common/services/request-context.service
     },
     { provide: APP_INTERCEPTOR, useClass: ResponseEnvelopeInterceptor },
     { provide: APP_INTERCEPTOR, useClass: MongoLoggingInterceptor },
+    // Last, so it sits closest to the controller — it stores/replays the raw
+    // return value, which still passes through the two interceptors above on
+    // every replay (see the interceptor's own doc comment).
+    { provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor },
   ],
 })
 export class AppModule implements NestModule {
