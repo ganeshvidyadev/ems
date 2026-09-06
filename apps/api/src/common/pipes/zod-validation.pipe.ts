@@ -25,31 +25,47 @@ import { RequestValidationError } from '../errors/api.errors';
  * required on output) — accepting `ZodTypeAny` and reading the output type via `output<S>`
  * is what lets this pipe validate those without every caller needing its own cast.
  *
- * **Passes a route param (`metadata.type === 'param'`) through unvalidated.**
- * `@Validate()` applies this pipe with `@UsePipes()` at the *method* level,
- * which Nest runs against every parameter of the handler — including a
- * sibling `@Param('id') id: string`, even though `@Validate()`'s schema is
- * always meant for the body (see its own doc comment). Without this guard,
- * the body schema (always an object) was also asked to validate the route
- * param (a bare string) and rejected it with "Expected object, received
- * string" on any handler combining the two — a real, previously-undiscovered
- * bug found live in this session, on a pattern (`@Param()` + `@Validate()` +
- * `@Body()` together) used across most of this API's write endpoints. It
- * went unnoticed this long because nothing had exercised these endpoints
- * over real HTTP with both a route param and a body present until now.
+ * **Only actually validates a whole-body or whole-query-object parameter —
+ * everything else passes through unchanged.** `@Validate()` applies this
+ * pipe with `@UsePipes()` at the *method* level, which Nest runs against
+ * *every* parameter of the handler, not just the one the schema was written
+ * for. `@Validate()` is always meant for the body (see its own doc comment),
+ * so any sibling parameter on the same handler — a route param, a
+ * single-key `@Query('x')` extraction, or a custom param decorator like
+ * `@IdempotencyKey()`/`@CurrentUser()` — must never be handed to this same
+ * schema, which is (almost always) an object shape a bare string or a
+ * decorator's own return value would never satisfy.
  *
- * Narrowly scoped to `'param'` rather than "only 'body'": this same class is
- * also used directly as `@Query(new ZodValidationPipe(listQuerySchema))`
- * across many list endpoints, where validation (and the coercion/defaults
- * those schemas apply) must keep running — only the method-level
- * `@UsePipes()` case is actually the bug.
+ * Found live, twice, on two different parameter shapes, before this
+ * positive allow-list replaced the narrower checks that kept missing a
+ * third:
+ *  1. `@Param('id')` sibling (Phase 10) — `metadata.type === 'param'`.
+ *  2. `@Query('storeId')` sibling (`CartController.addItem`) —
+ *     `metadata.type === 'query'`, same as the *legitimate* whole-query-object
+ *     case, so `'param'`-only checking missed it; `metadata.data` (the
+ *     extracted key name) is what actually distinguishes the two.
+ *  3. `@IdempotencyKey()` sibling (`CheckoutController.placeOrder`) —
+ *     `metadata.type === 'custom'`, a case neither earlier fix considered at
+ *     all, since a custom param decorator's `ArgumentMetadata` isn't
+ *     `'param'`/`'query'`/`'body'` in the first place.
+ *
+ * Rather than keep discovering and excluding one more shape reactively, this
+ * is a positive allow-list: only `type === 'body'` (the whole body, always
+ * `@Validate()`'s actual target) or `type === 'query'` with no `data` key
+ * (a whole-query-object, the direct `@Query(new ZodValidationPipe(...))`
+ * usage many list endpoints rely on) are ever validated. Every other
+ * combination — any `'param'`, any `'custom'`, or a single-key `data`
+ * extraction regardless of type — passes through unchanged, covering shapes
+ * not yet found broken as well as the three that were.
  */
 @Injectable()
 export class ZodValidationPipe<S extends ZodTypeAny> implements PipeTransform<unknown, output<S>> {
   constructor(private readonly schema: S) {}
 
   transform(value: unknown, metadata: ArgumentMetadata): output<S> {
-    if (metadata.type === 'param') return value as output<S>;
+    const isWholeBody = metadata.type === 'body';
+    const isWholeQueryObject = metadata.type === 'query' && !metadata.data;
+    if (!isWholeBody && !isWholeQueryObject) return value as output<S>;
 
     try {
       return this.schema.parse(value);

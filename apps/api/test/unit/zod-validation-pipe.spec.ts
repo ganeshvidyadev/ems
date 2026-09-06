@@ -6,6 +6,8 @@ import { RequestValidationError } from '../../src/common/errors/api.errors';
 const bodyMeta: ArgumentMetadata = { type: 'body', metatype: undefined, data: undefined };
 const paramMeta: ArgumentMetadata = { type: 'param', metatype: undefined, data: 'id' };
 const queryMeta: ArgumentMetadata = { type: 'query', metatype: undefined, data: undefined };
+const singleKeyQueryMeta: ArgumentMetadata = { type: 'query', metatype: undefined, data: 'storeId' };
+const customMeta: ArgumentMetadata = { type: 'custom', metatype: undefined, data: undefined };
 
 /**
  * `@Validate()` applies this pipe with `@UsePipes()` at the *method* level,
@@ -47,5 +49,29 @@ describe('ZodValidationPipe', () => {
   it('still throws for an invalid query payload', () => {
     const pipe = new ZodValidationPipe(z.object({ page: z.coerce.number() }));
     expect(() => pipe.transform({ page: 'not-a-number' }, queryMeta)).toThrow(RequestValidationError);
+  });
+
+  it('passes a single-key query extraction through unvalidated, same as a route param', () => {
+    // Found live on `CartController.addItem`: `@Query('storeId') storeId: string`
+    // sharing a handler with `@Validate(addCartItemRequestSchema)` — the
+    // `'param'`-only guard missed this because it's `metadata.type === 'query'`,
+    // not `'param'`, even though it is exactly the same single-key-extraction
+    // shape. `metadata.data` (the key name), not `metadata.type`, is what
+    // actually distinguishes this from the whole-object query case above.
+    const pipe = new ZodValidationPipe(objectSchema);
+    expect(() => pipe.transform('01M1STOREID', singleKeyQueryMeta)).not.toThrow();
+    expect(pipe.transform('01M1STOREID', singleKeyQueryMeta)).toBe('01M1STOREID');
+  });
+
+  it('passes a custom param decorator through unvalidated', () => {
+    // Found live on `CheckoutController.placeOrder`: `@IdempotencyKey() idempotencyKey: string | null`
+    // sharing a handler with `@Validate(placeOrderRequestSchema)` — a custom
+    // param decorator's `ArgumentMetadata` is `type: 'custom'`, a shape
+    // neither the `'param'`-only nor the `metadata.data` check considered.
+    const pipe = new ZodValidationPipe(objectSchema);
+    expect(() => pipe.transform('some-idempotency-key', customMeta)).not.toThrow();
+    expect(pipe.transform('some-idempotency-key', customMeta)).toBe('some-idempotency-key');
+    // Also exercises the null case `@IdempotencyKey()` itself can return.
+    expect(pipe.transform(null, customMeta)).toBeNull();
   });
 });
