@@ -7,12 +7,9 @@ export const REDIS_CLIENT = Symbol('REDIS_CLIENT');
 /** BullMQ requires its own connection with `maxRetriesPerRequest: null`. */
 export const REDIS_QUEUE_CLIENT = Symbol('REDIS_QUEUE_CLIENT');
 
-function buildOptions(config: RedisConfig) {
+/** Options common to both connection forms below — everything except how the address itself is given. */
+function sharedOptions(config: RedisConfig) {
   return {
-    host: config.host,
-    port: config.port,
-    password: config.password,
-    db: config.db,
     // Every key is environment-prefixed so a misconfigured REDIS_URL cannot let
     // staging read or evict production sessions and carts (docs/02 §21).
     keyPrefix: `${config.keyPrefix}:`,
@@ -20,6 +17,16 @@ function buildOptions(config: RedisConfig) {
     enableReadyCheck: true,
     connectTimeout: 10_000,
     retryStrategy: (attempt: number) => Math.min(attempt * 200, 5_000),
+  };
+}
+
+function buildOptions(config: RedisConfig) {
+  return {
+    host: config.host,
+    port: config.port,
+    password: config.password,
+    db: config.db,
+    ...sharedOptions(config),
   };
 }
 
@@ -41,11 +48,18 @@ function buildOptions(config: RedisConfig) {
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const config = configService.getOrThrow<RedisConfig>('redis');
-        const client = new Redis({ ...buildOptions(config), maxRetriesPerRequest: 3 });
         const logger = new Logger('Redis');
 
+        // `REDIS_URL`, when set, takes over the address entirely (host/port/
+        // password/db all come from the URL itself) — for a hosted instance
+        // like Redis Cloud, which hands out one connection string rather than
+        // separate fields. Everything else about the client is unchanged.
+        const client = config.url
+          ? new Redis(config.url, { ...sharedOptions(config), maxRetriesPerRequest: 3 })
+          : new Redis({ ...buildOptions(config), maxRetriesPerRequest: 3 });
+
         client.on('error', (error) => logger.error(`Redis error: ${error.message}`));
-        client.on('connect', () => logger.log(`Connected to ${config.host}:${config.port}`));
+        client.on('connect', () => logger.log(config.url ? 'Connected via REDIS_URL' : `Connected to ${config.host}:${config.port}`));
         client.on('reconnecting', () => logger.warn('Reconnecting…'));
 
         return client;

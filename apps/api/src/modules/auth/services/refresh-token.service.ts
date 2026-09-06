@@ -3,7 +3,7 @@ import { DomainError, newPublicId } from '@ems/kernel';
 import { ErrorCode } from '@ems/contracts';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { RefreshTokenEntity, type RevokeReason } from '../../../database/entities';
+import { RefreshTokenEntity, type RevokeReason, type UserType } from '../../../database/entities';
 import { CryptoService } from '../../../common/services/crypto.service';
 import { TokenService } from './token.service';
 import { TokenDenylistService } from './token-denylist.service';
@@ -82,14 +82,16 @@ export class RefreshTokenService {
   async issue(
     userId: string,
     tenantId: string | null,
+    userType: UserType,
     context: RotationContext = {},
   ): Promise<IssuedRefreshToken> {
-    return this.persist(userId, tenantId, newPublicId(), null, context);
+    return this.persist(userId, tenantId, userType, newPublicId(), null, context);
   }
 
   private async persist(
     userId: string,
     tenantId: string | null,
+    userType: UserType,
     familyId: string,
     parentId: string | null,
     context: RotationContext,
@@ -105,6 +107,7 @@ export class RefreshTokenService {
       repository.create({
         userId,
         tenantId,
+        userType,
         familyId,
         // Only the hash is persisted; a DB leak yields nothing usable.
         tokenHash: this.crypto.hashToken(plaintext),
@@ -156,10 +159,10 @@ export class RefreshTokenService {
 
       if (result.affectedRows === 1) {
         const rows = (await manager.query(
-          `SELECT id, user_id AS userId, tenant_id AS tenantId, family_id AS familyId
+          `SELECT id, user_id AS userId, tenant_id AS tenantId, user_type AS userType, family_id AS familyId
              FROM refresh_tokens WHERE token_hash = ? LIMIT 1`,
           [tokenHash],
-        )) as { id: string; userId: string; tenantId: string | null; familyId: string }[];
+        )) as { id: string; userId: string; tenantId: string | null; userType: UserType; familyId: string }[];
         return { claimed: true as const, row: rows[0]! };
       }
 
@@ -215,7 +218,7 @@ export class RefreshTokenService {
     }
 
     const row = claimed.row;
-    return this.persist(row.userId, row.tenantId, row.familyId, row.id, context);
+    return this.persist(row.userId, row.tenantId, row.userType, row.familyId, row.id, context);
   }
 
   // -------------------------------------------------------------------------

@@ -35,6 +35,8 @@ export interface DatabaseConfig {
 }
 
 export interface RedisConfig {
+  /** When set, the main cache client connects with this instead of host/port/password — see `REDIS_URL`'s own comment in env.schema.ts. */
+  url?: string;
   host: string;
   port: number;
   password?: string;
@@ -212,6 +214,7 @@ export function configuration(): Configuration {
       logging: env.MYSQL_LOGGING,
     },
     redis: {
+      url: env.REDIS_URL || undefined,
       host: env.REDIS_HOST,
       port: env.REDIS_PORT,
       password: env.REDIS_PASSWORD || undefined,

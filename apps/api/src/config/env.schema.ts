@@ -74,6 +74,13 @@ export const envSchema = z
     MONGO_DATABASE: z.string().default('ems_logs'),
 
     // --- Redis ------------------------------------------------------------
+    // `REDIS_HOST`/`REDIS_PORT`/etc. stay the primary, always-required config —
+    // unchanged on purpose. `REDIS_URL`, when set, is a single connection-string
+    // override for the main cache client only (a hosted Redis, e.g. Redis Cloud),
+    // read by `redis.module.ts`; the queue client is untouched by it, since a
+    // shared hosted instance is not guaranteed to run with the `noeviction`
+    // policy BullMQ requires (see `REDIS_QUEUE_HOST`'s own comment below).
+    REDIS_URL: optional(z.string().min(1)),
     REDIS_HOST: z.string().min(1),
     REDIS_PORT: z.coerce.number().int().default(6379),
     REDIS_PASSWORD: optional(z.string()),

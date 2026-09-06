@@ -328,7 +328,7 @@ export class AuthService {
     const authorization = await this.permissions.resolve(user.id, user.tenantId);
     const ctx = this.context.get();
 
-    const refresh = await this.refreshTokens.issue(user.id, user.tenantId, {
+    const refresh = await this.refreshTokens.issue(user.id, user.tenantId, user.userType, {
       ipAddress: ctx?.ip ?? null,
       userAgent: ctx?.userAgent ?? null,
       deviceLabel: this.authLog.deviceLabel(ctx?.userAgent),

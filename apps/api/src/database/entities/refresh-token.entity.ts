@@ -1,6 +1,6 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { NumericIdEntity, DATETIME3 } from './base.entity';
-import { UserEntity } from './user.entity';
+import { UserEntity, type UserType } from './user.entity';
 import { TenantScoped } from '../../common/decorators/tenant-scoped.decorator';
 
 export const REVOKE_REASONS = [
@@ -32,6 +32,16 @@ export class RefreshTokenEntity extends NumericIdEntity {
 
   @Column({ name: 'tenant_id', type: 'bigint', unsigned: true, nullable: true })
   tenantId!: string | null;
+
+  /**
+   * The issuing user's own type — `TENANT` unless `tenantId` is NULL for a
+   * platform-staff login. This is what lets `TenantGuardSubscriber` recognise
+   * a NULL-tenant row here as deliberate rather than a bug (see
+   * `isDeliberatelyGlobal`); `RoleEntity.scope` plays the identical role for
+   * system roles.
+   */
+  @Column({ name: 'user_type', type: 'varchar', length: 32, default: 'TENANT' })
+  userType!: UserType;
 
   /**
    * Rotation lineage. Every token minted from the same original login shares a
