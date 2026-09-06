@@ -90,7 +90,11 @@ export const EVENT_ROUTING: readonly { prefix: string; queues: QueueName[] }[] =
   { prefix: 'domain.', queues: [QueueName.PROVISIONING] },
   { prefix: 'commission.', queues: [QueueName.COMMISSION] },
   { prefix: 'settlement.', queues: [QueueName.COMMISSION] },
-  { prefix: 'channel.', queues: [QueueName.CHANNEL_SYNC] },
+  // Also to NOTIFICATION: a token expiry or a publish/sync failure is exactly
+  // the kind of thing "an expired token raises a merchant-visible alert
+  // rather than silently failing" (docs/05 Phase 10's own exit criterion)
+  // means — routing to CHANNEL_SYNC alone would keep the failure internal.
+  { prefix: 'channel.', queues: [QueueName.CHANNEL_SYNC, QueueName.NOTIFICATION] },
   { prefix: 'customer.', queues: [QueueName.NOTIFICATION] },
   { prefix: 'review.', queues: [QueueName.NOTIFICATION] },
 ];

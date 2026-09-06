@@ -9,7 +9,7 @@ import { calculateCommission } from './commission-calculator';
 import { buildReversalLedgerEntries, buildSaleLedgerEntries } from './ledger-entry.builder';
 import { CommissionLedgerRepository } from './commission-ledger.repository';
 import { ProductShareRepository } from './product-share.repository';
-import { runAsTenant } from './run-as-tenant.util';
+import { runAsTenant } from '../../common/utils/run-as-tenant.util';
 
 interface MarketplaceLine {
   item: OrderItemEntity;

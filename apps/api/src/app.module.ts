@@ -45,6 +45,8 @@ import { DnsModule } from './integrations/dns/dns.module';
 import { AcmeModule } from './integrations/acme/acme.module';
 import { DomainModule } from './modules/domain/domain.module';
 import { MarketplaceModule } from './modules/marketplace/marketplace.module';
+import { ChannelIntegrationModule } from './integrations/channel/channel.module';
+import { ChannelModule } from './modules/channel/channel.module';
 import { QueueModule } from './queues/queue.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -140,6 +142,9 @@ import { RequestContextService } from './common/services/request-context.service
     // module its exports (`MarketplaceOrderService`, injected by
     // `CheckoutService`) are available regardless of declaration order.
     MarketplaceModule,
+    // Multi-channel selling (Phase 10).
+    ChannelIntegrationModule,
+    ChannelModule,
     HealthModule,
   ],
   providers: [

@@ -5,6 +5,7 @@ import { ProvisioningProcessor } from './processors/provisioning.processor';
 import { MediaProcessProcessor } from './processors/media-process.processor';
 import { ProductImportProcessor } from './processors/product-import.processor';
 import { DomainVerificationProcessor } from './processors/domain-verification.processor';
+import { ChannelSyncProcessor } from './processors/channel-sync.processor';
 
 /**
  * Queue infrastructure.
@@ -25,6 +26,7 @@ import { DomainVerificationProcessor } from './processors/domain-verification.pr
     MediaProcessProcessor,
     ProductImportProcessor,
     DomainVerificationProcessor,
+    ChannelSyncProcessor,
   ],
   exports: [QueueRegistry, OutboxRelayService],
 })

@@ -55,6 +55,8 @@ export * from './acme-account.entity';
 export * from './product-share.entity';
 export * from './commission-ledger.entity';
 export * from './settlement.entity';
+export * from './channel.entity';
+export * from './channel-listing.entity';
 
 import { TenantEntity } from './tenant.entity';
 import { TenantDomainEntity } from './tenant-domain.entity';
@@ -106,6 +108,8 @@ import { AcmeAccountEntity } from './acme-account.entity';
 import { ProductShareEntity } from './product-share.entity';
 import { CommissionLedgerEntity } from './commission-ledger.entity';
 import { SettlementEntity } from './settlement.entity';
+import { ChannelEntity } from './channel.entity';
+import { ChannelListingEntity } from './channel-listing.entity';
 
 export const ALL_ENTITIES = [
   TenantEntity,
@@ -174,4 +178,6 @@ export const ALL_ENTITIES = [
   ProductShareEntity,
   CommissionLedgerEntity,
   SettlementEntity,
+  ChannelEntity,
+  ChannelListingEntity,
 ];

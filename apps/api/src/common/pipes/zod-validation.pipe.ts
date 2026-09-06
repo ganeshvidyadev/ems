@@ -24,12 +24,33 @@ import { RequestValidationError } from '../errors/api.errors';
  * `listQuerySchema` coerce and default almost every field (`page` is optional on input,
  * required on output) — accepting `ZodTypeAny` and reading the output type via `output<S>`
  * is what lets this pipe validate those without every caller needing its own cast.
+ *
+ * **Passes a route param (`metadata.type === 'param'`) through unvalidated.**
+ * `@Validate()` applies this pipe with `@UsePipes()` at the *method* level,
+ * which Nest runs against every parameter of the handler — including a
+ * sibling `@Param('id') id: string`, even though `@Validate()`'s schema is
+ * always meant for the body (see its own doc comment). Without this guard,
+ * the body schema (always an object) was also asked to validate the route
+ * param (a bare string) and rejected it with "Expected object, received
+ * string" on any handler combining the two — a real, previously-undiscovered
+ * bug found live in this session, on a pattern (`@Param()` + `@Validate()` +
+ * `@Body()` together) used across most of this API's write endpoints. It
+ * went unnoticed this long because nothing had exercised these endpoints
+ * over real HTTP with both a route param and a body present until now.
+ *
+ * Narrowly scoped to `'param'` rather than "only 'body'": this same class is
+ * also used directly as `@Query(new ZodValidationPipe(listQuerySchema))`
+ * across many list endpoints, where validation (and the coercion/defaults
+ * those schemas apply) must keep running — only the method-level
+ * `@UsePipes()` case is actually the bug.
  */
 @Injectable()
 export class ZodValidationPipe<S extends ZodTypeAny> implements PipeTransform<unknown, output<S>> {
   constructor(private readonly schema: S) {}
 
   transform(value: unknown, metadata: ArgumentMetadata): output<S> {
+    if (metadata.type === 'param') return value as output<S>;
+
     try {
       return this.schema.parse(value);
     } catch (error) {

@@ -141,6 +141,15 @@ export interface DomainsConfig {
   challengeDelegateDomain: string;
 }
 
+export interface ChannelsConfig {
+  ebay: {
+    env: 'SANDBOX' | 'PRODUCTION';
+    clientId: string;
+    clientSecret: string;
+    redirectUriName: string;
+  };
+}
+
 export interface Configuration {
   app: AppConfig;
   database: DatabaseConfig;
@@ -150,6 +159,7 @@ export interface Configuration {
   payment: PaymentConfig;
   shipping: ShippingConfig;
   domains: DomainsConfig;
+  channels: ChannelsConfig;
   jwt: JwtConfig;
   crypto: CryptoConfig;
   logging: LoggingConfig;
@@ -280,6 +290,14 @@ export function configuration(): Configuration {
         apiToken: env.CLOUDFLARE_API_TOKEN ?? '',
       },
       challengeDelegateDomain: env.ACME_CHALLENGE_DELEGATE_DOMAIN ?? '',
+    },
+    channels: {
+      ebay: {
+        env: env.EBAY_ENV,
+        clientId: env.EBAY_CLIENT_ID ?? '',
+        clientSecret: env.EBAY_CLIENT_SECRET ?? '',
+        redirectUriName: env.EBAY_REDIRECT_URI_NAME ?? '',
+      },
     },
     jwt: {
       // Decoded here so no consumer has to remember the encoding.

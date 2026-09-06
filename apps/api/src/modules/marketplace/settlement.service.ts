@@ -7,7 +7,7 @@ import { RequestContextService } from '../../common/services/request-context.ser
 import type { SettlementEntity } from '../../database/entities';
 import { CommissionLedgerRepository } from './commission-ledger.repository';
 import { SettlementRepository } from './settlement.repository';
-import { runAsTenant } from './run-as-tenant.util';
+import { runAsTenant } from '../../common/utils/run-as-tenant.util';
 
 export interface SettlementRunResult {
   created: SettlementEntity[];

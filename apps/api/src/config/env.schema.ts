@@ -189,6 +189,19 @@ export const envSchema = z
     /** The DNS zone the platform's own ACME challenge CNAME delegation resolves into — see `DnsProviderPort`'s doc comment. */
     ACME_CHALLENGE_DELEGATE_DOMAIN: optional(z.string()),
 
+    // --- Sales channels (Phase 10) ------------------------------------------
+    // eBay is the one channel with a genuine, complete adapter (docs/05 Phase 10's
+    // own "Honest constraint": Amazon/Flipkart/Facebook-Instagram/WhatsApp all need
+    // an external app-review process this environment cannot complete) — see
+    // `EbayChannelAdapter`. `STUB` exercises the full connect → publish → sync →
+    // import lifecycle with no live marketplace account, the same role the stub
+    // payment gateway and shipping carrier play.
+    EBAY_ENV: z.enum(['SANDBOX', 'PRODUCTION']).default('SANDBOX'),
+    EBAY_CLIENT_ID: optional(z.string()),
+    EBAY_CLIENT_SECRET: optional(z.string()),
+    /** eBay's OAuth term for the registered redirect URI identifier ("RuName"), not a URL itself. */
+    EBAY_REDIRECT_URI_NAME: optional(z.string()),
+
     // --- Observability ----------------------------------------------------
     METRICS_ENABLED: booleanFromString.default('true'),
     SWAGGER_ENABLED: booleanFromString.default('true'),
@@ -285,6 +298,13 @@ export const envSchema = z
         code: z.ZodIssueCode.custom,
         path: ['SHIPPING_CARRIER_DEFAULT'],
         message: 'The stub carrier cannot be used in production — shipments would never really dispatch',
+      });
+    }
+    if (env.EBAY_ENV === 'SANDBOX') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['EBAY_ENV'],
+        message: 'eBay must not point at the sandbox in production — merchants would connect real stores to a fake marketplace',
       });
     }
     if (env.DNS_PROVIDER_DEFAULT === 'stub') {
