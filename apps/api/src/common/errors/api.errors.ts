@@ -185,3 +185,19 @@ export class CouponUsageLimitReachedError extends DomainError {
 export class CouponNotEligibleError extends DomainError {
   readonly code = ErrorCode.COUPON_NOT_ELIGIBLE;
 }
+
+// ---------------------------------------------------------------------------
+// Shipping (Phase 6)
+// ---------------------------------------------------------------------------
+
+export class ShippingPincodeUnserviceableError extends DomainError {
+  readonly code = ErrorCode.SHIPPING_PINCODE_UNSERVICEABLE;
+
+  constructor(pincode: string, reason?: string) {
+    super(reason ?? `Pincode ${pincode} is not currently serviceable`, { pincode });
+  }
+}
+
+export class ShippingCarrierError extends DomainError {
+  readonly code = ErrorCode.SHIPPING_CARRIER_ERROR;
+}

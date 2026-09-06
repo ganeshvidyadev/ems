@@ -95,6 +95,38 @@ export interface PaymentConfig {
     /** Separate from the API key, so a leaked key cannot forge webhook events. */
     webhookSecret: string;
   };
+  stripe: {
+    secretKey: string;
+    publishableKey: string;
+    webhookSecret: string;
+  };
+  paypal: {
+    clientId: string;
+    clientSecret: string;
+    webhookId: string;
+    env: 'live' | 'sandbox';
+  };
+  cashfree: {
+    appId: string;
+    secretKey: string;
+    webhookSecret: string;
+    env: 'PRODUCTION' | 'SANDBOX';
+  };
+  phonepe: {
+    merchantId: string;
+    saltKey: string;
+    saltIndex: string;
+    env: 'PRODUCTION' | 'SANDBOX';
+  };
+}
+
+export interface ShippingConfig {
+  defaultCarrier: 'shiprocket' | 'stub';
+  shiprocket: {
+    email: string;
+    password: string;
+    webhookSecret: string;
+  };
 }
 
 export interface Configuration {
@@ -104,6 +136,7 @@ export interface Configuration {
   redisQueue: RedisQueueConfig;
   mongo: MongoConfig;
   payment: PaymentConfig;
+  shipping: ShippingConfig;
   jwt: JwtConfig;
   crypto: CryptoConfig;
   logging: LoggingConfig;
@@ -192,6 +225,37 @@ export function configuration(): Configuration {
         keyId: env.RAZORPAY_KEY_ID ?? '',
         keySecret: env.RAZORPAY_KEY_SECRET ?? '',
         webhookSecret: env.RAZORPAY_WEBHOOK_SECRET ?? '',
+      },
+      stripe: {
+        secretKey: env.STRIPE_SECRET_KEY ?? '',
+        publishableKey: env.STRIPE_PUBLISHABLE_KEY ?? '',
+        webhookSecret: env.STRIPE_WEBHOOK_SECRET ?? '',
+      },
+      paypal: {
+        clientId: env.PAYPAL_CLIENT_ID ?? '',
+        clientSecret: env.PAYPAL_CLIENT_SECRET ?? '',
+        webhookId: env.PAYPAL_WEBHOOK_ID ?? '',
+        env: env.PAYPAL_ENV,
+      },
+      cashfree: {
+        appId: env.CASHFREE_APP_ID ?? '',
+        secretKey: env.CASHFREE_SECRET_KEY ?? '',
+        webhookSecret: env.CASHFREE_WEBHOOK_SECRET ?? '',
+        env: env.CASHFREE_ENV,
+      },
+      phonepe: {
+        merchantId: env.PHONEPE_MERCHANT_ID ?? '',
+        saltKey: env.PHONEPE_SALT_KEY ?? '',
+        saltIndex: env.PHONEPE_SALT_INDEX ?? '1',
+        env: env.PHONEPE_ENV,
+      },
+    },
+    shipping: {
+      defaultCarrier: env.SHIPPING_CARRIER_DEFAULT,
+      shiprocket: {
+        email: env.SHIPROCKET_EMAIL ?? '',
+        password: env.SHIPROCKET_PASSWORD ?? '',
+        webhookSecret: env.SHIPROCKET_WEBHOOK_SECRET ?? '',
       },
     },
     jwt: {

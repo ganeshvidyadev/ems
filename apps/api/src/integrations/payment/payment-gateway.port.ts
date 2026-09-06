@@ -126,8 +126,16 @@ export interface PaymentGatewayPort {
    *
    * Raw bytes, not the parsed object: a parse-and-reserialise round-trip changes key order
    * and whitespace, which invalidates the HMAC and makes every webhook look forged.
+   *
+   * Async because not every gateway can verify locally: most sign with an HMAC checked
+   * in-process, but PayPal's scheme requires calling its own verification API — forcing every
+   * adapter through a synchronous shape would mean either fabricating a fake local check for
+   * PayPal or bending the interface to fit the odd one out.
    */
-  verifyWebhook(rawBody: Buffer, headers: Record<string, string | string[] | undefined>): WebhookVerification;
+  verifyWebhook(
+    rawBody: Buffer,
+    headers: Record<string, string | string[] | undefined>,
+  ): Promise<WebhookVerification>;
 }
 
 export const PAYMENT_GATEWAYS = 'PAYMENT_GATEWAYS';

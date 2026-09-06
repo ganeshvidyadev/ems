@@ -35,6 +35,7 @@ import { CartModule } from './modules/cart/cart.module';
 import { OrderPaymentModule } from './modules/order-payment/order-payment.module';
 import { OrderModule } from './modules/order/order.module';
 import { CheckoutModule } from './modules/checkout/checkout.module';
+import { ShippingModule } from './modules/shipping/shipping.module';
 import { QueueModule } from './queues/queue.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -111,6 +112,10 @@ import { RequestContextService } from './common/services/request-context.service
     OrderPaymentModule,
     OrderModule,
     CheckoutModule,
+    // Payments & shipping breadth (Phase 6): registered after checkout, which is
+    // its first consumer (serviceability + rates at checkout, AWB/tracking on
+    // fulfilment in OrderModule).
+    ShippingModule,
     HealthModule,
   ],
   providers: [

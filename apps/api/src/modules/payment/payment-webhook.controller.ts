@@ -63,7 +63,7 @@ export class PaymentWebhookController {
       return { received: true };
     }
 
-    const verification: WebhookVerification = adapter.verifyWebhook(
+    const verification: WebhookVerification = await adapter.verifyWebhook(
       rawBody,
       request.headers as Record<string, string | string[] | undefined>,
     );

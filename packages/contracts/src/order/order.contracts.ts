@@ -146,8 +146,18 @@ export const fulfilOrderItemSchema = z.object({
 export const fulfilOrderRequestSchema = z.object({
   warehouseId: publicIdSchema.optional(),
   items: z.array(fulfilOrderItemSchema).min(1),
+  /** Omit to have the configured carrier create a real shipment (AWB, label, tracking URL). */
   carrier: z.string().max(32).optional(),
+  /** Supplying an AWB directly records a manual/offline shipment instead of calling a carrier. */
   awbNumber: z.string().max(100).optional(),
+  weightGrams: z.number().int().positive().optional(),
+  dimensions: z
+    .object({
+      lengthMm: z.number().int().positive(),
+      widthMm: z.number().int().positive(),
+      heightMm: z.number().int().positive(),
+    })
+    .optional(),
   notifyCustomer: z.boolean().default(true),
 });
 export type FulfilOrderRequest = z.infer<typeof fulfilOrderRequestSchema>;

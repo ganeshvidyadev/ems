@@ -1,20 +1,31 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { FulfilOrderRequest, OrderResponse } from '@ems/contracts';
 import { BusinessRuleError, Money, type CurrencyCode } from '@ems/kernel';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import type { EntityManager } from 'typeorm';
 import { RequestContextService } from '../../common/services/request-context.service';
 import { OrderAlreadyFulfilledError, OrderNotCancellableError } from '../../common/errors/api.errors';
-import type { OrderEntity, OrderItemEntity } from '../../database/entities';
+import type { CarrierName } from '../../integrations/shipping/shipping-carrier.port';
+import { ShippingCarrierFactory } from '../../integrations/shipping/shipping-carrier.factory';
+import type { OrderEntity, OrderItemEntity, ShipmentCarrier } from '../../database/entities';
 import { InventoryService } from '../inventory/inventory.service';
 import { CouponService } from '../coupon/coupon.service';
 import { LoyaltyService } from '../loyalty/loyalty.service';
+// `CartProductLookupRepository` is cart-module-named but holds the one
+// generic "resolve a store's default warehouse" query every checkout- and
+// fulfilment-adjacent service needs — reused here rather than duplicated.
+import { CartProductLookupRepository } from '../cart/cart-product-lookup.repository';
 import type { PaginatedResult } from '../../database/repositories/tenant-scoped.repository';
 import { OrderItemRepository, OrderRepository, OrderStatusHistoryRepository, type OrderListFilter } from './order.repository';
 import { ShipmentItemRepository, ShipmentRepository } from './shipment.repository';
 
+/** Assumed per-unit weight when a fulfilment request doesn't supply the real package weight. */
+const DEFAULT_ITEM_WEIGHT_GRAMS = 200;
+
 @Injectable()
 export class OrderService {
+  private readonly logger = new Logger(OrderService.name);
+
   constructor(
     @InjectEntityManager() private readonly manager: EntityManager,
     private readonly orders: OrderRepository,
@@ -25,6 +36,8 @@ export class OrderService {
     private readonly inventory: InventoryService,
     private readonly coupons: CouponService,
     private readonly loyalty: LoyaltyService,
+    private readonly shippingCarriers: ShippingCarrierFactory,
+    private readonly warehouses: CartProductLookupRepository,
     private readonly context: RequestContextService,
   ) {}
 
@@ -216,15 +229,10 @@ export class OrderService {
         throw new OrderAlreadyFulfilledError('This order has already been fully fulfilled');
       }
 
-      const shipment = await shipmentsRepo.insert({
-        orderId: order.id,
-        warehouseId: null,
-        shipmentNumber: shipmentsRepo.generateShipmentNumber(),
-        carrier: (input.carrier?.toUpperCase() as never) ?? 'SELF',
-        awbNumber: input.awbNumber ?? null,
-        status: input.awbNumber ? 'LABEL_CREATED' : 'PENDING',
-      });
-
+      // Resolve the requested lines up front — needed both for the quantity
+      // bookkeeping below and, if we end up calling a real carrier, to build
+      // its item manifest and weight from what's actually being shipped.
+      const requestedLines: { line: OrderItemEntity; quantity: number }[] = [];
       for (const requested of input.items) {
         const line = await items.findOneOrFail({ where: { id: requested.orderItemId } as never });
         if (requested.quantity > line.quantityOpen) {
@@ -232,14 +240,38 @@ export class OrderService {
             `Cannot fulfil ${requested.quantity} of order item ${requested.orderItemId}; only ${line.quantityOpen} are open`,
           );
         }
+        requestedLines.push({ line, quantity: requested.quantity });
+      }
 
-        line.quantityFulfilled += requested.quantity;
+      const totalWeightGrams =
+        input.weightGrams ??
+        requestedLines.reduce((sum, r) => sum + DEFAULT_ITEM_WEIGHT_GRAMS * r.quantity, 0);
+
+      const shipmentFields = await this.buildShipmentFields(order, input, requestedLines, totalWeightGrams);
+
+      const shipment = await shipmentsRepo.insert({
+        orderId: order.id,
+        warehouseId: null,
+        shipmentNumber: shipmentsRepo.generateShipmentNumber(),
+        ...shipmentFields,
+        weightGrams: totalWeightGrams,
+        isCod: order.paymentStatus === 'PENDING' || order.paymentStatus === 'PARTIALLY_PAID',
+        codAmountMinor:
+          order.paymentStatus === 'PENDING'
+            ? Money.fromMinor(order.totalMinor, order.currency as CurrencyCode)
+                .subtract(Money.fromMinor(order.amountPaidMinor, order.currency as CurrencyCode))
+                .amountMinor.toString()
+            : '0',
+      });
+
+      for (const { line, quantity } of requestedLines) {
+        line.quantityFulfilled += quantity;
         await items.save(line);
 
         await shipmentItemsRepo.insert({
           shipmentId: shipment.id,
           orderItemId: line.id,
-          quantity: requested.quantity,
+          quantity,
         });
       }
 
@@ -295,6 +327,123 @@ export class OrderService {
 
       return order;
     });
+  }
+
+  /**
+   * Builds the carrier-facing fields for a new shipment.
+   *
+   *  - `input.awbNumber` given → a manual/offline shipment; no carrier is called at all.
+   *  - Otherwise → the configured carrier creates a real shipment (AWB, label, tracking URL).
+   *    A carrier failure degrades to the same manual/PENDING shape rather than blocking
+   *    fulfilment outright — a merchant can still pack and ship while sorting out the carrier.
+   */
+  private async buildShipmentFields(
+    order: OrderEntity,
+    input: FulfilOrderRequest,
+    requestedLines: { line: OrderItemEntity; quantity: number }[],
+    weightGrams: number,
+  ): Promise<{
+    carrier: ShipmentCarrier;
+    carrierService: string | null;
+    awbNumber: string | null;
+    trackingUrl: string | null;
+    labelUrl: string | null;
+    status: 'PENDING' | 'LABEL_CREATED';
+    fromAddress: Record<string, unknown> | null;
+    toAddress: Record<string, unknown> | null;
+    carrierResponse: Record<string, unknown> | null;
+  }> {
+    if (input.awbNumber) {
+      return {
+        carrier: (input.carrier?.toUpperCase() as ShipmentCarrier | undefined) ?? 'SELF',
+        carrierService: null,
+        awbNumber: input.awbNumber,
+        trackingUrl: null,
+        labelUrl: null,
+        status: 'LABEL_CREATED',
+        fromAddress: null,
+        toAddress: order.shippingAddress as unknown as Record<string, unknown> | null,
+        carrierResponse: null,
+      };
+    }
+
+    const manualFallback = {
+      carrier: 'SELF' as const,
+      carrierService: null,
+      awbNumber: null,
+      trackingUrl: null,
+      labelUrl: null,
+      status: 'PENDING' as const,
+      fromAddress: null,
+      toAddress: order.shippingAddress as unknown as Record<string, unknown> | null,
+      carrierResponse: null,
+    };
+
+    const origin = await this.warehouses.defaultWarehouseOrigin(order.storeId);
+    if (!origin || !order.shippingAddress) return manualFallback;
+
+    let carrier;
+    try {
+      carrier = this.shippingCarriers.resolve(input.carrier?.toLowerCase() as CarrierName | undefined);
+    } catch (error) {
+      this.logger.warn(`No shipping carrier available for order ${order.orderNumber}: ${error instanceof Error ? error.message : error}`);
+      return manualFallback;
+    }
+
+    try {
+      const shipment = await carrier.createShipment({
+        reference: `${order.orderNumber}-${Date.now().toString(36)}`,
+        orderReference: order.orderNumber,
+        fromAddress: {
+          name: origin.name,
+          phone: '9999999999',
+          addressLine1: origin.addressLine1,
+          city: origin.city,
+          stateCode: origin.stateCode,
+          postalCode: origin.postalCode,
+          countryCode: origin.countryCode,
+        },
+        toAddress: {
+          name: order.shippingAddress.recipientName,
+          phone: order.shippingAddress.phoneE164 ?? '9999999999',
+          addressLine1: order.shippingAddress.addressLine1,
+          addressLine2: order.shippingAddress.addressLine2,
+          city: order.shippingAddress.city,
+          stateCode: order.shippingAddress.stateCode,
+          postalCode: order.shippingAddress.postalCode,
+          countryCode: order.shippingAddress.countryCode,
+        },
+        weightGrams,
+        dimensions: input.dimensions,
+        isCod: order.paymentStatus === 'PENDING',
+        codAmountMinor: order.totalMinor,
+        currency: order.currency,
+        items: requestedLines.map(({ line, quantity }) => ({
+          name: line.name,
+          sku: line.sku,
+          quantity,
+          unitPriceMinor: line.unitPriceMinor,
+        })),
+      });
+
+      return {
+        carrier: carrier.name.toUpperCase() as ShipmentCarrier,
+        carrierService: null,
+        awbNumber: shipment.awbNumber,
+        trackingUrl: shipment.trackingUrl,
+        labelUrl: null,
+        status: shipment.awbNumber ? 'LABEL_CREATED' : 'PENDING',
+        fromAddress: origin as unknown as Record<string, unknown>,
+        toAddress: order.shippingAddress as unknown as Record<string, unknown>,
+        carrierResponse: shipment.raw,
+      };
+    } catch (error) {
+      this.logger.warn(
+        `Carrier shipment creation failed for order ${order.orderNumber}, recording a manual shipment instead: ` +
+          (error instanceof Error ? error.message : String(error)),
+      );
+      return manualFallback;
+    }
   }
 
   // =========================================================================

@@ -30,6 +30,19 @@ export class OrderPaymentRepository extends TenantScopedRepository<PaymentEntity
   async findByIdempotencyKey(idempotencyKey: string): Promise<PaymentEntity | null> {
     return this.findOne({ where: { idempotencyKey } });
   }
+
+  /** PENDING payments old enough that a webhook should already have arrived — the reconciler's candidate set. */
+  async findStalePending(olderThanMinutes: number, limit: number): Promise<PaymentEntity[]> {
+    return this.repository
+      .createQueryBuilder('payment')
+      .where('payment.tenantId = :tenantId', { tenantId: this.tenantId })
+      .andWhere('payment.status IN (:...statuses)', { statuses: ['PENDING', 'AUTHORIZED'] })
+      .andWhere('payment.gateway != :cod', { cod: 'COD' })
+      .andWhere('payment.createdAt < :cutoff', { cutoff: new Date(Date.now() - olderThanMinutes * 60_000) })
+      .orderBy('payment.createdAt', 'ASC')
+      .take(limit)
+      .getMany();
+  }
 }
 
 @Injectable()

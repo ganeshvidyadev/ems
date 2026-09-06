@@ -147,6 +147,28 @@ export const envSchema = z
     RAZORPAY_KEY_ID: optional(z.string()),
     RAZORPAY_KEY_SECRET: optional(z.string()),
     RAZORPAY_WEBHOOK_SECRET: optional(z.string()),
+    STRIPE_SECRET_KEY: optional(z.string()),
+    STRIPE_PUBLISHABLE_KEY: optional(z.string()),
+    STRIPE_WEBHOOK_SECRET: optional(z.string()),
+    PAYPAL_CLIENT_ID: optional(z.string()),
+    PAYPAL_CLIENT_SECRET: optional(z.string()),
+    PAYPAL_WEBHOOK_ID: optional(z.string()),
+    /** 'live' or 'sandbox' — PayPal's REST API base URL differs per environment. */
+    PAYPAL_ENV: z.enum(['live', 'sandbox']).default('sandbox'),
+    CASHFREE_APP_ID: optional(z.string()),
+    CASHFREE_SECRET_KEY: optional(z.string()),
+    CASHFREE_WEBHOOK_SECRET: optional(z.string()),
+    CASHFREE_ENV: z.enum(['PRODUCTION', 'SANDBOX']).default('SANDBOX'),
+    PHONEPE_MERCHANT_ID: optional(z.string()),
+    PHONEPE_SALT_KEY: optional(z.string()),
+    PHONEPE_SALT_INDEX: optional(z.string()),
+    PHONEPE_ENV: z.enum(['PRODUCTION', 'SANDBOX']).default('SANDBOX'),
+
+    // --- Shipping -----------------------------------------------------------
+    SHIPPING_CARRIER_DEFAULT: z.enum(['shiprocket', 'stub']).default('stub'),
+    SHIPROCKET_EMAIL: optional(z.string()),
+    SHIPROCKET_PASSWORD: optional(z.string()),
+    SHIPROCKET_WEBHOOK_SECRET: optional(z.string()),
 
     // --- Observability ----------------------------------------------------
     METRICS_ENABLED: booleanFromString.default('true'),
@@ -209,6 +231,41 @@ export const envSchema = z
         code: z.ZodIssueCode.custom,
         path: ['RAZORPAY_KEY_SECRET'],
         message: 'Razorpay is the default gateway but no key secret is configured',
+      });
+    }
+    if (env.PAYMENT_GATEWAY_DEFAULT === 'stripe' && !env.STRIPE_SECRET_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['STRIPE_SECRET_KEY'],
+        message: 'Stripe is the default gateway but no secret key is configured',
+      });
+    }
+    if (env.PAYMENT_GATEWAY_DEFAULT === 'paypal' && !env.PAYPAL_CLIENT_SECRET) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['PAYPAL_CLIENT_SECRET'],
+        message: 'PayPal is the default gateway but no client secret is configured',
+      });
+    }
+    if (env.PAYMENT_GATEWAY_DEFAULT === 'cashfree' && !env.CASHFREE_SECRET_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['CASHFREE_SECRET_KEY'],
+        message: 'Cashfree is the default gateway but no secret key is configured',
+      });
+    }
+    if (env.PAYMENT_GATEWAY_DEFAULT === 'phonepe' && !env.PHONEPE_SALT_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['PHONEPE_SALT_KEY'],
+        message: 'PhonePe is the default gateway but no salt key is configured',
+      });
+    }
+    if (env.SHIPPING_CARRIER_DEFAULT === 'stub') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['SHIPPING_CARRIER_DEFAULT'],
+        message: 'The stub carrier cannot be used in production — shipments would never really dispatch',
       });
     }
     if (!env.RATE_LIMIT_ENABLED) {

@@ -176,6 +176,16 @@ export class OrderPaymentService {
     return this.payments.findByGatewayRef(gateway, gatewayOrderId, gatewayPaymentId);
   }
 
+  async findStalePending(olderThanMinutes: number, limit: number): Promise<PaymentEntity[]> {
+    return this.payments.findStalePending(olderThanMinutes, limit);
+  }
+
+  /** Reads the gateway's own record for a payment — used by the reconciliation sweep. */
+  async fetchAuthoritative(gateway: string, gatewayPaymentId: string): Promise<GatewayPayment> {
+    const adapter = this.gateways.resolve(gateway.toLowerCase() as GatewayName);
+    return adapter.fetchPayment(gatewayPaymentId);
+  }
+
   // =========================================================================
   // Refunds
   // =========================================================================

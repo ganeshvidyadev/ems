@@ -9,6 +9,9 @@ export const SHIPMENT_CARRIERS = [
   'DTDC',
   'XPRESSBEES',
   'SELF',
+  // Not part of docs/02 §12's list — the same dev/test carrier `CarrierName`
+  // already carries elsewhere (Phase 6), allowed here for parity.
+  'STUB',
 ] as const;
 export type ShipmentCarrier = (typeof SHIPMENT_CARRIERS)[number];
 

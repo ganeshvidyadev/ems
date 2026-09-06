@@ -4,6 +4,10 @@ import { ExternalServiceError } from '@ems/kernel';
 import type { PaymentConfig } from '../../config/configuration';
 import type { GatewayName, PaymentGatewayPort } from './payment-gateway.port';
 import { RazorpayAdapter } from './razorpay/razorpay.adapter';
+import { StripeAdapter } from './stripe/stripe.adapter';
+import { PayPalAdapter } from './paypal/paypal.adapter';
+import { CashfreeAdapter } from './cashfree/cashfree.adapter';
+import { PhonePeAdapter } from './phonepe/phonepe.adapter';
 import { StubPaymentAdapter } from './stub/stub.adapter';
 
 /**
@@ -26,11 +30,19 @@ export class PaymentGatewayFactory {
   constructor(
     configService: ConfigService,
     razorpay: RazorpayAdapter,
+    stripe: StripeAdapter,
+    paypal: PayPalAdapter,
+    cashfree: CashfreeAdapter,
+    phonepe: PhonePeAdapter,
     stub: StubPaymentAdapter,
   ) {
     this.config = configService.getOrThrow<PaymentConfig>('payment');
 
     this.adapters.set('razorpay', razorpay);
+    this.adapters.set('stripe', stripe);
+    this.adapters.set('paypal', paypal);
+    this.adapters.set('cashfree', cashfree);
+    this.adapters.set('phonepe', phonepe);
     this.adapters.set('stub', stub);
 
     const available = [...this.adapters.entries()]

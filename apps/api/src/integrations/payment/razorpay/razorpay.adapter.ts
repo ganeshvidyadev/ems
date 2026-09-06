@@ -186,10 +186,12 @@ export class RazorpayAdapter implements PaymentGatewayPort {
    * HMAC-SHA256 over the **raw body** with the webhook secret — which is a different secret
    * from the API key, so a leaked key cannot be used to forge events.
    */
-  verifyWebhook(
+
+  /** Verifies locally (HMAC) — `async` only for parity with the port signature. */
+  async verifyWebhook(
     rawBody: Buffer,
     headers: Record<string, string | string[] | undefined>,
-  ): WebhookVerification {
+  ): Promise<WebhookVerification> {
     const header = headers['x-razorpay-signature'];
     const signature = Array.isArray(header) ? header[0] : header;
 

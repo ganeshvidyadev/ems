@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Body, Controller, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   checkoutPricingRequestSchema,
@@ -56,5 +56,13 @@ export class CheckoutController {
   ) {
     if (!idempotencyKey) throw new MalformedRequestError('Idempotency-Key header is required');
     return this.checkout.refund(id, body, idempotencyKey);
+  }
+
+  @Post('console/payments/reconcile')
+  @Permissions('payment:reconcile')
+  @ApiOperation({ summary: 'Re-check PENDING/AUTHORIZED order payments against their gateway' })
+  async reconcile(@Query('olderThanMinutes') olderThanMinutes = '10', @Query('limit') limit = '50') {
+    const settled = await this.checkout.reconcilePending(Number(olderThanMinutes), Number(limit));
+    return { settled };
   }
 }

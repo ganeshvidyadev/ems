@@ -16,6 +16,7 @@ export interface CartProductRow {
   sku: string | null;
   imageUrl: string | null;
   taxClassId?: string | null;
+  weightGrams?: number | null;
 }
 
 export interface CartVariantRow {
@@ -25,6 +26,17 @@ export interface CartVariantRow {
   sku: string;
   title: string | null;
   priceMinor: string;
+  weightGrams?: number | null;
+}
+
+export interface WarehouseOrigin {
+  id: string;
+  postalCode: string;
+  countryCode: string;
+  addressLine1: string;
+  city: string;
+  stateCode: string | null;
+  name: string;
 }
 
 /**
@@ -85,6 +97,7 @@ export class CartProductLookupRepository {
       `SELECT p.id, p.public_id AS publicId, p.store_id AS storeId, p.name,
               p.price_minor AS priceMinor, p.currency, p.track_inventory AS trackInventory,
               p.allow_backorder AS allowBackorder, p.status, p.sku, p.tax_class_id AS taxClassId,
+              p.weight_grams AS weightGrams,
               (SELECT url FROM product_media WHERE product_id = p.id ORDER BY is_primary DESC, position ASC LIMIT 1) AS imageUrl
          FROM products p
         WHERE p.id = ? AND p.tenant_id = ? AND p.deleted_at IS NULL
@@ -94,6 +107,7 @@ export class CartProductLookupRepository {
       trackInventory: number;
       allowBackorder: number;
       taxClassId: string | null;
+      weightGrams: number | null;
     })[];
 
     const row = rows[0];
@@ -104,12 +118,27 @@ export class CartProductLookupRepository {
   async getVariantById(id: string): Promise<CartVariantRow | null> {
     const rows = (await this.manager.query(
       `SELECT v.id, v.public_id AS publicId, v.product_id AS productId, v.sku, v.title,
-              v.price_minor AS priceMinor
+              v.price_minor AS priceMinor, v.weight_grams AS weightGrams
          FROM product_variants v
         WHERE v.id = ? AND v.tenant_id = ? AND v.deleted_at IS NULL
         LIMIT 1`,
       [id, this.tenantId],
     )) as CartVariantRow[];
+    return rows[0] ?? null;
+  }
+
+  /** The store's default (or highest-priority active) warehouse — the shipment's origin. */
+  async defaultWarehouseOrigin(storeId: string): Promise<WarehouseOrigin | null> {
+    const rows = (await this.manager.query(
+      `SELECT id, postal_code AS postalCode, country_code AS countryCode,
+              address_line1 AS addressLine1, city, state_code AS stateCode, name
+         FROM warehouses
+        WHERE tenant_id = ? AND is_active = 1 AND (store_id = ? OR store_id IS NULL)
+          AND deleted_at IS NULL AND postal_code IS NOT NULL
+        ORDER BY is_default DESC, priority ASC
+        LIMIT 1`,
+      [this.tenantId, storeId],
+    )) as WarehouseOrigin[];
     return rows[0] ?? null;
   }
 

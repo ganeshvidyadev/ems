@@ -23,12 +23,21 @@ import { OrderPaymentService } from '../order-payment/order-payment.service';
 import type { GatewayName, GatewayPayment } from '../../integrations/payment/payment-gateway.port';
 import type { PaymentGateway } from '../../database/entities';
 import { TaxCalculatorService } from './tax-calculator.service';
+import { ShippingCarrierFactory } from '../../integrations/shipping/shipping-carrier.factory';
+import { ShippingPincodeUnserviceableError } from '../../common/errors/api.errors';
 
-/** Flat placeholder rates in minor units — real carrier rate calc is Phase 6's `ShippingCarrierPort`. */
+/** Used only when no warehouse origin is configured, or the carrier call itself fails —
+ * checkout must degrade to a flat rate rather than hard-block on a carrier outage. */
 const SHIPPING_RATES_MINOR: Record<string, string> = {
   STANDARD: '5000',
   EXPRESS: '15000',
 };
+
+/** Assumed weight for a product with no `weight_grams` set — keeps rate/serviceability calls sane. */
+const DEFAULT_ITEM_WEIGHT_GRAMS = 200;
+
+/** COD carries its own fee — collection risk and handling cost the merchant otherwise eats. */
+const COD_FEE_MINOR = '3000';
 
 interface PricedLine {
   productId: string;
@@ -48,6 +57,7 @@ interface PricedLine {
   trackInventory: boolean;
   allowBackorder: boolean;
   taxClassId: string | null;
+  weightGrams: number;
 }
 
 @Injectable()
@@ -66,6 +76,7 @@ export class CheckoutService {
     private readonly coupons: CouponService,
     private readonly giftCards: GiftCardService,
     private readonly tax: TaxCalculatorService,
+    private readonly shippingCarriers: ShippingCarrierFactory,
     private readonly context: RequestContextService,
   ) {}
 
@@ -111,9 +122,80 @@ export class CheckoutService {
           trackInventory: product.trackInventory,
           allowBackorder: product.allowBackorder,
           taxClassId: product.taxClassId ?? null,
+          weightGrams: variant?.weightGrams ?? product.weightGrams ?? DEFAULT_ITEM_WEIGHT_GRAMS,
         };
       }),
     );
+  }
+
+  /**
+   * Serviceability + rate, degrading gracefully in two different ways for
+   * two different failures:
+   *
+   *  - The carrier explicitly says the pincode is unserviceable → **blocks
+   *    checkout** with a clear error (the Phase 6 exit criterion).
+   *  - The carrier call itself errors (misconfigured, network, timeout) →
+   *    logged and treated as serviceable with the flat placeholder rate, so
+   *    a carrier outage does not take down checkout entirely.
+   */
+  private async computeShipping(
+    storeId: string,
+    lines: PricedLine[],
+    address: OrderAddress,
+    shippingMethod: string,
+    isCod: boolean,
+    currency: CurrencyCode,
+  ): Promise<Money> {
+    const flatFallback = () =>
+      Money.fromMinor(SHIPPING_RATES_MINOR[shippingMethod.toUpperCase()] ?? SHIPPING_RATES_MINOR['STANDARD']!, currency);
+
+    const origin = await this.cartProducts.defaultWarehouseOrigin(storeId);
+    if (!origin) return flatFallback();
+
+    const totalWeightGrams = lines.reduce((sum, line) => sum + line.weightGrams * line.quantity, 0);
+    const serviceabilityInput = {
+      originPincode: origin.postalCode,
+      destinationPincode: address.postalCode,
+      weightGrams: totalWeightGrams,
+      isCod,
+    };
+
+    let carrier;
+    try {
+      carrier = this.shippingCarriers.resolve();
+    } catch (error) {
+      this.logger.warn(`No shipping carrier configured; falling back to flat rate: ${error instanceof Error ? error.message : error}`);
+      return flatFallback();
+    }
+
+    let serviceability;
+    try {
+      serviceability = await carrier.checkServiceability(serviceabilityInput);
+    } catch (error) {
+      this.logger.warn(
+        `Serviceability check failed against '${carrier.name}'; degrading to flat rate: ` +
+          (error instanceof Error ? error.message : String(error)),
+      );
+      return flatFallback();
+    }
+
+    if (!serviceability.serviceable) {
+      throw new ShippingPincodeUnserviceableError(address.postalCode, serviceability.reason);
+    }
+
+    try {
+      const rates = await carrier.getRates(serviceabilityInput);
+      const preferred =
+        rates.find((r) => r.serviceType.toUpperCase() === shippingMethod.toUpperCase()) ?? rates[0];
+      if (preferred) return Money.fromMinor(preferred.rateMinor, currency);
+    } catch (error) {
+      this.logger.warn(
+        `Rate lookup failed against '${carrier.name}'; degrading to flat rate: ` +
+          (error instanceof Error ? error.message : String(error)),
+      );
+    }
+
+    return flatFallback();
   }
 
   /** Spreads a discount across lines proportionally to subtotal, using largest-remainder allocation. */
@@ -142,7 +224,9 @@ export class CheckoutService {
     }
     this.applyDiscountToLines(lines, discount, currency);
 
-    const shipping = Money.fromMinor(SHIPPING_RATES_MINOR[shippingMethod.toUpperCase()] ?? '0', currency);
+    const shipping = shippingAddress
+      ? await this.computeShipping(cart.storeId, lines, shippingAddress, shippingMethod, false, currency)
+      : Money.fromMinor(SHIPPING_RATES_MINOR[shippingMethod.toUpperCase()] ?? SHIPPING_RATES_MINOR['STANDARD']!, currency);
     const tax = Money.sum(lines.map((l) => l.lineTax), currency);
     const total = subtotal.subtract(discount).add(shipping).add(tax);
 
@@ -176,14 +260,23 @@ export class CheckoutService {
     }
     this.applyDiscountToLines(lines, discount, currency);
 
-    const shippingCost = Money.fromMinor(
-      SHIPPING_RATES_MINOR[input.shippingMethod.toUpperCase()] ?? '0',
+    const isCod = input.paymentGateway === 'cod';
+    const shippingCost = await this.computeShipping(
+      storeId,
+      lines,
+      input.shippingAddress,
+      input.shippingMethod,
+      isCod,
       currency,
     );
+    // COD carries its own fee — the collection risk and handling cost the
+    // merchant would otherwise absorb — added on top like shipping, never
+    // treated as a discount or folded into the item total.
+    const codFee = isCod ? Money.fromMinor(COD_FEE_MINOR, currency) : Money.zero(currency);
     const tax = Money.sum(lines.map((l) => l.lineTax), currency);
     // The order's real total — a gift card is a *payment method* against this
     // total, not a discount on it, so it must never reduce this figure.
-    const total = subtotal.subtract(discount).add(shippingCost).add(tax);
+    const total = subtotal.subtract(discount).add(shippingCost).add(codFee).add(tax);
 
     return this.manager.transaction(async (tx) => {
       const ordersRepo = this.orders.withManager(tx);
@@ -221,7 +314,7 @@ export class CheckoutService {
         discountMinor: discount.amountMinor.toString(),
         shippingMinor: shippingCost.amountMinor.toString(),
         taxMinor: tax.amountMinor.toString(),
-        codFeeMinor: '0',
+        codFeeMinor: codFee.amountMinor.toString(),
         totalMinor: total.amountMinor.toString(),
         amountPaidMinor: giftCardApplied.amountMinor.toString(),
         amountRefundedMinor: '0',
@@ -511,6 +604,47 @@ export class CheckoutService {
 
       return { status: 'CAPTURED', orderId: order.publicId, orderNumber: order.orderNumber };
     });
+  }
+
+  /**
+   * Re-checks PENDING/AUTHORIZED order payments against their gateway.
+   *
+   * Needed because webhooks get lost, and a shopper who closes the tab
+   * mid-redirect never triggers the client-callback path either — without
+   * this, money can sit collected at the gateway while the order stays stuck
+   * PENDING forever (the exact Phase 6 exit criterion: "a payment stuck in
+   * PENDING is resolved by the reconciler without human intervention").
+   * Converges on `settleAndConfirm`, the same path the webhook and the
+   * client callback use, so all three can never disagree about the outcome.
+   */
+  async reconcilePending(olderThanMinutes = 10, limit = 50): Promise<number> {
+    const stale = await this.orderPayments.findStalePending(olderThanMinutes, limit);
+    let settled = 0;
+
+    for (const payment of stale) {
+      if (!payment.gatewayPaymentId) continue; // no gateway payment was ever created — nothing to check
+
+      try {
+        const result = await this.orderPayments.fetchAuthoritative(payment.gateway, payment.gatewayPaymentId);
+        if (result.status === 'CAPTURED' || result.status === 'FAILED') {
+          await this.settleAndConfirm(
+            payment.gateway.toLowerCase() as GatewayName,
+            payment.gatewayOrderId,
+            payment.gatewayPaymentId,
+            result,
+          );
+          settled += 1;
+        }
+      } catch (error) {
+        // One unreachable gateway must not stop the sweep for the others.
+        this.logger.warn(
+          `Reconciliation failed for order payment ${payment.publicId}: ` +
+            (error instanceof Error ? error.message : String(error)),
+        );
+      }
+    }
+
+    return settled;
   }
 
   // =========================================================================

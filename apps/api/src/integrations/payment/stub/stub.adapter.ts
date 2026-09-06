@@ -173,10 +173,10 @@ export class StubPaymentAdapter implements PaymentGatewayPort {
     };
   }
 
-  verifyWebhook(
+  async verifyWebhook(
     rawBody: Buffer,
     headers: Record<string, string | string[] | undefined>,
-  ): WebhookVerification {
+  ): Promise<WebhookVerification> {
     this.assertNotProduction();
 
     const header = headers['x-stub-signature'];

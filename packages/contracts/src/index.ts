@@ -27,3 +27,4 @@ export * from './loyalty/loyalty.contracts.js';
 export * from './order/order.contracts.js';
 export * from './checkout/checkout.contracts.js';
 export * from './return/return.contracts.js';
+export * from './shipment/shipment.contracts.js';
