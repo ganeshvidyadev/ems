@@ -70,6 +70,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <Link href="/coupons" className="hover:text-foreground">
                 Coupons
               </Link>
+              <Link href="/customers" className="hover:text-foreground">
+                Customers
+              </Link>
               <Link href="/sessions" className="hover:text-foreground">
                 Sessions
               </Link>

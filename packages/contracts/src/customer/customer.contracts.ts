@@ -69,6 +69,7 @@ export const customerListQuerySchema = listQuerySchema.extend({
     { field: 'createdAt', direction: 'DESC' },
   ]),
 });
+export type CustomerListQuery = z.infer<typeof customerListQuerySchema>;
 
 // ---------------------------------------------------------------------------
 // Addresses

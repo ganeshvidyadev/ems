@@ -1,4 +1,4 @@
-import { Column, Entity } from 'typeorm';
+import { Column, DeleteDateColumn, Entity } from 'typeorm';
 import { BOOLEAN_COLUMN, BaseEntity, DATETIME3, NumericIdEntity } from './base.entity';
 import { TenantScoped } from '../../common/decorators/tenant-scoped.decorator';
 
@@ -99,7 +99,7 @@ export class CustomerEntity extends BaseEntity {
   @Column({ type: 'json', nullable: true })
   tags!: string[] | null;
 
-  @Column({ name: 'deleted_at', ...DATETIME3, nullable: true })
+  @DeleteDateColumn({ name: 'deleted_at', ...DATETIME3 })
   deletedAt!: Date | null;
 
   get displayName(): string {
@@ -167,7 +167,7 @@ export class CustomerAddressEntity extends BaseEntity {
   @Column({ name: 'is_default_billing', ...BOOLEAN_COLUMN, default: 0 })
   isDefaultBilling!: boolean;
 
-  @Column({ name: 'deleted_at', ...DATETIME3, nullable: true })
+  @DeleteDateColumn({ name: 'deleted_at', ...DATETIME3 })
   deletedAt!: Date | null;
 }
 

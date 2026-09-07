@@ -69,6 +69,17 @@ export class CustomerRepository extends TenantScopedRepository<CustomerEntity> {
     )) as { id: string; publicId: string }[];
     return new Map(rows.map((r) => [r.id, r.publicId]));
   }
+
+  /** Batch reverse of `resolvePublicId` — internal ids to public ids in another tenant-owned table. */
+  async publicIdsFor(table: 'products' | 'product_variants', internalIds: string[]): Promise<Map<string, string>> {
+    const unique = [...new Set(internalIds)];
+    if (unique.length === 0) return new Map();
+    const rows = (await this.manager.query(
+      `SELECT id, public_id AS publicId FROM \`${table}\` WHERE tenant_id = ? AND id IN (${unique.map(() => '?').join(',')})`,
+      [this.tenantId, ...unique],
+    )) as { id: string; publicId: string }[];
+    return new Map(rows.map((r) => [r.id, r.publicId]));
+  }
 }
 
 @Injectable()

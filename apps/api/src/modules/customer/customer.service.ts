@@ -183,9 +183,30 @@ export class CustomerService {
   // Wishlist
   // -------------------------------------------------------------------------
 
-  async listWishlist(customerPublicId: string) {
+  /**
+   * `WishlistItemEntity.productId`/`variantId` are internal FK ids, but
+   * `WishlistItemResponse` (like every other console response) promises
+   * public ULIDs — resolved here, back to public ids, before the controller's
+   * `wishlistItemToResponse` forwards them through unchanged. Found live: the
+   * console rendered a raw internal id ("1") where a product name/SKU lookup
+   * should have resolved, the same id-space mismatch inventory's endpoints
+   * had before that fix.
+   */
+  async listWishlist(customerPublicId: string): Promise<{ productId: string; variantId: string | null; addedAt: Date }[]> {
     const customer = await this.customers.findByPublicIdOrFail(customerPublicId);
-    return this.wishlist.findByCustomer(customer.id);
+    const items = await this.wishlist.findByCustomer(customer.id);
+
+    const productPublicIds = await this.customers.publicIdsFor('products', items.map((i) => i.productId));
+    const variantInternalIds = items
+      .map((i) => i.variantId)
+      .filter((id): id is string => id !== null);
+    const variantPublicIds = await this.customers.publicIdsFor('product_variants', variantInternalIds);
+
+    return items.map((item) => ({
+      productId: productPublicIds.get(item.productId) ?? item.productId,
+      variantId: item.variantId ? (variantPublicIds.get(item.variantId) ?? item.variantId) : null,
+      addedAt: item.addedAt,
+    }));
   }
 
   async addWishlistItem(
