@@ -1,4 +1,4 @@
-import { Column, Entity, VersionColumn } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, VersionColumn } from 'typeorm';
 import { BOOLEAN_COLUMN, BaseEntity, DATETIME3 } from './base.entity';
 import { TenantScoped } from '../../common/decorators/tenant-scoped.decorator';
 
@@ -138,7 +138,15 @@ export class ProductEntity extends BaseEntity {
   @Column({ name: 'created_by', type: 'bigint', unsigned: true, nullable: true })
   createdBy!: string | null;
 
-  @Column({ name: 'deleted_at', ...DATETIME3, nullable: true })
+  // `@DeleteDateColumn`, not a plain `@Column` — a bare column with this name
+  // looks identical at the database level but carries no TypeORM soft-delete
+  // metadata, so `repository.softRemove()` (what `TenantScopedRepository
+  // .softDeleteByPublicId` calls) throws `MissingDeleteDateColumnError`
+  // instead of ever issuing an UPDATE. Found live: every `DELETE
+  // /console/products/:id` call has 500'd since this table's own `deleted_at`
+  // column was added — nothing had exercised product deletion over real HTTP
+  // until now.
+  @DeleteDateColumn({ name: 'deleted_at', ...DATETIME3 })
   deletedAt!: Date | null;
 
   get isLive(): boolean {

@@ -12,6 +12,7 @@ export * from './common/pagination.js';
 export * from './auth/auth.contracts.js';
 export * from './user/user.contracts.js';
 export * from './tenant/tenant.contracts.js';
+export * from './store/store.contracts.js';
 export * from './job/job.contracts.js';
 export * from './brand/brand.contracts.js';
 export * from './category/category.contracts.js';

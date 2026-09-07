@@ -15,6 +15,7 @@ import { LoggingModule } from './modules/logging/logging.module';
 import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
+import { StoreModule } from './modules/store/store.module';
 import { SubscriptionModule } from './modules/subscription/subscription.module';
 import { ProvisioningModule } from './modules/provisioning/provisioning.module';
 import { PaymentModule } from './modules/payment/payment.module';
@@ -106,6 +107,7 @@ import { RequestContextService } from './common/services/request-context.service
     NotificationModule,
     AuthModule,
     UserModule,
+    StoreModule,
     SubscriptionModule,
     ProvisioningModule,
     PaymentModule,

@@ -218,6 +218,15 @@ export async function apiPatch<T>(
   return unwrap(response.data);
 }
 
+export async function apiPut<T>(
+  url: string,
+  body?: unknown,
+  config?: AxiosRequestConfig,
+): Promise<T> {
+  const response = await http.put<ApiResponse<T>>(url, body, config);
+  return unwrap(response.data);
+}
+
 export async function apiDelete<T = void>(url: string, config?: AxiosRequestConfig): Promise<T> {
   const response = await http.delete<ApiResponse<T>>(url, config);
   // 204 has no body to unwrap.

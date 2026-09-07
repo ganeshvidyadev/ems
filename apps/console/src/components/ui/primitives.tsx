@@ -1,7 +1,18 @@
 'use client';
 
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { type VariantProps, cva } from 'class-variance-authority';
-import { forwardRef, type ButtonHTMLAttributes, type InputHTMLAttributes } from 'react';
+import { X } from 'lucide-react';
+import {
+  forwardRef,
+  type ButtonHTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+  type ThHTMLAttributes,
+  type TdHTMLAttributes,
+} from 'react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -194,4 +205,204 @@ export function CardHeader({ title, description }: { title: string; description?
 
 export function CardBody({ className, children }: { className?: string; children: React.ReactNode }) {
   return <div className={cn('p-6 pt-0', className)}>{children}</div>;
+}
+
+// ---------------------------------------------------------------------------
+// Textarea
+// ---------------------------------------------------------------------------
+
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(
+  ({ className, ...props }, ref) => (
+    <textarea
+      ref={ref}
+      className={cn(
+        'flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+        'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2',
+        'focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed',
+        'disabled:opacity-50',
+        'aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:ring-destructive',
+        className,
+      )}
+      {...props}
+    />
+  ),
+);
+Textarea.displayName = 'Textarea';
+
+// ---------------------------------------------------------------------------
+// Select — a styled native <select>, not a Radix combobox: the option list
+// here is always short (status/type/store), where a native element is both
+// simpler and better on mobile than reimplementing listbox keyboard nav.
+// ---------------------------------------------------------------------------
+
+export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(
+  ({ className, children, ...props }, ref) => (
+    <select
+      ref={ref}
+      className={cn(
+        'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </select>
+  ),
+);
+Select.displayName = 'Select';
+
+// ---------------------------------------------------------------------------
+// Badge — status pills (product status, order status, etc.)
+// ---------------------------------------------------------------------------
+
+const badgeVariants = cva('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', {
+  variants: {
+    variant: {
+      default: 'bg-secondary text-secondary-foreground',
+      success: 'bg-success/15 text-success',
+      warning: 'bg-warning/15 text-warning-foreground',
+      destructive: 'bg-destructive/15 text-destructive',
+      outline: 'border border-border text-foreground',
+    },
+  },
+  defaultVariants: { variant: 'default' },
+});
+
+export function Badge({
+  className,
+  variant,
+  children,
+}: { className?: string; children: ReactNode } & VariantProps<typeof badgeVariants>) {
+  return <span className={cn(badgeVariants({ variant }), className)}>{children}</span>;
+}
+
+// ---------------------------------------------------------------------------
+// Table — plain semantic HTML, styled. No virtualization: console list pages
+// are paginated server-side (20-50 rows), so there is nothing to virtualize.
+// ---------------------------------------------------------------------------
+
+export function Table({ children }: { children: ReactNode }) {
+  return (
+    <div className="w-full overflow-x-auto rounded-md border">
+      <table className="w-full caption-bottom text-sm">{children}</table>
+    </div>
+  );
+}
+
+export function TableHeader({ children }: { children: ReactNode }) {
+  return <thead className="border-b bg-muted/50">{children}</thead>;
+}
+
+export function TableBody({ children }: { children: ReactNode }) {
+  return <tbody className="[&_tr:last-child]:border-0">{children}</tbody>;
+}
+
+export function TableRow({ children, className }: { children: ReactNode; className?: string }) {
+  return <tr className={cn('border-b transition-colors hover:bg-muted/50', className)}>{children}</tr>;
+}
+
+export function TableHead({ className, children, ...props }: ThHTMLAttributes<HTMLTableCellElement>) {
+  return (
+    <th className={cn('h-11 px-4 text-left align-middle text-xs font-medium text-muted-foreground', className)} {...props}>
+      {children}
+    </th>
+  );
+}
+
+export function TableCell({ className, children, ...props }: TdHTMLAttributes<HTMLTableCellElement>) {
+  return (
+    <td className={cn('p-4 align-middle', className)} {...props}>
+      {children}
+    </td>
+  );
+}
+
+/** Centered placeholder row for empty/loading states, spanning every column. */
+export function TableEmptyRow({ colSpan, children }: { colSpan: number; children: ReactNode }) {
+  return (
+    <tr>
+      <td colSpan={colSpan} className="p-10 text-center text-sm text-muted-foreground">
+        {children}
+      </td>
+    </tr>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Dialog — thin Radix wrapper for confirmations and compact forms (a full
+// create/edit page still gets its own route; this is for "are you sure?").
+// ---------------------------------------------------------------------------
+
+export function Dialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  children,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description?: string;
+  children: ReactNode;
+}) {
+  return (
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
+        <DialogPrimitive.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border bg-card p-6 shadow-lg">
+          <DialogPrimitive.Title className="text-lg font-semibold">{title}</DialogPrimitive.Title>
+          {description && (
+            <DialogPrimitive.Description className="mt-1 text-sm text-muted-foreground">
+              {description}
+            </DialogPrimitive.Description>
+          )}
+          <div className="mt-4">{children}</div>
+          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <X className="size-4" />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Pagination — simple prev/next + page count, matching the envelope's
+// `PaginationMeta` shape (docs/04 §2) exactly, so a caller passes it straight through.
+// ---------------------------------------------------------------------------
+
+export function Pagination({
+  page,
+  totalPages,
+  hasNext,
+  hasPrev,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex items-center justify-between px-1 py-3">
+      <p className="text-sm text-muted-foreground">
+        Page {page} of {totalPages}
+      </p>
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" disabled={!hasPrev} onClick={() => onPageChange(page - 1)}>
+          Previous
+        </Button>
+        <Button variant="outline" size="sm" disabled={!hasNext} onClick={() => onPageChange(page + 1)}>
+          Next
+        </Button>
+      </div>
+    </div>
+  );
 }

@@ -58,6 +58,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <Link href="/" className="hover:text-foreground">
                 Status
               </Link>
+              <Link href="/products" className="hover:text-foreground">
+                Products
+              </Link>
               <Link href="/sessions" className="hover:text-foreground">
                 Sessions
               </Link>
