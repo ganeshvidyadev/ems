@@ -69,6 +69,73 @@ export async function storefrontFetch<T>(
 }
 
 /**
+ * A paginated storefront read, keeping the envelope's `meta.pagination`.
+ *
+ * Separate from `storefrontFetch` because that one unwraps to `data` and drops
+ * `meta` — which is the right shape for a single resource, and useless for a
+ * product grid that has to render "page 2 of 5". Rather than widen the common
+ * helper's return type for every caller, list endpoints get their own.
+ */
+export interface StorefrontPage<T> {
+  items: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+export async function storefrontFetchPage<T>(
+  path: string,
+  options: { tags?: string[]; revalidate?: number | false } = {},
+): Promise<StorefrontPage<T>> {
+  const tenant = await getTenantContext();
+
+  const response = await fetch(`${API_BASE}/storefront${path}`, {
+    headers: {
+      'x-ems-hostname': tenant.hostname,
+      Accept: 'application/json',
+    },
+    next: {
+      tags: options.tags,
+      revalidate: options.revalidate ?? 60,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Storefront API ${response.status} for ${path}`);
+  }
+
+  const body = (await response.json()) as {
+    success: boolean;
+    data: T[];
+    meta?: { pagination?: StorefrontPage<T>['pagination'] };
+  };
+  if (!body.success) throw new Error(`Storefront API returned an error for ${path}`);
+
+  const items = body.data ?? [];
+
+  return {
+    items,
+    // A list endpoint always sends pagination, but synthesising it rather than
+    // asserting it keeps a malformed response from crashing the page.
+    pagination:
+      body.meta?.pagination ??
+      {
+        page: 1,
+        limit: items.length,
+        total: items.length,
+        totalPages: 1,
+        hasNext: false,
+        hasPrev: false,
+      },
+  };
+}
+
+/**
  * Turns a tenant theme into inline CSS custom properties.
  *
  * Applied as a `style` attribute on the layout's root element, which is what lets

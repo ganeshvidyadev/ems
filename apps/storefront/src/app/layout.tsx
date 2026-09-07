@@ -1,5 +1,9 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { Providers } from '@/app/providers';
+import { SiteFooter } from '@/components/site-footer';
+import { SiteHeader } from '@/components/site-header';
+import { getStoreSummary } from '@/lib/store';
 import { getTenantContext } from '@/lib/tenant';
 import './globals.css';
 
@@ -10,7 +14,10 @@ import './globals.css';
  */
 export async function generateMetadata(): Promise<Metadata> {
   const tenant = await getTenantContext();
-  const storeName = tenant.slug ? titleCase(tenant.slug) : 'Store';
+  // The real store name, not a title-cased slug — "Northwind Main Store" rather
+  // than "Northwind". Falls back to the slug when the store is not resolvable.
+  const store = await getStoreSummary();
+  const storeName = store.name;
 
   return {
     title: { default: storeName, template: `%s · ${storeName}` },
@@ -29,6 +36,7 @@ export default async function RootLayout({
   children: ReactNode;
 }) {
   const tenant = await getTenantContext();
+  const store = await getStoreSummary();
 
   return (
     <html lang="en">
@@ -38,16 +46,28 @@ export default async function RootLayout({
         differ per request and a cached stylesheet would serve one tenant's brand
         colours to another.
       */}
-      <body data-tenant={tenant.slug ?? undefined}>
-        <div className="mx-auto max-w-content px-4">{children}</div>
+      <body data-tenant={tenant.slug ?? undefined} className="flex min-h-screen flex-col">
+        {/*
+          The store summary is resolved once here and handed to the client tree as a
+          prop. Every client component that needs the store's public id — add to
+          cart, checkout — would otherwise have to fetch it itself and make the
+          shopper wait on a round-trip for a value this render already had.
+        */}
+        <Providers
+          store={{
+            storeId: store.id,
+            name: store.name,
+            currency: store.currency,
+            tenantSlug: tenant.slug ?? '',
+          }}
+        >
+          <SiteHeader />
+          <main className="flex-1">
+            <div className="mx-auto max-w-content px-4 py-8">{children}</div>
+          </main>
+          <SiteFooter name={store.name} currency={store.currency} />
+        </Providers>
       </body>
     </html>
   );
-}
-
-function titleCase(slug: string): string {
-  return slug
-    .split('-')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
 }

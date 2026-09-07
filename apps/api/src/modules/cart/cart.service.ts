@@ -219,18 +219,45 @@ export class CartService {
     const taxEstimate = Money.zero(currency);
     const total = subtotal.subtract(discount).add(shippingEstimate).add(taxEstimate);
 
-    const items: CartLineItem[] = cart.items.map((item) => ({
-      productId: item.productId,
-      variantId: item.variantId,
-      sku: item.sku,
-      name: item.name,
-      variantTitle: item.variantTitle,
-      imageUrl: item.imageUrl,
-      quantity: item.quantity,
-      unitPriceMinor: item.unitPriceMinor,
-      lineSubtotalMinor: Money.fromMinor(item.unitPriceMinor, currency).multiplyByQuantity(item.quantity).amountMinor.toString(),
-      addedAt: item.addedAt,
-    }));
+    /**
+     * Lines are stored against **internal** ids (`addItem` writes `product.id`),
+     * but `cartLineItemSchema` types `productId`/`variantId` as public ids — and
+     * `updateItem`/`removeItem` resolve what they are given with
+     * `getProduct(publicId)`. Emitting the internal id therefore handed clients a
+     * value those endpoints cannot resolve: they found no matching line, changed
+     * nothing, and still answered 200, so a quantity change or a remove silently
+     * did nothing.
+     *
+     * Resolved here rather than by storing public ids in Redis: the internal id is
+     * the right key for the stored cart (it is what checkout and inventory join
+     * on), and this is the boundary where internal ids stop being appropriate.
+     */
+    const items: CartLineItem[] = await Promise.all(
+      cart.items.map(async (item) => {
+        const [product, variant] = await Promise.all([
+          this.products.getProductById(item.productId),
+          item.variantId ? this.products.getVariantById(item.variantId) : Promise.resolve(null),
+        ]);
+
+        return {
+          // Falling back to the stored id keeps a line for a since-deleted product
+          // renderable — the shopper can still see it and remove it — rather than
+          // failing the whole cart read.
+          productId: product?.publicId ?? item.productId,
+          variantId: variant?.publicId ?? item.variantId,
+          sku: item.sku,
+          name: item.name,
+          variantTitle: item.variantTitle,
+          imageUrl: item.imageUrl,
+          quantity: item.quantity,
+          unitPriceMinor: item.unitPriceMinor,
+          lineSubtotalMinor: Money.fromMinor(item.unitPriceMinor, currency)
+            .multiplyByQuantity(item.quantity)
+            .amountMinor.toString(),
+          addedAt: item.addedAt,
+        };
+      }),
+    );
 
     return {
       id: cart.id,

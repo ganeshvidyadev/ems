@@ -1,61 +1,120 @@
-import { getTenantContext } from '@/lib/tenant';
+import type { ProductResponse } from '@ems/contracts';
+import { PackageOpen } from 'lucide-react';
+import Link from 'next/link';
+import { ProductGrid } from '@/components/product-card';
+import { Alert, EmptyState } from '@/components/ui';
+import { getStoreSummary } from '@/lib/store';
+import { storefrontFetchPage } from '@/lib/tenant';
 
 /**
- * Phase 1 storefront home.
+ * The shop front.
  *
- * Renders the resolved tenant context so that host-based resolution is verifiable
- * before any catalogue exists: visiting `northwind.ems.localhost:3001` and
- * `lakeside.ems.localhost:3001` must show different tenants from the same
- * deployment. That is the property the whole storefront depends on, and it is worth
- * being able to see directly.
- *
- * The homepage composition (banners, featured products, theme) arrives in Phase 7.
+ * A server component, so the first paint is real HTML with real prices and works
+ * with JavaScript disabled — which matters more here than anywhere else in the
+ * app, because this is the page search engines and first-time visitors land on.
+ * The catalogue reads are cache-tagged, so a price change can be pushed live with
+ * `revalidateTag('products')` instead of waiting out a TTL.
  */
+
+/** Two requests, in parallel: the featured shelf and the newest arrivals. */
+async function loadHome(): Promise<{
+  featured: ProductResponse[];
+  latest: ProductResponse[];
+  failed: boolean;
+}> {
+  try {
+    const [featured, latest] = await Promise.all([
+      storefrontFetchPage<ProductResponse>('/products?isFeatured=true&limit=4', {
+        tags: ['products'],
+        revalidate: 60,
+      }),
+      storefrontFetchPage<ProductResponse>('/products?limit=8', {
+        tags: ['products'],
+        revalidate: 60,
+      }),
+    ]);
+
+    return { featured: featured.items, latest: latest.items, failed: false };
+  } catch {
+    return { featured: [], latest: [], failed: true };
+  }
+}
+
 export default async function HomePage() {
-  const tenant = await getTenantContext();
+  const [store, { featured, latest, failed }] = await Promise.all([getStoreSummary(), loadHome()]);
+
+  // Featured products already appear in the featured shelf; repeating them
+  // immediately below under a different heading makes a small catalogue look
+  // padded out.
+  const featuredIds = new Set(featured.map((product) => product.id));
+  const rest = latest.filter((product) => !featuredIds.has(product.id));
+
+  if (failed) {
+    return (
+      <div className="py-8">
+        <Alert>
+          We could not load the catalogue just now. Please refresh in a moment.
+        </Alert>
+      </div>
+    );
+  }
+
+  if (latest.length === 0 && featured.length === 0) {
+    return (
+      <div className="py-8">
+        <EmptyState
+          icon={<PackageOpen className="h-8 w-8" />}
+          title="Nothing here yet"
+          description={`${store.name} hasn't published any products yet. Do check back soon.`}
+        />
+      </div>
+    );
+  }
 
   return (
-    <main className="flex min-h-screen flex-col justify-center gap-8 py-16">
-      <header className="space-y-2">
-        <p className="text-sm uppercase tracking-widest text-ink-muted">EMS Storefront</p>
-        <h1 className="text-3xl font-semibold">
-          {tenant.slug ? titleCase(tenant.slug) : 'Unresolved store'}
+    <div className="space-y-14">
+      <section className="rounded-theme border border-line bg-surface-alt px-6 py-12 text-center sm:px-12 sm:py-16">
+        <h1 className="font-heading text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+          {store.name}
         </h1>
-      </header>
-
-      <dl className="divide-y rounded-theme border border-line bg-surface-alt">
-        <Row label="Hostname" value={tenant.hostname || '(none)'} />
-        <Row label="Tenant slug" value={tenant.slug ?? '(custom domain — resolved by the API)'} />
-        <Row label="Domain type" value={tenant.domainType} />
-      </dl>
-
-      {!tenant.slug && (
-        <p className="text-sm text-ink-muted">
-          No platform subdomain in this host. On a custom domain the API resolves the tenant from{' '}
-          <code className="font-mono">tenant_domains</code>. Locally, try{' '}
-          <code className="font-mono">northwind.ems.localhost:3001</code>.
+        <p className="mx-auto mt-3 max-w-xl text-base text-ink-muted">
+          Desk setups, seating and accessories — picked to actually last, and priced in {store.currency}.
         </p>
+        <div className="mt-6 flex justify-center">
+          <Link
+            href="/products"
+            className="inline-flex h-12 items-center justify-center rounded-theme bg-brand px-6 text-base font-medium text-brand-foreground transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          >
+            Browse all products
+          </Link>
+        </div>
+      </section>
+
+      {featured.length > 0 && (
+        <section className="space-y-5">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h2 className="font-heading text-xl font-semibold tracking-tight text-ink">Featured</h2>
+              <p className="mt-1 text-sm text-ink-muted">Hand-picked by {store.name}.</p>
+            </div>
+          </div>
+          <ProductGrid products={featured} />
+        </section>
       )}
 
-      <p className="text-xs text-ink-muted">
-        Catalogue, cart and checkout arrive in Phases 4–5; theming in Phase 7.
-      </p>
-    </main>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-4 px-4 py-3">
-      <dt className="text-sm text-ink-muted">{label}</dt>
-      <dd className="font-mono text-sm">{value}</dd>
+      {rest.length > 0 && (
+        <section className="space-y-5">
+          <div className="flex items-end justify-between gap-4">
+            <h2 className="font-heading text-xl font-semibold tracking-tight text-ink">
+              {featured.length > 0 ? 'More from the shop' : 'Latest products'}
+            </h2>
+            <Link href="/products" className="text-sm font-medium text-brand hover:underline">
+              View all
+            </Link>
+          </div>
+          <ProductGrid products={rest} />
+        </section>
+      )}
     </div>
   );
-}
-
-function titleCase(slug: string): string {
-  return slug
-    .split('-')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
 }

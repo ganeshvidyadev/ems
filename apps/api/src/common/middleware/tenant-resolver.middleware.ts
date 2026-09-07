@@ -94,41 +94,72 @@ export class TenantResolverMiddleware implements NestMiddleware {
    * here would sit in front of every page view and every add-to-cart. The cache is
    * invalidated explicitly on domain CRUD rather than by TTL alone, so a newly
    * verified custom domain goes live immediately.
+   *
+   * `x-ems-hostname` is a **fallback**, tried only when `Host` itself resolves to
+   * no tenant. A storefront's Next.js server renders pages server-side, so its
+   * outgoing calls to this API carry the API's own host — never the shopper's — and
+   * `Host` is a forbidden header that `fetch` will not let a client set. Without a
+   * header to carry it, the shopper's hostname cannot reach this middleware and
+   * every server-rendered storefront page is tenant-less.
+   *
+   * The ordering is the safety property: a request whose `Host` already names a
+   * real storefront domain never looks at the header, so the header cannot override
+   * a live domain. Where it *is* consulted it only selects between public
+   * per-tenant storefronts — the same choice anyone makes by typing a different URL
+   * — so it grants no read the tenant's own hostname would not already give.
    */
   private async resolveFromHost(req: Request): Promise<void> {
-    const hostname = this.normalizeHost(req.headers.host ?? '');
-    if (!hostname) return;
+    const candidates = [
+      this.normalizeHost(req.headers.host ?? ''),
+      this.normalizeHost(this.forwardedHostname(req)),
+    ].filter((value): value is string => value !== null);
 
-    const cacheKey = `domain:${hostname}`;
-    let resolution = await this.cache.get<DomainResolution>(cacheKey);
+    for (const hostname of candidates) {
+      const resolution = await this.lookupDomain(hostname);
+      if (!resolution) continue;
 
-    if (!resolution) {
-      const rows = (await this.dataSource.query(
-        `SELECT d.tenant_id AS tenantId, d.store_id AS storeId,
-                t.slug AS tenantSlug, t.status AS status
-           FROM tenant_domains d
-           JOIN tenants t ON t.id = d.tenant_id
-          WHERE d.hostname = ?
-            AND t.deleted_at IS NULL
-          LIMIT 1`,
-        [hostname],
-      )) as DomainResolution[];
-
-      resolution = rows[0] ?? null;
-
-      // Negative results are cached too, briefly. Without that, traffic to an
-      // unknown host — a stale DNS record, a scanner — hits MySQL on every request.
-      await this.cache.set(cacheKey, resolution, resolution ? 600 : 60);
+      this.context.patch({
+        tenantId: String(resolution.tenantId),
+        storeId: resolution.storeId ? String(resolution.storeId) : null,
+        tenantSlug: resolution.tenantSlug,
+        tenantStatus: resolution.status,
+      });
+      return;
     }
+  }
 
-    if (!resolution) return;
+  private async lookupDomain(hostname: string): Promise<DomainResolution | null> {
+    const cacheKey = `domain:${hostname}`;
+    const cached = await this.cache.get<DomainResolution>(cacheKey);
+    if (cached) return cached;
 
-    this.context.patch({
-      tenantId: String(resolution.tenantId),
-      storeId: resolution.storeId ? String(resolution.storeId) : null,
-      tenantSlug: resolution.tenantSlug,
-      tenantStatus: resolution.status,
-    });
+    const rows = (await this.dataSource.query(
+      `SELECT d.tenant_id AS tenantId, d.store_id AS storeId,
+              t.slug AS tenantSlug, t.status AS status
+         FROM tenant_domains d
+         JOIN tenants t ON t.id = d.tenant_id
+        WHERE d.hostname = ?
+          AND t.deleted_at IS NULL
+        LIMIT 1`,
+      [hostname],
+    )) as DomainResolution[];
+
+    const resolution = rows[0] ?? null;
+
+    // Negative results are cached too, briefly. Without that, traffic to an
+    // unknown host — a stale DNS record, a scanner — hits MySQL on every request.
+    await this.cache.set(cacheKey, resolution, resolution ? 600 : 60);
+
+    return resolution;
+  }
+
+  /**
+   * The hostname the shopper's browser actually asked for, forwarded by the
+   * storefront's own server. Only ever read as a fallback — see `resolveFromHost`.
+   */
+  private forwardedHostname(req: Request): string {
+    const raw = req.headers['x-ems-hostname'];
+    return typeof raw === 'string' ? raw : '';
   }
 
   private resolveFromRouteParam(req: Request): void {

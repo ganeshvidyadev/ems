@@ -323,12 +323,35 @@ export class ProductService {
       attributes: product.attributes,
       ratingAverage: product.ratingAverage,
       ratingCount: product.ratingCount,
-      publishedAt: product.publishedAt?.toISOString() ?? null,
+      publishedAt: toIsoString(product.publishedAt),
       variants: variantEntities.map((v) => this.variants.toResponse(v, product.publicId)),
       categoryIds,
       primaryCategoryId,
-      createdAt: product.createdAt.toISOString(),
-      updatedAt: product.updatedAt.toISOString(),
+      createdAt: toIsoString(product.createdAt) ?? '',
+      updatedAt: toIsoString(product.updatedAt) ?? '',
     };
   }
+}
+
+/**
+ * Dates here are not reliably `Date` instances.
+ *
+ * `ProductStorefrontController.list()` caches the *entities* it hands to this
+ * method, and the cache is Redis — so a cache hit deserialises `publishedAt`,
+ * `createdAt` and `updatedAt` from JSON as **strings**. Calling `.toISOString()`
+ * on those threw, which made every storefront catalogue request after the first
+ * one (i.e. every cache hit) a 500.
+ *
+ * Normalising at the DTO boundary rather than teaching the cache about Dates: this
+ * is the one place that has to produce an ISO string, and it should not care
+ * whether the value reached it straight from TypeORM or via a JSON round-trip.
+ */
+function toIsoString(value: Date | string | null | undefined): string | null {
+  if (value === null || value === undefined) return null;
+  if (value instanceof Date) return value.toISOString();
+
+  // Already an ISO-ish string from the cache. Re-parsed rather than passed through
+  // so the output format is identical on a hit and a miss.
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 }
