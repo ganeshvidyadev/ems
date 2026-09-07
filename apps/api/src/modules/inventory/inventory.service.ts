@@ -1,18 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import type { InventoryLevelResponse, InventoryMovementResponse } from '@ems/contracts';
-import { BusinessRuleError, ConflictError } from '@ems/kernel';
+import { BusinessRuleError, ConflictError, NotFoundError } from '@ems/kernel';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import type { EntityManager } from 'typeorm';
 import { CacheService } from '../../common/services/cache.service';
 import { InventoryInsufficientError } from '../../common/errors/api.errors';
 import { RequestContextService } from '../../common/services/request-context.service';
 import type { InventoryLevelEntity, InventoryMovementType } from '../../database/entities';
+import { ProductRepository } from '../product/product.repository';
 import { InventoryLevelRepository, InventoryMovementRepository } from './inventory.repository';
+import { WarehouseRepository } from './warehouse.repository';
 
 export interface StockAllocation {
   warehouseId: string;
   quantity: number;
   levelId: string;
+}
+
+/** Public ids resolved to display back on an `InventoryLevelResponse`. */
+interface ResponseIds {
+  warehouseId: string;
+  warehouseName: string;
+  productId: string;
+  variantId: string | null;
 }
 
 @Injectable()
@@ -23,12 +33,61 @@ export class InventoryService {
     private readonly movements: InventoryMovementRepository,
     private readonly context: RequestContextService,
     private readonly cache: CacheService,
+    private readonly products: ProductRepository,
+    private readonly warehouses: WarehouseRepository,
   ) {}
 
+  /**
+   * `InventoryLevelEntity`/`InventoryMovementEntity` key everything by the
+   * internal numeric FK (`NumericIdEntity.id`) — the checkout reservation
+   * path above already passes those correctly, resolved once by its own
+   * caller. The console-facing methods below take the *public* ULID instead
+   * (matching every other console endpoint and this module's own Zod
+   * contracts), so each one resolves public → internal before touching a
+   * repository, and back again for anything echoed in a response.
+   *
+   * Found live: `adjust`/`transfer`/`upsertSettings` all 500'd with MySQL's
+   * "Data truncated for column 'warehouse_id'" the first time a real
+   * warehouse/product public id reached a raw parameterized INSERT/UPDATE
+   * against a `bigint` column. The read paths (`listForProduct`, `low-stock`)
+   * never surfaced this because MySQL's lenient implicit string→int
+   * coercion on a `SELECT ... WHERE product_id = '<ulid>'` parses the ULID's
+   * leading digits and, for an early-created row whose internal id is small,
+   * can coincidentally match — silently correct by chance, not by design.
+   */
+  private async resolveProductId(publicId: string): Promise<string> {
+    return (await this.products.findByPublicIdOrFail(publicId)).id;
+  }
+
+  private async resolveWarehouseId(publicId: string): Promise<string> {
+    return (await this.warehouses.findByPublicIdOrFail(publicId)).id;
+  }
+
+  private async resolveVariantId(publicId: string | null): Promise<string | null> {
+    if (!publicId) return null;
+    const tenantId = this.context.requireTenantId('inventory variant lookup');
+    const rows = (await this.manager.query(
+      `SELECT id FROM product_variants WHERE tenant_id = ? AND public_id = ?`,
+      [tenantId, publicId],
+    )) as { id: string }[];
+    if (rows.length === 0) throw new NotFoundError('ProductVariant', publicId);
+    return rows[0].id;
+  }
+
   async listForProduct(productId: string, variantId?: string | null): Promise<InventoryLevelResponse[]> {
-    const rows = await this.levels.findByProduct(productId, variantId);
-    const warehouseNames = await this.warehouseNames(rows.map((r) => r.warehouseId));
-    return rows.map((row) => this.toResponse(row, warehouseNames.get(row.warehouseId) ?? row.warehouseId));
+    const internalProductId = await this.resolveProductId(productId);
+    const internalVariantId = variantId === undefined ? undefined : await this.resolveVariantId(variantId);
+    const rows = await this.levels.findByProduct(internalProductId, internalVariantId);
+    const names = await this.warehouseNames(rows.map((r) => r.warehouseId));
+    const warehousePublicIds = await this.warehousePublicIds(rows.map((r) => r.warehouseId));
+    return rows.map((row) =>
+      this.toResponse(row, {
+        warehouseId: warehousePublicIds.get(row.warehouseId) ?? row.warehouseId,
+        warehouseName: names.get(row.warehouseId) ?? row.warehouseId,
+        productId,
+        variantId: variantId ?? null,
+      }),
+    );
   }
 
   async upsertSettings(input: {
@@ -39,7 +98,15 @@ export class InventoryService {
     reorderQuantity?: number | null;
     binLocation?: string | null;
   }): Promise<InventoryLevelResponse> {
-    const slot = await this.levels.ensureSlot(input);
+    const internalWarehouseId = await this.resolveWarehouseId(input.warehouseId);
+    const internalProductId = await this.resolveProductId(input.productId);
+    const internalVariantId = await this.resolveVariantId(input.variantId);
+
+    const slot = await this.levels.ensureSlot({
+      warehouseId: internalWarehouseId,
+      productId: internalProductId,
+      variantId: internalVariantId,
+    });
     Object.assign(slot, {
       reorderPoint: input.reorderPoint === undefined ? slot.reorderPoint : input.reorderPoint,
       reorderQuantity: input.reorderQuantity === undefined ? slot.reorderQuantity : input.reorderQuantity,
@@ -48,8 +115,13 @@ export class InventoryService {
     await this.levels.save(slot);
     await this.cache.invalidate('inventory');
 
-    const name = (await this.warehouseNames([slot.warehouseId])).get(slot.warehouseId) ?? slot.warehouseId;
-    return this.toResponse(slot, name);
+    const name = (await this.warehouseNames([slot.warehouseId])).get(slot.warehouseId) ?? input.warehouseId;
+    return this.toResponse(slot, {
+      warehouseId: input.warehouseId,
+      warehouseName: name,
+      productId: input.productId,
+      variantId: input.variantId,
+    });
   }
 
   /**
@@ -68,11 +140,19 @@ export class InventoryService {
     reason?: string;
     unitCostMinor?: string;
   }): Promise<InventoryLevelResponse> {
+    const internalWarehouseId = await this.resolveWarehouseId(input.warehouseId);
+    const internalProductId = await this.resolveProductId(input.productId);
+    const internalVariantId = await this.resolveVariantId(input.variantId);
+
     return this.manager.transaction(async (tx) => {
       const levels = this.scopedTo(tx, this.levels);
       const movementsRepo = this.scopedTo(tx, this.movements);
 
-      const slot = await levels.ensureSlot(input);
+      const slot = await levels.ensureSlot({
+        warehouseId: internalWarehouseId,
+        productId: internalProductId,
+        variantId: internalVariantId,
+      });
       const applied = await levels.adjustOnHand(slot.id, input.quantityDelta);
       if (!applied) {
         throw new BusinessRuleError('Adjustment would take stock below zero');
@@ -80,9 +160,9 @@ export class InventoryService {
 
       const refreshed = await levels.findOneOrFail({ where: { id: slot.id } });
       await movementsRepo.record({
-        warehouseId: input.warehouseId,
-        productId: input.productId,
-        variantId: input.variantId,
+        warehouseId: internalWarehouseId,
+        productId: internalProductId,
+        variantId: internalVariantId,
         type: input.type,
         quantityDelta: input.quantityDelta,
         quantityAfter: refreshed.quantityOnHand,
@@ -94,7 +174,13 @@ export class InventoryService {
       });
 
       await this.cache.invalidate('inventory');
-      return this.toResponse(refreshed, await this.warehouseName(refreshed.warehouseId));
+      const name = await this.warehouseName(refreshed.warehouseId);
+      return this.toResponse(refreshed, {
+        warehouseId: input.warehouseId,
+        warehouseName: name,
+        productId: input.productId,
+        variantId: input.variantId,
+      });
     });
   }
 
@@ -110,14 +196,19 @@ export class InventoryService {
       throw new BusinessRuleError('Source and destination warehouses must differ');
     }
 
+    const internalFromWarehouseId = await this.resolveWarehouseId(input.fromWarehouseId);
+    const internalToWarehouseId = await this.resolveWarehouseId(input.toWarehouseId);
+    const internalProductId = await this.resolveProductId(input.productId);
+    const internalVariantId = await this.resolveVariantId(input.variantId);
+
     await this.manager.transaction(async (tx) => {
       const levels = this.scopedTo(tx, this.levels);
       const movementsRepo = this.scopedTo(tx, this.movements);
 
       const source = await levels.ensureSlot({
-        warehouseId: input.fromWarehouseId,
-        productId: input.productId,
-        variantId: input.variantId,
+        warehouseId: internalFromWarehouseId,
+        productId: internalProductId,
+        variantId: internalVariantId,
       });
 
       const removed = await levels.adjustOnHand(source.id, -input.quantity);
@@ -125,9 +216,9 @@ export class InventoryService {
 
       const sourceAfter = await levels.findOneOrFail({ where: { id: source.id } });
       await movementsRepo.record({
-        warehouseId: input.fromWarehouseId,
-        productId: input.productId,
-        variantId: input.variantId,
+        warehouseId: internalFromWarehouseId,
+        productId: internalProductId,
+        variantId: internalVariantId,
         type: 'TRANSFER_OUT',
         quantityDelta: -input.quantity,
         quantityAfter: sourceAfter.quantityOnHand,
@@ -138,16 +229,16 @@ export class InventoryService {
       });
 
       const dest = await levels.ensureSlot({
-        warehouseId: input.toWarehouseId,
-        productId: input.productId,
-        variantId: input.variantId,
+        warehouseId: internalToWarehouseId,
+        productId: internalProductId,
+        variantId: internalVariantId,
       });
       await levels.adjustOnHand(dest.id, input.quantity);
       const destAfter = await levels.findOneOrFail({ where: { id: dest.id } });
       await movementsRepo.record({
-        warehouseId: input.toWarehouseId,
-        productId: input.productId,
-        variantId: input.variantId,
+        warehouseId: internalToWarehouseId,
+        productId: internalProductId,
+        variantId: internalVariantId,
         type: 'TRANSFER_IN',
         quantityDelta: input.quantity,
         quantityAfter: destAfter.quantityOnHand,
@@ -365,13 +456,16 @@ export class InventoryService {
     items: InventoryMovementResponse[];
     total: number;
   }> {
-    const { items, total } = await this.movements.listByProduct(productId, page, limit);
+    const internalProductId = await this.resolveProductId(productId);
+    const { items, total } = await this.movements.listByProduct(internalProductId, page, limit);
+    const warehousePublicIds = await this.warehousePublicIds(items.map((m) => m.warehouseId));
+    const variantPublicIds = await this.variantPublicIds(items.map((m) => m.variantId));
     return {
       items: items.map((m) => ({
         id: m.id,
-        warehouseId: m.warehouseId,
-        productId: m.productId,
-        variantId: m.variantId,
+        warehouseId: warehousePublicIds.get(m.warehouseId) ?? m.warehouseId,
+        productId,
+        variantId: m.variantId ? (variantPublicIds.get(m.variantId) ?? m.variantId) : null,
         type: m.type,
         quantityDelta: m.quantityDelta,
         quantityAfter: m.quantityAfter,
@@ -387,7 +481,17 @@ export class InventoryService {
   async listLowStock(limit = 100): Promise<InventoryLevelResponse[]> {
     const rows = await this.levels.listLowStock(limit);
     const names = await this.warehouseNames(rows.map((r) => r.warehouseId));
-    return rows.map((row) => this.toResponse(row, names.get(row.warehouseId) ?? row.warehouseId));
+    const warehousePublicIds = await this.warehousePublicIds(rows.map((r) => r.warehouseId));
+    const productPublicIds = await this.productPublicIds(rows.map((r) => r.productId));
+    const variantPublicIds = await this.variantPublicIds(rows.map((r) => r.variantId));
+    return rows.map((row) =>
+      this.toResponse(row, {
+        warehouseId: warehousePublicIds.get(row.warehouseId) ?? row.warehouseId,
+        warehouseName: names.get(row.warehouseId) ?? row.warehouseId,
+        productId: productPublicIds.get(row.productId) ?? row.productId,
+        variantId: row.variantId ? (variantPublicIds.get(row.variantId) ?? row.variantId) : null,
+      }),
+    );
   }
 
   // =========================================================================
@@ -418,12 +522,45 @@ export class InventoryService {
     return new Map(rows.map((r) => [r.id, r.name]));
   }
 
-  private toResponse(level: InventoryLevelEntity, warehouseName: string): InventoryLevelResponse {
+  private async warehousePublicIds(internalIds: string[]): Promise<Map<string, string>> {
+    const unique = [...new Set(internalIds)];
+    if (unique.length === 0) return new Map();
+    const tenantId = this.context.requireTenantId('inventory warehouse lookup');
+    const rows = (await this.manager.query(
+      `SELECT id, public_id AS publicId FROM warehouses WHERE tenant_id = ? AND id IN (${unique.map(() => '?').join(',')})`,
+      [tenantId, ...unique],
+    )) as { id: string; publicId: string }[];
+    return new Map(rows.map((r) => [r.id, r.publicId]));
+  }
+
+  private async productPublicIds(internalIds: string[]): Promise<Map<string, string>> {
+    const unique = [...new Set(internalIds)];
+    if (unique.length === 0) return new Map();
+    const tenantId = this.context.requireTenantId('inventory product lookup');
+    const rows = (await this.manager.query(
+      `SELECT id, public_id AS publicId FROM products WHERE tenant_id = ? AND id IN (${unique.map(() => '?').join(',')})`,
+      [tenantId, ...unique],
+    )) as { id: string; publicId: string }[];
+    return new Map(rows.map((r) => [r.id, r.publicId]));
+  }
+
+  private async variantPublicIds(internalIds: (string | null)[]): Promise<Map<string, string>> {
+    const unique = [...new Set(internalIds.filter((v): v is string => v !== null))];
+    if (unique.length === 0) return new Map();
+    const tenantId = this.context.requireTenantId('inventory variant lookup');
+    const rows = (await this.manager.query(
+      `SELECT id, public_id AS publicId FROM product_variants WHERE tenant_id = ? AND id IN (${unique.map(() => '?').join(',')})`,
+      [tenantId, ...unique],
+    )) as { id: string; publicId: string }[];
+    return new Map(rows.map((r) => [r.id, r.publicId]));
+  }
+
+  private toResponse(level: InventoryLevelEntity, ids: ResponseIds): InventoryLevelResponse {
     return {
-      warehouseId: level.warehouseId,
-      warehouseName,
-      productId: level.productId,
-      variantId: level.variantId,
+      warehouseId: ids.warehouseId,
+      warehouseName: ids.warehouseName,
+      productId: ids.productId,
+      variantId: ids.variantId,
       quantityOnHand: level.quantityOnHand,
       quantityReserved: level.quantityReserved,
       quantityIncoming: level.quantityIncoming,

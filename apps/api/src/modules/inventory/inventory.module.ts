@@ -2,6 +2,8 @@ import { Global, Module } from '@nestjs/common';
 import { InventoryController } from './inventory.controller';
 import { InventoryLevelRepository, InventoryMovementRepository } from './inventory.repository';
 import { InventoryService } from './inventory.service';
+import { WarehouseController } from './warehouse.controller';
+import { WarehouseRepository } from './warehouse.repository';
 
 /**
  * `@Global()`: checkout's reservation step and the order-cancellation restock
@@ -11,8 +13,8 @@ import { InventoryService } from './inventory.service';
  */
 @Global()
 @Module({
-  controllers: [InventoryController],
-  providers: [InventoryLevelRepository, InventoryMovementRepository, InventoryService],
+  controllers: [InventoryController, WarehouseController],
+  providers: [InventoryLevelRepository, InventoryMovementRepository, InventoryService, WarehouseRepository],
   exports: [InventoryService],
 })
 export class InventoryModule {}
