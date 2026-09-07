@@ -13,6 +13,7 @@ export const QueueName = {
   NOTIFICATION: 'notification',
   CHANNEL_SYNC: 'channel-sync',
   IMPORT_EXPORT: 'import-export',
+  TENANT_EXPORT: 'tenant-export',
   MEDIA_PROCESS: 'media-process',
   REPORT_GENERATION: 'report-generation',
   PROVISIONING: 'provisioning',
@@ -49,6 +50,16 @@ export const QUEUE_SETTINGS: Record<QueueName, QueueSettings> = {
   [QueueName.NOTIFICATION]: { concurrency: 20, attempts: 3, backoffMs: 3_000 },
   [QueueName.CHANNEL_SYNC]: { concurrency: 4, attempts: 5, backoffMs: 10_000 },
   [QueueName.IMPORT_EXPORT]: { concurrency: 2, attempts: 1, backoffMs: 0 },
+  // A dedicated queue, not reused from IMPORT_EXPORT: two independent BullMQ
+  // `Worker` instances subscribed to the same queue name compete for every
+  // job regardless of name — `ProductImportProcessor`'s own worker would
+  // sometimes win the race for a `tenant-export` job, see its `job.name`
+  // guard return silently (no error), and BullMQ would mark the job
+  // "completed" having done nothing, with `job_runs` never updated. Found
+  // live: two real export jobs sat `QUEUED` forever despite the worker
+  // being confirmed up and listening. One queue per processor, like every
+  // other consumer in this file, is what actually avoids this.
+  [QueueName.TENANT_EXPORT]: { concurrency: 2, attempts: 2, backoffMs: 5_000 },
   [QueueName.MEDIA_PROCESS]: { concurrency: 6, attempts: 3, backoffMs: 3_000 },
   [QueueName.REPORT_GENERATION]: { concurrency: 3, attempts: 2, backoffMs: 5_000 },
   [QueueName.PROVISIONING]: { concurrency: 2, attempts: 5, backoffMs: 15_000 },

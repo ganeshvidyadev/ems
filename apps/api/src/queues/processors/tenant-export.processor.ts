@@ -55,8 +55,10 @@ export class TenantExportProcessor implements OnApplicationBootstrap, OnApplicat
   onApplicationBootstrap(): void {
     if (process.env.EMS_ROLE !== 'worker') return;
 
-    const settings = QUEUE_SETTINGS[QueueName.IMPORT_EXPORT];
-    this.worker = new Worker<TenantExportJobData>(QueueName.IMPORT_EXPORT, (job) => this.handle(job), {
+    // Its own queue, not IMPORT_EXPORT — see QUEUE_SETTINGS[TENANT_EXPORT]'s
+    // own comment for the real bug two workers sharing one queue caused.
+    const settings = QUEUE_SETTINGS[QueueName.TENANT_EXPORT];
+    this.worker = new Worker<TenantExportJobData>(QueueName.TENANT_EXPORT, (job) => this.handle(job), {
       connection: this.connection,
       concurrency: settings.concurrency,
     });
@@ -65,7 +67,7 @@ export class TenantExportProcessor implements OnApplicationBootstrap, OnApplicat
       this.logger.error(`Tenant export job ${job?.id ?? '?'} failed: ${error.message}`);
     });
 
-    this.logger.log('Tenant export consumer listening on import-export queue');
+    this.logger.log(`Tenant export worker listening (concurrency ${settings.concurrency})`);
   }
 
   private async handle(job: Job<TenantExportJobData>): Promise<void> {

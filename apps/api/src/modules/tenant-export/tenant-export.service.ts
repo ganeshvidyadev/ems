@@ -55,7 +55,7 @@ export class TenantExportService {
       correlationId: this.context.correlationId ?? null,
     };
 
-    await this.queues.get(QueueName.IMPORT_EXPORT).add('tenant-export', jobData);
+    await this.queues.get(QueueName.TENANT_EXPORT).add('tenant-export', jobData);
 
     return { jobId: jobRun.id, status: jobRun.status };
   }
