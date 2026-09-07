@@ -22,6 +22,7 @@ export * from './media/media.contracts.js';
 export * from './product/product.contracts.js';
 export * from './inventory/inventory.contracts.js';
 export * from './customer/customer.contracts.js';
+export * from './review/review.contracts.js';
 export * from './cart/cart.contracts.js';
 export * from './coupon/coupon.contracts.js';
 export * from './gift-card/gift-card.contracts.js';

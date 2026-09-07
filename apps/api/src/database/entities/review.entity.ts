@@ -1,4 +1,4 @@
-import { Column, Entity } from 'typeorm';
+import { Column, DeleteDateColumn, Entity } from 'typeorm';
 import { BOOLEAN_COLUMN, BaseEntity, DATETIME3 } from './base.entity';
 import { TenantScoped } from '../../common/decorators/tenant-scoped.decorator';
 
@@ -60,6 +60,9 @@ export class ReviewEntity extends BaseEntity {
   @Column({ name: 'moderated_at', ...DATETIME3, nullable: true })
   moderatedAt!: Date | null;
 
-  @Column({ name: 'deleted_at', ...DATETIME3, nullable: true })
+  // `@DeleteDateColumn`, not a plain `@Column` — `repository.softRemove()`
+  // throws `MissingDeleteDateColumnError` without it, the same bug found and
+  // fixed on ProductEntity/CouponEntity/CustomerEntity earlier this session.
+  @DeleteDateColumn({ name: 'deleted_at', ...DATETIME3 })
   deletedAt!: Date | null;
 }

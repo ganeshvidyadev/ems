@@ -30,6 +30,7 @@ import { ProductModule } from './modules/product/product.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { CustomerModule } from './modules/customer/customer.module';
 import { CouponModule } from './modules/coupon/coupon.module';
+import { ReviewModule } from './modules/review/review.module';
 import { GiftCardModule } from './modules/gift-card/gift-card.module';
 import { LoyaltyModule } from './modules/loyalty/loyalty.module';
 import { CartModule } from './modules/cart/cart.module';
@@ -125,6 +126,7 @@ import { RequestContextService } from './common/services/request-context.service
     InventoryModule,
     CustomerModule,
     CouponModule,
+    ReviewModule,
     GiftCardModule,
     LoyaltyModule,
     CartModule,
