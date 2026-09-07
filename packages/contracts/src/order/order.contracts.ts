@@ -127,6 +127,7 @@ export const orderListQuerySchema = listQuerySchema.extend({
     { field: 'createdAt', direction: 'DESC' },
   ]),
 });
+export type OrderListQuery = z.infer<typeof orderListQuerySchema>;
 
 export const cancelOrderRequestSchema = z.object({
   reason: z.string().trim().max(255).optional(),
