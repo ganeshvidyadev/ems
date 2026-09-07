@@ -78,6 +78,7 @@ export const couponListQuerySchema = listQuerySchema.extend({
   status: z.enum(COUPON_STATUSES).optional(),
   sort: sortQuerySchema(['code', 'createdAt', 'usageCount'] as const),
 });
+export type CouponListQuery = z.infer<typeof couponListQuerySchema>;
 
 export const validateCouponRequestSchema = z.object({
   code: z.string().trim().min(1).max(64),

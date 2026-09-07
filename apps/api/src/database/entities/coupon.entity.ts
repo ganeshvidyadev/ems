@@ -1,4 +1,4 @@
-import { Column, Entity } from 'typeorm';
+import { Column, DeleteDateColumn, Entity } from 'typeorm';
 import { BOOLEAN_COLUMN, BaseEntity, DATETIME3, NumericIdEntity } from './base.entity';
 import { TenantScoped } from '../../common/decorators/tenant-scoped.decorator';
 
@@ -100,7 +100,11 @@ export class CouponEntity extends BaseEntity {
   @Column({ name: 'created_by', type: 'bigint', unsigned: true, nullable: true })
   createdBy!: string | null;
 
-  @Column({ name: 'deleted_at', ...DATETIME3, nullable: true })
+  // `@DeleteDateColumn`, not a plain `@Column` — `repository.softRemove()`
+  // (used by `CouponService.remove()`) throws `MissingDeleteDateColumnError`
+  // without it. Found live: every coupon DELETE 500'd, the same bug ProductEntity
+  // had before it was fixed earlier this session.
+  @DeleteDateColumn({ name: 'deleted_at', ...DATETIME3 })
   deletedAt!: Date | null;
 
   get isWithinWindow(): boolean {
