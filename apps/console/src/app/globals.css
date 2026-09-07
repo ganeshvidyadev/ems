@@ -9,77 +9,150 @@
  * parallel set of utilities on every element. The storefront extends this idea to
  * per-tenant theming, where the values are injected at request time — a Tailwind
  * build per tenant would not scale past a few hundred stores (docs/01 §12).
+ *
+ * Declared OUTSIDE `@layer base`, which is not a style preference — it is load-bearing.
+ * Tailwind treats a *class* selector written inside `@layer` as a candidate for
+ * purging, and keeps it only if the class name appears somewhere in `content`. No file
+ * in this app uses a `dark:` variant or the literal class, so `.dark` was being stripped
+ * from the build entirely: the whole dark palette below was dead CSS, and adding
+ * `class="dark"` to <html> changed nothing. `:root` survived only because it is not a
+ * class. Unlayered, both blocks always ship.
  */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 224 71% 4%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 224 71% 4%;
+
+  --primary: 221 83% 53%;
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 221 39% 11%;
+
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%;
+
+  --accent: 220 14% 96%;
+  --accent-foreground: 221 39% 11%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 210 40% 98%;
+
+  --success: 142 71% 45%;
+  --success-foreground: 0 0% 100%;
+
+  --warning: 38 92% 50%;
+  --warning-foreground: 224 71% 4%;
+
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 221 83% 53%;
+
+  --radius: 0.5rem;
+  /*
+   * Inter first: it ships with a lot of design tooling and many machines already
+   * have it, and where it exists the numerals and tighter metrics read closer to
+   * the Stripe/Linear reference. Everything after it is the previous stack
+   * verbatim, so a machine without Inter renders exactly as before — no webfont
+   * request, no layout shift, no build-time font download.
+   */
+  --font-sans: 'Inter var', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /*
+   * Elevation, as tokens.
+   *
+   * The console leaned on `border` for every boundary, which stacks into a grid of
+   * 1px lines once a page has cards inside cards. Shadows separate surfaces without
+   * drawing anything, so a panel can drop its border and still read as a panel.
+   * Values are deliberately low-contrast — two stacked shadows (a tight contact
+   * shadow plus a wide ambient one) rather than one large blur.
+   */
+  --shadow-xs: 0 1px 2px 0 hsl(224 71% 4% / 0.05);
+  --shadow-card: 0 1px 2px 0 hsl(224 71% 4% / 0.04), 0 1px 3px 0 hsl(224 71% 4% / 0.06);
+  --shadow-raised: 0 2px 4px -1px hsl(224 71% 4% / 0.06), 0 8px 16px -4px hsl(224 71% 4% / 0.08);
+  --shadow-overlay: 0 8px 24px -6px hsl(224 71% 4% / 0.16), 0 16px 48px -12px hsl(224 71% 4% / 0.14);
+
+  /*
+   * Motion. One duration scale and one easing, so a fade and a slide that fire
+   * together actually finish together. `--ease-out` is a decelerating curve: fast
+   * start, soft landing, which is what makes an entrance feel responsive rather
+   * than slow.
+   */
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 280ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dark {
+  --background: 224 71% 4%;
+  --foreground: 210 20% 98%;
+
+  --card: 224 71% 6%;
+  --card-foreground: 210 20% 98%;
+
+  --primary: 217 91% 60%;
+  --primary-foreground: 224 71% 4%;
+
+  --secondary: 215 28% 17%;
+  --secondary-foreground: 210 20% 98%;
+
+  --muted: 215 28% 17%;
+  --muted-foreground: 218 11% 65%;
+
+  --accent: 215 28% 17%;
+  --accent-foreground: 210 20% 98%;
+
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 210 20% 98%;
+
+  --success: 142 69% 38%;
+  --success-foreground: 0 0% 100%;
+
+  --warning: 38 92% 50%;
+  --warning-foreground: 224 71% 4%;
+
+  --border: 215 28% 17%;
+  --input: 215 28% 17%;
+  --ring: 217 91% 60%;
+
+  /*
+   * Dark-mode elevation cannot be a darker shadow — there is nothing lighter
+   * behind it to darken. Depth comes from an inset hairline highlight along the
+   * top edge (light catching a raised surface) plus a shadow black enough to read
+   * against a near-black background.
+   */
+  --shadow-xs: 0 1px 2px 0 hsl(224 71% 2% / 0.4);
+  --shadow-card: inset 0 1px 0 0 hsl(210 20% 98% / 0.04), 0 1px 3px 0 hsl(224 71% 2% / 0.5);
+  --shadow-raised: inset 0 1px 0 0 hsl(210 20% 98% / 0.05), 0 8px 16px -4px hsl(224 71% 2% / 0.6);
+  --shadow-overlay: inset 0 1px 0 0 hsl(210 20% 98% / 0.06), 0 16px 48px -12px hsl(224 71% 2% / 0.8);
+}
+
+/*
+ * Project utilities, also unlayered for the reason given above: these are class
+ * selectors, and inside `@layer base` each one survives only as long as some file
+ * still references it. `.tabular` happens to be used today; that is not a guarantee
+ * worth building a stylesheet on.
+ */
+
+/* Tabular figures so money columns align vertically in tables. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Large numbers and page titles want negative tracking — at 24px+ the default
+ * letter-spacing that helps body text read looks loose and unfinished. Tabular
+ * figures too, so a metric does not change width as its digits change.
+ */
+.display {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71% 4%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
-
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 221 39% 11%;
-
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
-
-    --accent: 220 14% 96%;
-    --accent-foreground: 221 39% 11%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
-
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
-
-    --warning: 38 92% 50%;
-    --warning-foreground: 224 71% 4%;
-
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 221 83% 53%;
-
-    --radius: 0.5rem;
-    --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  }
-
-  .dark {
-    --background: 224 71% 4%;
-    --foreground: 210 20% 98%;
-
-    --card: 224 71% 6%;
-    --card-foreground: 210 20% 98%;
-
-    --primary: 217 91% 60%;
-    --primary-foreground: 224 71% 4%;
-
-    --secondary: 215 28% 17%;
-    --secondary-foreground: 210 20% 98%;
-
-    --muted: 215 28% 17%;
-    --muted-foreground: 218 11% 65%;
-
-    --accent: 215 28% 17%;
-    --accent-foreground: 210 20% 98%;
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 20% 98%;
-
-    --success: 142 69% 38%;
-    --success-foreground: 0 0% 100%;
-
-    --warning: 38 92% 50%;
-    --warning-foreground: 224 71% 4%;
-
-    --border: 215 28% 17%;
-    --input: 215 28% 17%;
-    --ring: 217 91% 60%;
-  }
-
   * {
     @apply border-border;
   }
@@ -91,8 +164,22 @@
       'calt' 1;
   }
 
-  /* Tabular figures so money columns align vertically in tables. */
-  .tabular {
-    font-variant-numeric: tabular-nums;
+  /*
+   * Honour the OS "reduce motion" setting globally rather than per component.
+   *
+   * Vestibular disorders make large transforms genuinely unpleasant, and a
+   * dashboard that staggers a dozen panels in is exactly the pattern that
+   * triggers it. Duration is collapsed to ~0 instead of removing the animation,
+   * so anything relying on an `animationend`/`transitionend` event still fires.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
