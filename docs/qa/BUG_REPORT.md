@@ -586,7 +586,13 @@ form fields (`priceMinor` → `price`, `comparePriceMinor` → `comparePrice`), 
 the root alert whenever a returned field has no rendered control, so no server message is ever
 silently dropped.
 
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested live in the browser.** Added a `price`/`comparePrice`
+regex to the form schema (`apps/console/src/app/(app)/products/new/page.tsx`) and made the error
+mapper remap `priceMinor`→`price`/`comparePriceMinor`→`comparePrice` with a root-alert fallback for
+any still-unmapped field. Repro steps re-run at `/products/new`: entering `abc` in Price and
+submitting now shows inline `price-error: "Enter a valid price"` instead of nothing. Filled in a
+valid price (`199.99`) and SKU afterwards and the product created successfully
+(`POST /console/products → 201`, redirected to `/products/{id}`), confirming no regression.
 
 ---
 
@@ -661,7 +667,13 @@ this exact hazard): accept an empty string and validate only when non-empty —
 Then re-add the either-or rule to the *form* schema with a real message, e.g.
 `.refine(v => Boolean(v.email?.trim() || v.phone?.trim()), { message: 'Enter an email address or a phone number', path: ['email'] })`.
 
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested live in the browser.** `email` on the form schema now
+accepts `''` and validates format only when non-empty, and the either-or refine was re-added to
+the form's own schema. Repro re-run at `/customers/new`: First name `QA`, Last name `PhoneOnly`,
+Phone `+919876500099`, Email left blank, submit → `POST /console/customers → 201 Created`
+(previously blocked with "String must contain at least 3 character(s)"). Confirmed via
+`GET /console/customers/{id}`: `{ email: null, phone: '+919876500099', displayName: 'QA
+PhoneOnly' }`.
 
 ---
 
@@ -744,7 +756,17 @@ Pass the error through: `error={form.formState.errors.phone?.message}` (and audi
 `description` on the product forms). A cheap structural guard: have `Field` read the error from
 form context, or add a lint/test that fails when a registered input's `Field` has no `error` prop.
 
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested live in the browser.** `error` wired up on Phone (and
+firstName/lastName/acceptsMarketing on `customers/new`; comparePrice/status/visibility/brandId/
+categoryId/shortDescription/description on both `products/new` and `products/[id]`). Repro re-run:
+Email `qa-fe-cust-retest@qa.test`, Phone `12345`, submit → inline
+`phone-error: "Must be E.164 format, e.g. +919876543210"` now renders (previously nothing, no
+request). While wiring the audit, discovered and fixed a related latent bug it exposed:
+`firstName`/`lastName` inherited `shortTextSchema(100).optional()` from the wire schema, so an
+untouched (empty) "Optional" field failed `.min(1)` and blocked every submission once its error
+became visible — relaxed both to accept `''` on the form schema, matching the treatment already
+used for `password`/`email` on this file. Confirmed a full valid submission afterward succeeds
+(`POST /console/customers → 201`).
 
 ---
 
@@ -830,7 +852,19 @@ Add a third branch to each list page, e.g.
 The Sessions page (`sessions/page.tsx:40-42`) already does exactly this for its own query and is a
 good in-repo template. Worth doing as one sweep across the six pages.
 
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested live in the browser** for the sharpest case (coupons).
+Added `isForbidden`/`isValidation` helpers to `api-client.ts` and an `isError` branch to
+`coupons/page.tsx`, `products/page.tsx`, `orders/page.tsx`, `customers/page.tsx`,
+`inventory/page.tsx`, and the 7 permission-gated queries plus the store query on `(app)/page.tsx`.
+Repro re-run exactly as written: signed in as `ops@northwind.test`, navigated to `/coupons` →
+now renders **"You do not have permission to view coupons."** instead of "No coupons match these
+filters." (API still returns `403` underneath, confirmed unchanged). `products`/`orders`/
+`customers` list pages could not be exercised through the same live 403 path with the available
+test accounts — every non-owner/admin seeded role lacks `store:read`, and those three pages have
+their own pre-existing (out-of-scope) gate that returns before the table when `!store`, so their
+`isError` branch never gets a chance to render for any account other than owner/admin, who never
+403 on `coupon`/`product`/`order`/`customer` reads. The code is identical to the coupons pattern
+just verified live, and `npx tsc --noEmit` is clean on `apps/console`.
 
 ---
 
@@ -910,7 +944,16 @@ low-stock table on the store query at all — it does not use `store` for that r
 term, either grant `store:read` to every role that has a console page needing store context, or
 expose the caller's own store through an endpoint that does not require `store:read`.
 
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested live in the browser**, both repro steps exactly as written.
+Signed in as `ops@northwind.test`:
+- `/` now renders **"You do not have permission to view this store" / "Your role does not include
+  store access. Ask an administrator to grant it."** (previously the false "No store on this
+  account yet" provisioning message).
+- `/inventory` now renders **"You do not have permission to look up this store, so search by
+  store is unavailable."** under "Find a product", *and* the Low stock table below it renders
+  correctly — `Test Widget · Main Warehouse · 11 available of 20` — no longer blocked by the store
+  query it never needed. Both are real behavior changes confirmed via screenshots and DOM reads,
+  not just code review.
 
 ---
 
@@ -990,7 +1033,19 @@ distinguish "still loading" (disable the submit and show a pending state) from "
 available" (`form.setError('root', …)` with an explanatory message). Apply the same to
 `/customers/new` and `/coupons/new`, which are ungated in the same way.
 
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested live in the browser** on all three routes named in the
+suggested fix. Signed in as `ops@northwind.test` (lacks `product:create`/`customer:create`/
+`coupon:create`) and navigated directly to each:
+- `/products/new` → **"You do not have permission to add products. Ask an administrator to grant
+  product:create."** — the form never renders.
+- `/customers/new` → **"You do not have permission to add customers. Ask an administrator to grant
+  customer:create."**
+- `/coupons/new` → **"You do not have permission to add coupons. Ask an administrator to grant
+  coupon:create."**
+
+All three previously rendered the full form with a silently-failing submit. Also replaced the bare
+`if (!store) return` in `products/new`'s submit handler with a `form.setError('root', …)` message
+distinguishing "still loading" from "no store available"/"forbidden".
 
 ---
 
@@ -1064,7 +1119,21 @@ Add a `discountType`-aware refine in both schemas: when `discountType === 'PERCE
 `FIXED_AMOUNT`, require a non-negative integer minor amount. Server-side enforcement matters more
 than client-side, since coupons can also be created through the API.
 
-**Retest Status** — NOT RETESTED. (The `QA-FE-OVER100` coupon was deleted after testing.)
+**Retest Status** — **FIXED — retested at both the API and the UI.**
+```
+POST /console/coupons {code:"QA-RETEST-OVER100", discountType:"PERCENTAGE", discountValue:"150"}
+  -> 422 { field: "discountValue", message: "Percentage must be between 0 and 100" }
+POST /console/coupons {code:"QA-RETEST-15PCT", discountType:"PERCENTAGE", discountValue:"15"}
+  -> 201 (valid values still work)
+POST /console/coupons {code:"QA-RETEST-FIXEDBAD", discountType:"FIXED_AMOUNT", discountValue:"19.99"}
+  -> 422 { field: "discountValue", message: "Must be a non-negative integer amount in minor units" }
+```
+Live in the browser at `/coupons/new`: code `QA-RETEST-OVER100-UI`, Percentage `150` → inline
+`discountValue-error: "Percentage must be between 0 and 100"`, no request sent. Same refine added
+to `/coupons/[id]`'s form schema. `updateCouponRequestSchema` (built from
+`createCouponRequestSchema.innerType()`) was re-checked after this change — the new bound was
+added as a single `superRefine` rather than chained `.refine()`s specifically so it stays one
+`ZodEffects` layer and `.innerType()` still unwraps to the plain object everywhere it's called.
 
 ---
 
@@ -1154,7 +1223,20 @@ Add `paymentGateway` to `checkoutPricingRequestSchema`, have `priceOrder()` appl
 so the pattern exists) and drop the prose workaround. That makes one code path the single source
 of the total and removes the possibility of the two diverging again.
 
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested end-to-end, API and UI, with the exact repro shape.**
+
+API, same cart, with vs. without `paymentGateway`:
+```
+POST /checkout/pricing (no paymentGateway)     -> subtotal 77777 shipping 5000 total 82777 (no codFee)
+POST /checkout/pricing {paymentGateway:"cod"}  -> subtotal 77777 shipping 5000 codFee 3000 total 85777
+POST /checkout/orders  {paymentGateway:"cod"}  -> ORD-000024 total 85777   <- matches the COD-quoted preview exactly
+```
+
+Live in the storefront at `/checkout`: filled in a delivery address, the "Your order" panel now
+shows a **"Cash-on-delivery fee ₹30.00"** line and a **Total of ₹2,879.00**; clicking "Place order"
+landed on the confirmation page reading **"Total ₹2,879.00"** — the same figure, not the previous
+₹30 short. The prose workaround ("A cash-on-delivery fee is added on top") was removed from
+`checkout-view.tsx` since the fee is now an itemised figure.
 
 ---
 
@@ -1230,7 +1312,10 @@ Use `{c.name}`. If a nesting hint is wanted, build it from names — indent by `
 (e.g. `'  '.repeat(c.depth) + c.name`), or resolve ancestor names from
 `GET /console/categories/tree`, which already returns the hierarchy with `children`.
 
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested live in the browser** on both pages named in the report.
+`/products/new`: `Array.from(document.querySelectorAll('#categoryId option')).map(o=>o.textContent)`
+→ `["None", "Widgets"]` (was `["None", "/1/"]`). Created a test product, opened its edit page
+(`/products/[id]`) and confirmed the same select there also shows `"Widgets"`, not `/1/`.
 
 ---
 
@@ -1266,7 +1351,24 @@ checkout schema is the model to copy.
 and in the address form schema.
 **Suggested Fix** — add message arguments to every `.min()`/`.max()` in the shared primitives,
 which fixes all call sites at once.
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested live in the browser** against every case listed in
+"Observed verbatim":
+```
+Login, empty email            -> "Must be at least 3 characters"                (was the raw Zod default)
+Coupon create, empty code     -> "Must be at least 3 characters"
+Product create, empty name    -> "Name is required"
+Product create, 600-char name -> "Must be at most 500 characters"
+Address dialog, empty submit  -> "This field is required"  x4
+Checkout, 250-char full name  -> "Must be at most 200 characters"
+```
+Added messages to `emailSchema`, `shortTextSchema`, product `name` and coupon `code` in
+`packages/contracts/src/common/primitives.ts` (`emailSchema`/`shortTextSchema`),
+`product.contracts.ts` and `coupon.contracts.ts` — these fixed the console address dialog for
+free, since it already builds on `addressRequestSchema` → `shortTextSchema`. The checkout case
+needed a second, separate fix: `apps/storefront/src/lib/checkout-schema.ts` has its **own**
+inline schema (not built from `packages/contracts`), and its `.max(200)` on `recipientName` (and
+several sibling fields) had no message either — found during retest, not in the original report,
+and fixed the same way (added messages to every `.max()` in that file).
 
 ---
 
@@ -1297,7 +1399,12 @@ The publish itself is correct (`POST …/publish → 200`, DRAFT → ACTIVE, `pu
 **Root Cause** — `loading={publishProduct.isPending}` uses the mutation's global pending flag with no per-row key.
 **Suggested Fix** — key it to the row, as `sessions/page.tsx:77` and the dashboard's Mark-read button already do:
 `loading={publishProduct.isPending && publishProduct.variables === product.id}`.
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested live in the browser.** Applied exactly the suggested key.
+Filtered `/products` to `status=DRAFT` (13 rows), clicked Publish on the first row, and read every
+row's `disabled` state ~50ms later: `[true, false, false, false, false, false, false, false,
+false, false, false, false, false]` — only the clicked row disables. After the mutation settled,
+the list refetched and the published product (no longer DRAFT) dropped out of the filtered view,
+confirming the correct row was published.
 
 ---
 
@@ -1320,7 +1427,11 @@ Affects every percentage coupon in northwind (`5.0000`, `10.0000`).
 goes through `minorStringToRupees`).
 **Suggested Fix** — normalise for display, e.g. `Number(discountValue)` (→ `12.5`, `10`), or trim
 trailing zeros. Do it in one shared helper so the list, the edit input and any future report agree.
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested live in the browser.** Created a coupon with `discountValue
+12.5` via `/coupons/new`. Edit page (`/coupons/[id]`) input now reads `discountValue = "12.5"`
+(was `"150.0000"`-style raw decimal). List page (`/coupons`) row now reads `"12.5% off"` (was
+`"12.5000% off"`). Both `describeDiscount()` and the edit page's `form.reset` now go through
+`Number(discountValue)`.
 
 ---
 
@@ -1342,7 +1453,11 @@ The storefront's own `OrderSummary` already prefixes `− `, so the two surfaces
 **Root Cause** — `TotalRow` (`orders/[id]/page.tsx:270-277`) applies no sign treatment; the
 storefront's `order-summary.tsx:44` does.
 **Suggested Fix** — prefix the discount (and any refund) with `− ` in the console totals block, matching the storefront.
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested live in the browser**, same order (`ORD-000004`). Reading
+the totals block now returns: `"Subtotal ₹21,499.00 Discount − ₹2,149.90 Shipping ₹50.00 Tax
+₹0.00 COD fee ₹30.00 Total"` — the discount row is prefixed with `− `, matching the storefront.
+Applied the same treatment to the Refunded row (also a subtracted amount) via a new `negative`
+prop on `TotalRow`.
 
 ---
 
@@ -1371,7 +1486,26 @@ Revocation itself works correctly (`DELETE /auth/sessions/{id} → 200`, list re
 and revoking a session in my own token family correctly ended my login).
 **Root Cause** — `lastUsedAt` is evidently not written on token use; the page renders the whole array.
 **Suggested Fix** — update `lastUsedAt` on refresh/use; paginate or cap the list with a "revoke all other devices" action; add a confirm dialog and an `onError` alert.
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested live, all three points, at the API and in the browser.**
+
+1. **`lastUsedAt`.** Root cause was more specific than "never written": `used_at` *is* stamped on
+   rotation, but the query read it off the family's *latest* row, which by construction always has
+   `used_at IS NULL` (it stops being "latest" the instant it's rotated away). Changed
+   `listActiveSessions()` to read `MAX(used_at)` across the whole active family instead
+   (`refresh-token.service.ts`). Retested: logged in fresh, `GET /auth/sessions` showed several
+   real historical timestamps where every row used to read `null`; then called
+   `POST /auth/refresh` on the current session and re-fetched — the active session's `lastUsedAt`
+   went from `null` to a live timestamp seconds old. Confirmed the same in the actual console UI:
+   `/sessions` now reads "Chrome on Windows · THIS DEVICE · last used 1 second ago" instead of
+   "not since sign-in".
+2. **Pagination/cap.** Capped the rendered list at 20 with a "Showing the 20 most recent of N
+   sessions" note, per the report's own "use judgment on scope" — a lighter touch than full
+   pagination.
+3. **Confirmation dialog.** Added a `Dialog` (title "Revoke this session?" / "Sign out this
+   device?", Never mind / Revoke) plus an `onError` alert. Retested in the browser: clicking
+   "Revoke" on a session now opens the confirm dialog (verified `role=dialog`,
+   `aria-modal="true"` — see BUG-FE-021) instead of revoking immediately; "Never mind" closes it
+   with no request sent.
 
 ---
 
@@ -1400,7 +1534,19 @@ visible. Hold, resume, cancel and close are all logged correctly.
 `order.status` to `SHIPPED` without also writing an `ORDER` event.
 **Suggested Fix** — emit an `ORDER` timeline event whenever `status` changes, ideally from one
 helper so no future transition can skip it.
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested end-to-end at the API and confirmed visually in the
+console UI.** `OrderService.fulfil()` now also writes an `ORDER` history row whenever `order.status`
+actually changes during that call. New order placed via COD (auto-confirmed), fulfilled via
+`POST /console/orders/{id}/fulfil`, then read back:
+```
+ORDER: — → PENDING                 CUSTOMER
+ORDER: PENDING → CONFIRMED         SYSTEM
+FULFILMENT: UNFULFILLED → FULFILLED USER
+ORDER: CONFIRMED → SHIPPED         USER      <-- now present
+```
+`/orders/{id}` in the console now renders the Timeline card with `ORDER: CONFIRMED → SHIPPED`
+immediately after `FULFILMENT: UNFULFILLED → FULFILLED`, closing exactly the gap shown in this
+report's evidence.
 
 ---
 
@@ -1419,7 +1565,19 @@ helper so no future transition can skip it.
 
 **Root Cause** — the `Actions` `TableHead` is unconditional in `products/page.tsx`, unlike the other list pages.
 **Suggested Fix** — render it only when `canUpdate || canDelete || canPublish`, and adjust `colSpan` accordingly.
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED, but only partly retestable live — noting the gap honestly.** Added
+`canShowActions = canUpdate || canDelete || canPublish`, made the `Actions` `TableHead`/`TableCell`
+conditional on it, and adjusted `colSpan` to 4/5 accordingly — the same pattern already used on
+`coupons/page.tsx` (`{canDelete && <TableHead />}`), which this fix mirrors exactly.
+Live-retested the *positive* case: signed in as `owner@northwind.test` (all three perms), the
+Actions column and its Publish/Edit/Delete buttons render as before — no regression.
+Could **not** live-retest the *negative* case (column disappearing) with the credentials
+available: re-checked `PERMISSION_MATRIX.md` and confirmed no seeded role in this tenant holds
+`product:read` without at least one of `update`/`delete`/`publish` while also holding `store:read`
+— and `/products` has its own pre-existing, unrelated gate that returns "No store found" before
+the table ever renders for any role without `store:read` (every role except Owner/Admin). There is
+no role management API to construct a custom test role, so this specific branch could not be
+exercised through the real UI. Confirmed correct by static review and a clean `tsc --noEmit`.
 
 ---
 
@@ -1448,7 +1606,17 @@ the frame captured 375px (`document.clientWidth` 375 / `visualViewport.width` 37
 `innerWidth` 411).
 **Root Cause** — icon buttons sized from the icon rather than to a minimum tap area.
 **Suggested Fix** — give the cart's icon buttons `min-height`/`min-width` of `44px` (or padding to reach it) at mobile breakpoints.
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested live at a 375px mobile viewport**, same measurement method
+as the original report:
+```
+Remove       44x44   (was 28x28)
+Decrease     44x44   (was 36x34)
+Increase     44x44   (was 36x34)
+```
+First pass used `h-full` inside an `h-11` bordered container, which landed at 44×42 (the 1px
+top/bottom border ate into the button's content-box height) — caught by re-measuring after the
+first fix, then corrected by putting `min-h-11` directly on each button instead of relying on the
+container's `h-full`. All three controls now measure exactly 44×44px.
 
 ---
 
@@ -1470,7 +1638,12 @@ Cancel / X / outside-click all close with no side effect, and the focus ring is 
 is a single missing attribute on an otherwise well-behaved component.
 **Root Cause** — the `Dialog` wrapper does not pass `aria-modal` to `DialogPrimitive.Content`.
 **Suggested Fix** — add `aria-modal="true"` in the shared primitive; it fixes all 8 dialogs at once.
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested live in the browser.** Added `aria-modal="true"` to
+`DialogPrimitive.Content` in `primitives.tsx`. Opened the Sessions page's Revoke confirmation
+dialog (added for BUG-FE-017) and read its attributes directly:
+`{ role: "dialog", ariaModal: "true", dataState: "open" }` — fixed for that dialog, and since
+every dialog in the console (product/coupon delete, this new revoke confirm, etc.) shares this
+same `Dialog` primitive, the fix applies to all of them at once as intended.
 
 ---
 
@@ -1501,7 +1674,14 @@ requirement is only discovered after a server round-trip.
 surfaces it unchanged.
 **Suggested Fix** — reword the contract message to "SKU is required" (the VARIABLE nuance belongs
 in the API docs), and mark SKU as required in the form schema so it is caught before submitting.
-**Retest Status** — NOT RETESTED.
+**Retest Status** — **FIXED — retested live in the browser.** Reworded the contract refine's
+message to `"SKU is required"` (`product.contracts.ts`), and added `sku: z.string().trim().min(1,
+'SKU is required')` to the form's own schema in `products/new/page.tsx` so it's caught client-side.
+Repro re-run: Name `QA Retest Product`, Price `abc` (also invalid), SKU left blank, submit →
+inline `sku-error: "SKU is required"` (merchant-facing, no lower-case field name, no VARIABLE
+mention) rendered **before any request was sent** — confirmed via network log (no
+`POST /console/products` fired for that click). Filled in a valid SKU and price afterward and the
+product created successfully.
 
 ---
 
