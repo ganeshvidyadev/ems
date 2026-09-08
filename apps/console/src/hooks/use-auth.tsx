@@ -26,6 +26,25 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 /**
+ * Every route in `app/(auth)/` — a failed refresh on any of these must not
+ * bounce the visitor to `/login`, since they're the pages a signed-out
+ * visitor is actually trying to use.
+ *
+ * Found live (BUG-FE-001): this used to check only `pathname.startsWith('/login')`,
+ * so `/forgot-password`, `/reset-password`, `/verify-email` and `/accept-invite`
+ * all redirected an unauthenticated visitor straight back to `/login` the
+ * instant the bootstrap refresh 401'd — before they could ever use the page.
+ * It only rendered correctly while already signed in, which is why it went
+ * unnoticed: every manual check of these pages happened from an authenticated
+ * session.
+ */
+const AUTH_ROUTES = ['/login', '/forgot-password', '/reset-password', '/verify-email', '/accept-invite'];
+
+function isAuthRoute(pathname: string): boolean {
+  return AUTH_ROUTES.some((route) => pathname.startsWith(route));
+}
+
+/**
  * Session lifecycle.
  *
  * Two behaviours carry the design:
@@ -87,9 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setUnauthenticatedHandler(() => {
       clearSession();
-      // Only redirect if not already on an auth page, otherwise a failed refresh on the
-      // login page bounces the user in a loop.
-      if (!window.location.pathname.startsWith('/login')) {
+      // Only redirect if not already on an auth page, otherwise a failed refresh on
+      // login/forgot-password/reset-password/verify-email/accept-invite bounces the
+      // visitor away from the very page they're trying to use.
+      if (!isAuthRoute(window.location.pathname)) {
         router.replace('/login');
       }
     });

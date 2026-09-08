@@ -14,6 +14,16 @@ export interface ProductListFilter {
   brandId?: string;
   categoryId?: string;
   isFeatured?: boolean;
+  /**
+   * Plain name/SKU substring match — the console's own "Search by name or
+   * SKU" affordance, not the fulltext relevance search the storefront uses
+   * (`SearchPort`/`MysqlFulltextAdapter`, which also hardcodes ACTIVE+VISIBLE
+   * and would wrongly hide a merchant's own DRAFT products from their own
+   * search). Found live in QA: `q` was accepted by the schema, validated,
+   * and then never read anywhere in `ProductService.list()` — every search
+   * silently returned the unfiltered default listing.
+   */
+  q?: string;
 }
 
 export interface ProductListSort {
@@ -89,6 +99,9 @@ export class ProductRepository extends TenantScopedRepository<ProductEntity> {
       qb.innerJoin('product_categories', 'pc', 'pc.product_id = p.id AND pc.category_id = :categoryId', {
         categoryId: filter.categoryId,
       });
+    }
+    if (filter.q) {
+      qb.andWhere('(p.name LIKE :q OR p.sku LIKE :q)', { q: `%${filter.q}%` });
     }
 
     for (const clause of sort) {

@@ -438,25 +438,66 @@ boundary content; the boundary content lands in the `hidden` staging div; the in
 should swap it into `<main>` and complete hydration never takes effect; and no error is raised.
 It is confined to the subtree under `apps/storefront/src/app/products/loading.tsx`.
 
-**Caveat, stated deliberately.** This was reproduced on every fresh navigation and after full
-reloads, in two separate browser tabs, on both affected routes — but it did render correctly on
-the **very first** `/products` load of the session (12 product cards, all links present), and the
-server HTML is always complete. So it is intermittent-then-sticky rather than absolute, and it
-may be a Next.js dev-server streaming/HMR artifact rather than a defect that would ship. It is
-recorded as FAIL rather than PASS because it is what a shopper actually experienced for the rest
-of the session, and it is **explicitly flagged for re-verification against a production build**
-(`pnpm build && pnpm start`) before anyone spends time on a code fix. That verification was not
-run here because it was outside this phase's remit and the environment has no production build.
+**Update 2026-09-08 — reproduced against a clean production build; this is confirmed as a real
+defect, not a dev-server/HMR artifact.**
 
-**Suggested Fix**
+Ran `npx next build` (clean, `.next` removed first — ruled out a stale cache) then
+`npx next start --port 3002`, and opened `http://northwind.ems.localhost:3002/products` cold, on
+the very first request of a freshly started process. It reproduced immediately — no "works on the
+first load" grace period this time, which the original dev-server observation suggested might
+exist. This rules out both candidate explanations in the original caveat (dev-server streaming and
+HMR): there is no HMR in `next start`, and the failure is now the *first*-load behavior, not
+something that develops after a few navigations.
 
-Re-verify against a production build first. If it reproduces there, the likely candidates are the
-`loading.tsx` boundary interacting with `revalidate: 60` server fetches, or a mismatch between the
-streamed shell and the client tree. A pragmatic mitigation that also removes the risk entirely is
-to render the catalogue's own inline skeleton inside the page component (with `<Suspense>` scoped
-to the grid) instead of relying on a route-level `loading.tsx`.
+**Root cause, now precisely identified** by reading React's own streaming markers in the served
+HTML rather than guessing. Every Suspense boundary React streams gets a `hidden` placeholder div
+tagged with a segment id (`S:n`), and a same-page inline script calls `$RC("B:n","S:n")` or
+`$RS("S:n","P:n")` to reveal it once its content is ready:
 
-**Retest Status** — NOT RETESTED. Re-verification against a production build is required before this is treated as a code defect.
+```js
+// Extracted from the live page via document.querySelectorAll('script:not([src])')
+revealCalls: ["$RS(\"S:3\",\"P:3\")", "$RS(\"S:4\",\"P:4\")", ..., "$RS(\"S:13\",\"P:13\")",
+              "$RC(\"B:14\",\"S:14\")", "$RC(\"B:0\",\"S:0\")"]
+hiddenDivs:  [{id:""}, {id:"S:1", textPreview:"All products16 productsSort by..."},
+              {id:"S:14"}, {id:"S:0"}]
+```
+
+**`S:1` — the boundary holding the actual product grid — has real, fully server-rendered content
+sitting in its `hidden` div, but no `$RC`/`$RS` call anywhere in the document ever references
+`S:1`.** Every other boundary in the stream (`S:0`, `S:3`–`S:14`) gets its reveal call; this one
+is simply missing. The server computed and flushed the right HTML and then never flushed the
+instruction to show it — a truncated/dropped segment in the streaming response, not an application
+logic bug. `apps/storefront/src/app/products/page.tsx` and `catalogue-toolbar.tsx` were both
+re-read looking for anything that could cause this from the application side and found nothing —
+no manual Suspense usage, no unusual async patterns; the boundary is created implicitly by the
+route's own `loading.tsx`, same as every other route-level boundary in this app that works fine
+(cart/checkout have no `loading.tsx` and are unaffected, which was already known; the new
+information is that a production build is affected identically to dev).
+
+**Suspect environment factor, not yet isolated further**: this project's installed toolchain is
+Next.js **15.5.22** on React **19.2.8** on Node **v24.15.0** — an unusually new combination
+(Node 24 is a very recent major). A streaming-response truncation of exactly this shape (content
+flushed, terminal reveal script dropped, zero client or server error) is consistent with a
+Node-HTTP/Next-streaming-internals interaction bug rather than anything in this app's own code,
+but that is a hypothesis, not a confirmed diagnosis — it was not isolated further (e.g. by pinning
+an older Node LTS and rebuilding) because that is an environment/toolchain decision with a blast
+radius beyond this one route, and belongs to whoever owns that decision, not to a QA retest.
+
+**Suggested Fix** — two independent tracks, either sufficient on its own:
+1. **Toolchain**: try Node 20 or 22 LTS (matching `package.json`'s stated `engines` range if one
+   exists) against the same build, to test the version-skew hypothesis above directly.
+2. **Application-level mitigation, regardless of the toolchain root cause**: stop relying on the
+   route-level `loading.tsx` for this route's main content and render the catalogue's own inline
+   skeleton with an explicit `<Suspense>` scoped tightly around just the grid inside
+   `page.tsx`/a small wrapper component. A narrower, explicit boundary is easier to reason about
+   than the implicit route-level one and may not trigger whatever produces the dropped segment —
+   but this has not been tried or verified, it is a plausible mitigation, not a confirmed fix.
+
+**Retest Status** — RETESTED against a production build: confirmed FAIL, same as dev. Root cause
+narrowed to a specific missing stream segment (documented above) but not yet fixed — no code
+change has been made, per this phase's discovery-only rule. Severity stands at P1 (raised
+confidence it is real and would ship; not raised to P0 because checkout itself remains reachable
+by a cart created another way, and the fix options above are known, just not yet executed).
 
 ---
 

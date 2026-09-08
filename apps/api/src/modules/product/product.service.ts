@@ -46,6 +46,7 @@ export class ProductService {
         brandId: brandId ?? undefined,
         categoryId: categoryId ?? undefined,
         isFeatured: query.isFeatured,
+        q: query.q,
       },
       query.sort,
       (query.page - 1) * query.limit,
