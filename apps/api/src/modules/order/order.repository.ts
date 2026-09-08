@@ -70,6 +70,21 @@ export class OrderRepository extends TenantScopedRepository<OrderEntity> {
     const number = rows[0]?.lastNumber ?? '1';
     return `ORD-${number.padStart(6, '0')}`;
   }
+
+  /** Batch reverse of the forward `resolveId`-style lookups — internal ids to public ids in another tenant-owned table. */
+  async publicIdsFor(
+    table: 'stores' | 'products' | 'product_variants',
+    internalIds: (string | null)[],
+  ): Promise<Map<string, string>> {
+    const unique = [...new Set(internalIds.filter((id): id is string => id !== null))];
+    if (unique.length === 0) return new Map();
+    const rows = await this.manager.query(
+      `SELECT id, public_id AS publicId FROM \`${table}\`
+        WHERE tenant_id = ? AND id IN (${unique.map(() => '?').join(',')})`,
+      [this.tenantId, ...unique],
+    );
+    return new Map((rows as { id: string; publicId: string }[]).map((row) => [row.id, row.publicId]));
+  }
 }
 
 @Injectable()

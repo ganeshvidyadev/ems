@@ -6,11 +6,35 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Alert, Button, Card, CardBody, CardHeader, Field, Input, Select, Textarea } from '@/components/ui/primitives';
-import { ApiError } from '@/lib/api-client';
+import { usePermission } from '@/hooks/use-auth';
+import { ApiError, isForbidden } from '@/lib/api-client';
 import { useBrands, useCategories } from '@/lib/queries/catalog-refs';
 import { useCreateProduct } from '@/lib/queries/products';
 import { useCurrentStore } from '@/lib/queries/stores';
 import { rupeesToMinorString } from '@/lib/money';
+
+/** Wire fields the server may name in a validation error that this form does not
+ * render a control for directly — remapped to the form field that does, so no
+ * server message is ever silently dropped (BUG-FE-004). */
+const SERVER_FIELD_REMAP: Record<string, string> = {
+  priceMinor: 'price',
+  comparePriceMinor: 'comparePrice',
+};
+
+/** Every form field below that renders an `error` slot via `Field`. Kept in sync with
+ * the JSX so the mapper above can tell "no control for this field" from "control exists". */
+const FORM_FIELDS_WITH_ERROR_SLOT = new Set([
+  'name',
+  'sku',
+  'price',
+  'comparePrice',
+  'status',
+  'visibility',
+  'brandId',
+  'categoryId',
+  'shortDescription',
+  'description',
+]);
 
 /**
  * Form-only fields, not the wire schema: `priceMinor` is a rupee decimal here
@@ -42,9 +66,25 @@ const formSchema = createProductRequestSchema
     taxClassId: true,
   })
   .extend({
-    price: z.string().trim().min(1, 'Price is required'),
-    comparePrice: z.string().trim().optional(),
+    // Validated client-side so an invalid or negative price never reaches the
+    // server — previously `abc`/`-5` both slipped through `rupeesToMinorString`
+    // and came back as a 422 naming `priceMinor`, a field this form has no
+    // control for, so the error was silently dropped (BUG-FE-004).
+    price: z
+      .string()
+      .trim()
+      .min(1, 'Price is required')
+      .regex(/^\d+(\.\d{1,2})?$/, 'Enter a valid price'),
+    comparePrice: z
+      .string()
+      .trim()
+      .optional()
+      .refine((v) => !v || /^\d+(\.\d{1,2})?$/.test(v), 'Enter a valid price'),
     categoryId: z.string().optional(),
+    // The wire schema only requires this cross-field (sku unless VARIABLE), a
+    // refine the form's `.innerType().innerType()` strips — so it's restated
+    // directly here to catch a blank SKU before a server round-trip (BUG-FE-022).
+    sku: z.string().trim().min(1, 'SKU is required'),
     // Relaxed to a plain optional string, not `publicIdSchema` (exactly 26
     // characters) — a native <select>'s unselected "None" option submits an
     // empty string, not `undefined`, which `publicIdSchema.optional()` (only
@@ -57,7 +97,8 @@ type FormValues = z.input<typeof formSchema>;
 
 export default function NewProductPage() {
   const router = useRouter();
-  const { store } = useCurrentStore();
+  const canCreate = usePermission('product:create');
+  const { store, isLoading: storeLoading, isError: storeIsError, error: storeError } = useCurrentStore();
   const { data: brands } = useBrands();
   const { data: categories } = useCategories();
   const createProduct = useCreateProduct();
@@ -80,7 +121,19 @@ export default function NewProductPage() {
   });
 
   async function onSubmit(values: FormValues) {
-    if (!store) return;
+    if (storeLoading) {
+      form.setError('root', { message: 'Still loading your store — try again in a moment.' });
+      return;
+    }
+    if (!store) {
+      form.setError('root', {
+        message:
+          storeIsError && isForbidden(storeError)
+            ? 'You do not have permission to look up your store, so a product cannot be created.'
+            : 'No store is available for this account, so a product cannot be created.',
+      });
+      return;
+    }
 
     try {
       const product = await createProduct.mutateAsync({
@@ -108,14 +161,38 @@ export default function NewProductPage() {
       router.push(`/products/${product.id}`);
     } catch (error) {
       if (error instanceof ApiError) {
-        for (const [field, message] of Object.entries(error.fieldErrors)) {
-          form.setError(field as keyof FormValues, { message });
+        const unmapped: string[] = [];
+        for (const [wireField, message] of Object.entries(error.fieldErrors)) {
+          const field = SERVER_FIELD_REMAP[wireField] ?? wireField;
+          if (FORM_FIELDS_WITH_ERROR_SLOT.has(field)) {
+            form.setError(field as keyof FormValues, { message });
+          } else {
+            unmapped.push(message);
+          }
         }
-        if (Object.keys(error.fieldErrors).length === 0) {
-          form.setError('root', { message: error.message });
+        // Any server message that named a field this form has no rendered
+        // control for previously vanished silently — surface it as a root
+        // alert instead so nothing is ever dropped (BUG-FE-004).
+        if (Object.keys(error.fieldErrors).length === 0 || unmapped.length > 0) {
+          form.setError('root', {
+            message: unmapped.length > 0 ? unmapped.join(' ') : error.message,
+          });
         }
       }
     }
+  }
+
+  if (!canCreate) {
+    return (
+      <div className="mx-auto max-w-2xl px-6 py-8">
+        <Card>
+          <CardHeader
+            title="New product"
+            description="You do not have permission to add products. Ask an administrator to grant product:create."
+          />
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -149,7 +226,7 @@ export default function NewProductPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Status" htmlFor="status">
+              <Field label="Status" htmlFor="status" error={form.formState.errors.status?.message}>
                 <Select id="status" {...form.register('status')}>
                   {PRODUCT_STATUSES.map((s) => (
                     <option key={s} value={s}>
@@ -158,7 +235,7 @@ export default function NewProductPage() {
                   ))}
                 </Select>
               </Field>
-              <Field label="Visibility" htmlFor="visibility">
+              <Field label="Visibility" htmlFor="visibility" error={form.formState.errors.visibility?.message}>
                 <Select id="visibility" {...form.register('visibility')}>
                   {PRODUCT_VISIBILITIES.map((v) => (
                     <option key={v} value={v}>
@@ -170,7 +247,7 @@ export default function NewProductPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Brand" htmlFor="brandId" hint="Optional">
+              <Field label="Brand" htmlFor="brandId" hint="Optional" error={form.formState.errors.brandId?.message}>
                 <Select id="brandId" {...form.register('brandId')}>
                   <option value="">None</option>
                   {brands?.map((b) => (
@@ -180,23 +257,39 @@ export default function NewProductPage() {
                   ))}
                 </Select>
               </Field>
-              <Field label="Category" htmlFor="categoryId" hint="Optional">
+              <Field
+                label="Category"
+                htmlFor="categoryId"
+                hint="Optional"
+                error={form.formState.errors.categoryId?.message}
+              >
                 <Select id="categoryId" {...form.register('categoryId')}>
                   <option value="">None</option>
                   {categories?.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.path || c.name}
+                      {'  '.repeat(c.depth)}
+                      {c.name}
                     </option>
                   ))}
                 </Select>
               </Field>
             </div>
 
-            <Field label="Short description" htmlFor="shortDescription" hint="Optional">
+            <Field
+              label="Short description"
+              htmlFor="shortDescription"
+              hint="Optional"
+              error={form.formState.errors.shortDescription?.message}
+            >
               <Input id="shortDescription" {...form.register('shortDescription')} />
             </Field>
 
-            <Field label="Description" htmlFor="description" hint="Optional">
+            <Field
+              label="Description"
+              htmlFor="description"
+              hint="Optional"
+              error={form.formState.errors.description?.message}
+            >
               <Textarea id="description" rows={5} {...form.register('description')} />
             </Field>
 

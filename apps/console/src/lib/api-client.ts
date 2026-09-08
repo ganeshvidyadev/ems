@@ -65,6 +65,14 @@ export class ApiError extends Error {
   }
 }
 
+/** Convenience predicates for branching on a react-query `error` without an `instanceof` at every call site. */
+export function isForbidden(error: unknown): boolean {
+  return error instanceof ApiError && error.isForbidden;
+}
+export function isValidation(error: unknown): boolean {
+  return error instanceof ApiError && error.isValidation;
+}
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
 /**

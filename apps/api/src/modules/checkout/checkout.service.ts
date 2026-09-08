@@ -221,10 +221,16 @@ export class CheckoutService {
     });
   }
 
-  async priceOrder(cartId: string, shippingAddress?: OrderAddress, shippingMethod = 'STANDARD') {
+  async priceOrder(
+    cartId: string,
+    shippingAddress?: OrderAddress,
+    shippingMethod = 'STANDARD',
+    paymentGateway?: string,
+  ) {
     const cart = await this.cart.get(cartId);
     const currency = cart.currency as CurrencyCode;
     const lines = await this.priceLines(cart, shippingAddress);
+    const isCod = paymentGateway === 'cod';
 
     const subtotal = Money.sum(lines.map((l) => l.lineSubtotal), currency);
     let discount = Money.zero(currency);
@@ -238,16 +244,21 @@ export class CheckoutService {
     this.applyDiscountToLines(lines, discount, currency);
 
     const shipping = shippingAddress
-      ? await this.computeShipping(cart.storeId, lines, shippingAddress, shippingMethod, false, currency)
+      ? await this.computeShipping(cart.storeId, lines, shippingAddress, shippingMethod, isCod, currency)
       : Money.fromMinor(SHIPPING_RATES_MINOR[shippingMethod.toUpperCase()] ?? SHIPPING_RATES_MINOR['STANDARD']!, currency);
     const tax = Money.sum(lines.map((l) => l.lineTax), currency);
-    const total = subtotal.subtract(discount).add(shipping).add(tax);
+    // Same term `placeOrder()` applies — quoting it here is what BUG-FE-011 was
+    // about: previously this preview had no way to know COD was intended, so
+    // its total silently undercounted the actually-charged total by this fee.
+    const codFee = isCod ? Money.fromMinor(COD_FEE_MINOR, currency) : Money.zero(currency);
+    const total = subtotal.subtract(discount).add(shipping).add(codFee).add(tax);
 
     return {
       subtotal: subtotal.toJSON(),
       discount: discount.toJSON(),
       shipping: shipping.toJSON(),
       tax: tax.toJSON(),
+      ...(isCod ? { codFee: codFee.toJSON() } : {}),
       total: total.toJSON(),
     };
   }

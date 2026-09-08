@@ -181,13 +181,15 @@ export default function OrderDetailPage() {
 
             <div className="mt-4 space-y-1 text-sm">
               <TotalRow label="Subtotal" value={order.subtotal} />
-              <TotalRow label="Discount" value={order.discount} />
+              <TotalRow label="Discount" value={order.discount} negative />
               <TotalRow label="Shipping" value={order.shipping} />
               <TotalRow label="Tax" value={order.tax} />
               {Number(order.codFee.amountMinor) > 0 && <TotalRow label="COD fee" value={order.codFee} />}
               <TotalRow label="Total" value={order.total} bold />
               <TotalRow label="Paid" value={order.amountPaid} />
-              {Number(order.amountRefunded.amountMinor) > 0 && <TotalRow label="Refunded" value={order.amountRefunded} />}
+              {Number(order.amountRefunded.amountMinor) > 0 && (
+                <TotalRow label="Refunded" value={order.amountRefunded} negative />
+              )}
             </div>
           </CardBody>
         </Card>
@@ -267,11 +269,26 @@ export default function OrderDetailPage() {
   );
 }
 
-function TotalRow({ label, value, bold }: { label: string; value: { amountMinor: string; currency: string }; bold?: boolean }) {
+function TotalRow({
+  label,
+  value,
+  bold,
+  negative,
+}: {
+  label: string;
+  value: { amountMinor: string; currency: string };
+  bold?: boolean;
+  /** Prefixes the amount with "− ", matching the storefront's OrderSummary, so a
+   * subtracted line (discount, refund) doesn't read as a positive addend (BUG-FE-016). */
+  negative?: boolean;
+}) {
   return (
     <div className={bold ? 'flex justify-between font-semibold' : 'flex justify-between text-muted-foreground'}>
       <span>{label}</span>
-      <span className="tabular">{formatMoney(value)}</span>
+      <span className="tabular">
+        {negative ? '− ' : ''}
+        {formatMoney(value)}
+      </span>
     </div>
   );
 }

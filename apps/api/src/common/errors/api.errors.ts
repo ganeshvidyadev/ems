@@ -143,6 +143,14 @@ export class OrderAlreadyFulfilledError extends DomainError {
   readonly code = ErrorCode.ORDER_ALREADY_FULFILLED;
 }
 
+export class OrderNotFulfillableError extends DomainError {
+  readonly code = ErrorCode.ORDER_NOT_FULFILLABLE;
+
+  constructor(currentStatus: string) {
+    super(`Order cannot be fulfilled from status '${currentStatus}'`, { currentStatus });
+  }
+}
+
 export class OrderEmptyError extends DomainError {
   readonly code = ErrorCode.ORDER_EMPTY;
 

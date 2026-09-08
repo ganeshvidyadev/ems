@@ -113,13 +113,18 @@ export default function EditProductPage() {
               <Field label="Price (₹)" htmlFor="price" error={form.formState.errors.price?.message}>
                 <Input id="price" inputMode="decimal" disabled={!canUpdate} {...form.register('price')} />
               </Field>
-              <Field label="Compare-at price (₹)" htmlFor="comparePrice" hint="Optional">
+              <Field
+                label="Compare-at price (₹)"
+                htmlFor="comparePrice"
+                hint="Optional"
+                error={form.formState.errors.comparePrice?.message}
+              >
                 <Input id="comparePrice" inputMode="decimal" disabled={!canUpdate} {...form.register('comparePrice')} />
               </Field>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Status" htmlFor="status">
+              <Field label="Status" htmlFor="status" error={form.formState.errors.status?.message}>
                 <Select id="status" disabled={!canUpdate} {...form.register('status')}>
                   {PRODUCT_STATUSES.map((s) => (
                     <option key={s} value={s}>
@@ -128,7 +133,7 @@ export default function EditProductPage() {
                   ))}
                 </Select>
               </Field>
-              <Field label="Visibility" htmlFor="visibility">
+              <Field label="Visibility" htmlFor="visibility" error={form.formState.errors.visibility?.message}>
                 <Select id="visibility" disabled={!canUpdate} {...form.register('visibility')}>
                   {PRODUCT_VISIBILITIES.map((v) => (
                     <option key={v} value={v}>
@@ -140,7 +145,7 @@ export default function EditProductPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Brand" htmlFor="brandId" hint="Optional">
+              <Field label="Brand" htmlFor="brandId" hint="Optional" error={form.formState.errors.brandId?.message}>
                 <Select id="brandId" disabled={!canUpdate} {...form.register('brandId')}>
                   <option value="">None</option>
                   {brands?.map((b) => (
@@ -150,23 +155,39 @@ export default function EditProductPage() {
                   ))}
                 </Select>
               </Field>
-              <Field label="Category" htmlFor="categoryId" hint="Optional">
+              <Field
+                label="Category"
+                htmlFor="categoryId"
+                hint="Optional"
+                error={form.formState.errors.categoryId?.message}
+              >
                 <Select id="categoryId" disabled={!canUpdate} {...form.register('categoryId')}>
                   <option value="">None</option>
                   {categories?.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.path || c.name}
+                      {'  '.repeat(c.depth)}
+                      {c.name}
                     </option>
                   ))}
                 </Select>
               </Field>
             </div>
 
-            <Field label="Short description" htmlFor="shortDescription" hint="Optional">
+            <Field
+              label="Short description"
+              htmlFor="shortDescription"
+              hint="Optional"
+              error={form.formState.errors.shortDescription?.message}
+            >
               <Input id="shortDescription" disabled={!canUpdate} {...form.register('shortDescription')} />
             </Field>
 
-            <Field label="Description" htmlFor="description" hint="Optional">
+            <Field
+              label="Description"
+              htmlFor="description"
+              hint="Optional"
+              error={form.formState.errors.description?.message}
+            >
               <Textarea id="description" rows={5} disabled={!canUpdate} {...form.register('description')} />
             </Field>
 

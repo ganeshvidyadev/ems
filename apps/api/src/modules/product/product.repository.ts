@@ -200,6 +200,18 @@ export class ProductRepository extends TenantScopedRepository<ProductEntity> {
     return new Map((rows as { id: string; publicId: string }[]).map((row) => [row.publicId, row.id]));
   }
 
+  /** Batch reverse of `resolveIds` — internal ids to public ids in another tenant-owned table. */
+  async publicIdsFor(table: 'stores' | 'brands' | 'tax_classes', internalIds: (string | null)[]): Promise<Map<string, string>> {
+    const unique = [...new Set(internalIds.filter((id): id is string => id !== null))];
+    if (unique.length === 0) return new Map();
+    const rows = await this.manager.query(
+      `SELECT id, public_id AS publicId FROM \`${table}\`
+        WHERE tenant_id = ? AND id IN (${unique.map(() => '?').join(',')})`,
+      [this.tenantId, ...unique],
+    );
+    return new Map((rows as { id: string; publicId: string }[]).map((row) => [row.id, row.publicId]));
+  }
+
   /** Internal category id → public id, for hydrating a product's `categoryIds` response field. */
   async publicIdsForCategories(internalIds: string[]): Promise<Map<string, string>> {
     if (internalIds.length === 0) return new Map();

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import {
+  Alert,
   Badge,
   Button,
   Dialog,
@@ -19,6 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/primitives';
 import { usePermission } from '@/hooks/use-auth';
+import { isForbidden } from '@/lib/api-client';
 import { useDeleteProduct, useProducts, usePublishProduct } from '@/lib/queries/products';
 import { useCurrentStore } from '@/lib/queries/stores';
 import { cn, formatDate, formatMoney } from '@/lib/utils';
@@ -100,6 +102,8 @@ function ProductsPageContent() {
 
   const products = productsQuery.data?.data ?? [];
   const pagination = productsQuery.data?.meta.pagination;
+  const canShowActions = canUpdate || canDelete || canPublish;
+  const colSpan = canShowActions ? 5 : 4;
 
   return (
     <PageShell
@@ -133,6 +137,14 @@ function ProductsPageContent() {
         </Button>
       </form>
 
+      {productsQuery.isError && (
+        <Alert variant="error" className="mb-4">
+          {isForbidden(productsQuery.error)
+            ? 'You do not have permission to view products.'
+            : 'Could not load products. Try refreshing the page.'}
+        </Alert>
+      )}
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -140,14 +152,14 @@ function ProductsPageContent() {
             <TableHead>Status</TableHead>
             <TableHead>Price</TableHead>
             <TableHead>Updated</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            {canShowActions && <TableHead className="text-right">Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {productsQuery.isLoading ? (
-            <TableEmptyRow colSpan={5}>Loading…</TableEmptyRow>
-          ) : products.length === 0 ? (
-            <TableEmptyRow colSpan={5}>No products match these filters.</TableEmptyRow>
+            <TableEmptyRow colSpan={colSpan}>Loading…</TableEmptyRow>
+          ) : productsQuery.isError ? null : products.length === 0 ? (
+            <TableEmptyRow colSpan={colSpan}>No products match these filters.</TableEmptyRow>
           ) : (
             products.map((product) => (
               <TableRow key={product.id}>
@@ -164,30 +176,32 @@ function ProductsPageContent() {
                   {formatMoney({ amountMinor: product.priceMinor, currency: product.currency })}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{formatDate(product.updatedAt)}</TableCell>
-                <TableCell>
-                  <div className="flex justify-end gap-2">
-                    {canPublish && product.status === 'DRAFT' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        loading={publishProduct.isPending}
-                        onClick={() => publishProduct.mutate(product.id)}
-                      >
-                        Publish
-                      </Button>
-                    )}
-                    {canUpdate && (
-                      <Button size="sm" variant="outline" onClick={() => router.push(`/products/${product.id}`)}>
-                        Edit
-                      </Button>
-                    )}
-                    {canDelete && (
-                      <Button size="sm" variant="destructive" onClick={() => setDeleteTarget(product)}>
-                        Delete
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
+                {canShowActions && (
+                  <TableCell>
+                    <div className="flex justify-end gap-2">
+                      {canPublish && product.status === 'DRAFT' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          loading={publishProduct.isPending && publishProduct.variables === product.id}
+                          onClick={() => publishProduct.mutate(product.id)}
+                        >
+                          Publish
+                        </Button>
+                      )}
+                      {canUpdate && (
+                        <Button size="sm" variant="outline" onClick={() => router.push(`/products/${product.id}`)}>
+                          Edit
+                        </Button>
+                      )}
+                      {canDelete && (
+                        <Button size="sm" variant="destructive" onClick={() => setDeleteTarget(product)}>
+                          Delete
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}

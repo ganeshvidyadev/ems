@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import {
+  Alert,
   Badge,
   Input,
   Table,
@@ -13,12 +14,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/primitives';
+import { isForbidden } from '@/lib/api-client';
 import { useLowStock } from '@/lib/queries/inventory';
 import { useProduct, useProducts } from '@/lib/queries/products';
 import { useCurrentStore } from '@/lib/queries/stores';
 
 export default function InventoryPage() {
-  const { store, isLoading: storeLoading } = useCurrentStore();
+  const { store, isLoading: storeLoading, isError: storeIsError, error: storeError } = useCurrentStore();
   const lowStock = useLowStock();
   const [search, setSearch] = useState('');
 
@@ -29,13 +31,6 @@ export default function InventoryPage() {
     storeId: store?.id ?? '',
   });
 
-  if (storeLoading) {
-    return <PageShell><p className="text-sm text-muted-foreground">Loading store…</p></PageShell>;
-  }
-  if (!store) {
-    return <PageShell><p className="text-sm text-muted-foreground">No store found for this account yet.</p></PageShell>;
-  }
-
   const results = search.trim().length > 0 ? searchQuery.data?.data ?? [] : [];
   const lowStockRows = lowStock.data ?? [];
 
@@ -45,30 +40,51 @@ export default function InventoryPage() {
         <label htmlFor="product-search" className="mb-1.5 block text-sm font-medium">
           Find a product
         </label>
-        <Input
-          id="product-search"
-          placeholder="Search by name or SKU…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-md"
-        />
-        {results.length > 0 && (
-          <div className="mt-2 max-w-md overflow-hidden rounded-md border">
-            {results.map((product) => (
-              <Link
-                key={product.id}
-                href={`/inventory/${product.id}`}
-                className="flex items-center justify-between border-b px-3 py-2 text-sm last:border-0 hover:bg-muted/50"
-              >
-                <span>{product.name}</span>
-                <span className="text-xs text-muted-foreground">{product.sku}</span>
-              </Link>
-            ))}
-          </div>
+        {storeLoading ? (
+          <p className="text-sm text-muted-foreground">Loading store…</p>
+        ) : !store ? (
+          <p className="text-sm text-muted-foreground">
+            {storeIsError && isForbidden(storeError)
+              ? 'You do not have permission to look up this store, so search by store is unavailable.'
+              : 'No store found for this account yet.'}
+          </p>
+        ) : (
+          <>
+            <Input
+              id="product-search"
+              placeholder="Search by name or SKU…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-md"
+            />
+            {results.length > 0 && (
+              <div className="mt-2 max-w-md overflow-hidden rounded-md border">
+                {results.map((product) => (
+                  <Link
+                    key={product.id}
+                    href={`/inventory/${product.id}`}
+                    className="flex items-center justify-between border-b px-3 py-2 text-sm last:border-0 hover:bg-muted/50"
+                  >
+                    <span>{product.name}</span>
+                    <span className="text-xs text-muted-foreground">{product.sku}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
+      {/* The low-stock table does not depend on `store` at all, so it renders
+          regardless of whether the store lookup succeeded (see BUG-FE-008). */}
       <h2 className="mb-3 text-sm font-medium text-muted-foreground">Low stock</h2>
+      {lowStock.isError && (
+        <Alert variant="error" className="mb-3">
+          {isForbidden(lowStock.error)
+            ? 'You do not have permission to view low-stock levels.'
+            : 'Could not load low-stock levels. Try refreshing the page.'}
+        </Alert>
+      )}
       <Table>
         <TableHeader>
           <TableRow>
@@ -83,7 +99,7 @@ export default function InventoryPage() {
         <TableBody>
           {lowStock.isLoading ? (
             <TableEmptyRow colSpan={6}>Loading…</TableEmptyRow>
-          ) : lowStockRows.length === 0 ? (
+          ) : lowStock.isError ? null : lowStockRows.length === 0 ? (
             <TableEmptyRow colSpan={6}>Nothing is at or below its reorder point.</TableEmptyRow>
           ) : (
             lowStockRows.map((row) => (

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Alert, Button, Card, CardBody, CardHeader, Field, Input, Select, Textarea } from '@/components/ui/primitives';
+import { usePermission } from '@/hooks/use-auth';
 import { ApiError } from '@/lib/api-client';
 import { useCreateCoupon } from '@/lib/queries/coupons';
 import { rupeesToMinorString } from '@/lib/money';
@@ -58,11 +59,30 @@ const formSchema = createCouponRequestSchema
   .refine((v) => v.discountType === 'FREE_SHIPPING' || (v.discountValue && v.discountValue.trim().length > 0), {
     message: 'Discount value is required',
     path: ['discountValue'],
-  });
+  })
+  // Mirrors the wire schema's `discountType`-aware bound (BUG-FE-010): a
+  // percentage over 100 (a likely typo, e.g. "150" for "15") should never
+  // reach the server in the first place.
+  .refine(
+    (v) => {
+      if (v.discountType !== 'PERCENTAGE' || !v.discountValue) return true;
+      const n = Number(v.discountValue);
+      return Number.isFinite(n) && n > 0 && n <= 100;
+    },
+    { message: 'Percentage must be between 0 and 100', path: ['discountValue'] },
+  )
+  .refine(
+    (v) => {
+      if (v.discountType !== 'FIXED_AMOUNT' || !v.discountValue) return true;
+      return /^\d+(\.\d{1,2})?$/.test(v.discountValue.trim());
+    },
+    { message: 'Enter a valid amount', path: ['discountValue'] },
+  );
 type FormValues = z.input<typeof formSchema>;
 
 export default function NewCouponPage() {
   const router = useRouter();
+  const canCreate = usePermission('coupon:create');
   const createCoupon = useCreateCoupon();
 
   const form = useForm<FormValues>({
@@ -115,6 +135,19 @@ export default function NewCouponPage() {
         }
       }
     }
+  }
+
+  if (!canCreate) {
+    return (
+      <div className="mx-auto max-w-2xl px-6 py-8">
+        <Card>
+          <CardHeader
+            title="New coupon"
+            description="You do not have permission to add coupons. Ask an administrator to grant coupon:create."
+          />
+        </Card>
+      </div>
+    );
   }
 
   return (

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import {
+  Alert,
   Badge,
   Button,
   Pagination,
@@ -18,6 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/primitives';
 import { usePermission } from '@/hooks/use-auth';
+import { isForbidden } from '@/lib/api-client';
 import { useCustomers } from '@/lib/queries/customers';
 import { formatDate, formatMoney } from '@/lib/utils';
 
@@ -68,6 +70,14 @@ function CustomersPageContent() {
         )}
       </div>
 
+      {customersQuery.isError && (
+        <Alert variant="error" className="mb-4">
+          {isForbidden(customersQuery.error)
+            ? 'You do not have permission to view customers.'
+            : 'Could not load customers. Try refreshing the page.'}
+        </Alert>
+      )}
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -82,7 +92,7 @@ function CustomersPageContent() {
         <TableBody>
           {customersQuery.isLoading ? (
             <TableEmptyRow colSpan={6}>Loading…</TableEmptyRow>
-          ) : customers.length === 0 ? (
+          ) : customersQuery.isError ? null : customers.length === 0 ? (
             <TableEmptyRow colSpan={6}>No customers match these filters.</TableEmptyRow>
           ) : (
             customers.map((customer) => (

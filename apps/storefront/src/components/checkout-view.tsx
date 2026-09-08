@@ -122,7 +122,8 @@ export function CheckoutView() {
   }
 
   // The cart's own estimates until a priceable address exists; the live quote
-  // replaces them the moment the API can compute shipping and tax for real.
+  // replaces them the moment the API can compute shipping and tax for real —
+  // including the COD fee once a payment method is quoted (BUG-FE-011).
   const figures = pricing.data ?? {
     subtotal: cart.subtotal,
     discount: cart.discount,
@@ -343,17 +344,9 @@ export function CheckoutView() {
 
         <p className="text-xs text-ink-muted" aria-live="polite">
           {pricing.data
-            ? 'Shipping and tax calculated for your address. A cash-on-delivery fee is added on top.'
+            ? 'Shipping and tax calculated for your address.'
             : 'Shipping and tax are estimates until you enter a delivery address.'}
         </p>
-        {/*
-          The fee is disclosed but not shown as a figure, and deliberately not
-          hardcoded here. `POST checkout/pricing` takes no `paymentGateway`
-          (`checkoutPricingRequestSchema` has no such field) and `priceOrder` never
-          adds the fee, so this panel cannot obtain the real amount — and copying
-          the server's `COD_FEE_MINOR` constant into the browser would go stale the
-          first time it changed. Flagged as an API gap rather than guessed at.
-        */}
 
         {pricing.isError && (
           <Alert tone="info">
@@ -421,7 +414,14 @@ function useLivePricing(cartId: string | null, values: CheckoutFormValues) {
       api
         .request<CheckoutPricingResponse>('/checkout/pricing', {
           method: 'POST',
-          body: { cartId, shippingAddress: JSON.parse(addressKey), shippingMethod: 'STANDARD' },
+          body: {
+            cartId,
+            shippingAddress: JSON.parse(addressKey),
+            shippingMethod: 'STANDARD',
+            // Lets the preview quote the same COD fee `placeOrder()` actually
+            // charges, instead of the total silently excluding it (BUG-FE-011).
+            paymentGateway: values.paymentGateway,
+          },
           signal: controller.signal,
         })
         .then((data) => setState({ data, isFetching: false, isError: false }))

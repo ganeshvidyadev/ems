@@ -293,11 +293,22 @@ export class ProductService {
     const { product, categoryIds, primaryCategoryId } = hydrated;
     const variantEntities = product.type === 'VARIABLE' ? await this.variantRepo.findByProduct(product.id) : [];
 
+    // KF-07: these three carry internal bigint FK ids on the entity — the response
+    // contract promises public ULIDs like every other reference field, so each is
+    // resolved forward here rather than passed through.
+    const [storePublicIds, brandPublicIds, taxClassPublicIds] = await Promise.all([
+      this.products.publicIdsFor('stores', [product.storeId]),
+      this.products.publicIdsFor('brands', [product.brandId]),
+      this.products.publicIdsFor('tax_classes', [product.taxClassId]),
+    ]);
+
     return {
       id: product.publicId,
-      storeId: product.storeId,
-      brandId: product.brandId,
-      taxClassId: product.taxClassId,
+      storeId: storePublicIds.get(product.storeId) ?? product.storeId,
+      brandId: product.brandId ? (brandPublicIds.get(product.brandId) ?? product.brandId) : product.brandId,
+      taxClassId: product.taxClassId
+        ? (taxClassPublicIds.get(product.taxClassId) ?? product.taxClassId)
+        : product.taxClassId,
       type: product.type,
       name: product.name,
       slug: product.slug,

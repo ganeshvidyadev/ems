@@ -6,6 +6,10 @@ export const checkoutPricingRequestSchema = z.object({
   cartId: z.string().min(1),
   shippingAddress: orderAddressSchema.optional(),
   shippingMethod: z.string().max(64).optional(),
+  // Lets the pricing preview quote the same COD handling fee `placeOrder()`
+  // actually charges — without it the preview total and the placed-order
+  // total silently diverged by the fee amount (BUG-FE-011).
+  paymentGateway: z.enum(['razorpay', 'stripe', 'paypal', 'cashfree', 'phonepe', 'cod', 'stub']).optional(),
 });
 export type CheckoutPricingRequest = z.infer<typeof checkoutPricingRequestSchema>;
 
@@ -14,6 +18,8 @@ export const checkoutPricingResponseSchema = z.object({
   discount: moneySchema,
   shipping: moneySchema,
   tax: moneySchema,
+  /** Present (and non-zero) only when `paymentGateway: 'cod'` was quoted. */
+  codFee: moneySchema.optional(),
   total: moneySchema,
 });
 export type CheckoutPricingResponse = z.infer<typeof checkoutPricingResponseSchema>;

@@ -200,10 +200,12 @@ export function Field({
 export function Alert({
   variant = 'error',
   title,
+  className,
   children,
 }: {
   variant?: 'error' | 'success' | 'info' | 'warning';
   title?: string;
+  className?: string;
   children: React.ReactNode;
 }) {
   const styles = {
@@ -219,7 +221,7 @@ export function Alert({
       // behind other live-region updates.
       role={variant === 'error' ? 'alert' : 'status'}
       aria-live={variant === 'error' ? 'assertive' : 'polite'}
-      className={cn('rounded-md border px-3 py-2.5 text-sm', styles[variant])}
+      className={cn('rounded-md border px-3 py-2.5 text-sm', styles[variant], className)}
     >
       {title && <p className="font-medium">{title}</p>}
       <div className={cn(title && 'mt-0.5 opacity-90')}>{children}</div>
@@ -461,7 +463,10 @@ export function Dialog({
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
-        <DialogPrimitive.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border bg-card p-6 shadow-lg">
+        <DialogPrimitive.Content
+          aria-modal="true"
+          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border bg-card p-6 shadow-lg"
+        >
           <DialogPrimitive.Title className="text-lg font-semibold">{title}</DialogPrimitive.Title>
           {description && (
             <DialogPrimitive.Description className="mt-1 text-sm text-muted-foreground">

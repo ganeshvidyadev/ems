@@ -210,6 +210,11 @@ export class OrderEntity extends BaseEntity {
   get isCancellable(): boolean {
     return this.status === 'PENDING' || this.status === 'CONFIRMED' || this.status === 'ON_HOLD';
   }
+
+  /** Mirrors the status check `fulfil()` already applies when deciding whether to advance to SHIPPED. */
+  get isFulfillable(): boolean {
+    return this.status === 'CONFIRMED' || this.status === 'PROCESSING';
+  }
 }
 
 /** Immutable snapshot of what was actually sold — see `OrderEntity` doc comment. */

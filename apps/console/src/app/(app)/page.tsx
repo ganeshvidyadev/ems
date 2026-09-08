@@ -14,6 +14,7 @@ import {
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import {
+  Alert,
   Badge,
   Button,
   Card,
@@ -34,6 +35,7 @@ import {
   type StatDelta,
 } from '@/components/ui/primitives';
 import { useAuth, usePermission } from '@/hooks/use-auth';
+import { isForbidden } from '@/lib/api-client';
 import { useCustomers } from '@/lib/queries/customers';
 import { useLowStock } from '@/lib/queries/inventory';
 import { useMarkNotificationRead, useNotifications } from '@/lib/queries/notifications';
@@ -82,7 +84,7 @@ const STATUS_BADGE: Record<OrderResponse['status'], 'default' | 'success' | 'war
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { store, isLoading: storeLoading } = useCurrentStore();
+  const { store, isLoading: storeLoading, isError: storeIsError, error: storeError } = useCurrentStore();
   const [rangeDays, setRangeDays] = useState<'7' | '30' | '90'>('30');
 
   const canReadReports = usePermission('report:read');
@@ -121,17 +123,24 @@ export default function DashboardPage() {
   if (storeLoading) return <DashboardSkeleton />;
 
   if (!store) {
+    const storeForbidden = storeIsError && isForbidden(storeError);
     return (
       <PageShell title="Dashboard">
         <Card variant="elevated">
           <EmptyState
             icon={PackageSearch}
-            title="No store on this account yet"
-            description="A store is created when your tenant is provisioned. If that has not happened, the system status page will show whether the API is healthy."
+            title={storeForbidden ? 'You do not have permission to view this store' : 'No store on this account yet'}
+            description={
+              storeForbidden
+                ? 'Your role does not include store access. Ask an administrator to grant it.'
+                : 'A store is created when your tenant is provisioned. If that has not happened, the system status page will show whether the API is healthy.'
+            }
             action={
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/system">Check system status</Link>
-              </Button>
+              !storeForbidden && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/system">Check system status</Link>
+                </Button>
+              )
             }
           />
         </Card>
@@ -199,6 +208,30 @@ export default function DashboardPage() {
         </>
       }
     >
+      {(() => {
+        const failedLabels = [
+          canReadReports && summary.isError && 'sales summary',
+          canReadReports && baseline.isError && 'previous-period summary',
+          recentOrders.isError && 'recent orders',
+          customerCount.isError && 'customer count',
+          productCount.isError && 'product count',
+          lowStock.isError && 'low stock',
+          canReadNotifications && notifications.isError && 'notifications',
+        ].filter((label): label is string => Boolean(label));
+        if (failedLabels.length === 0) return null;
+        const anyForbidden = [summary, baseline, recentOrders, customerCount, productCount, lowStock, notifications].some(
+          (q) => q.isError && isForbidden(q.error),
+        );
+        return (
+          <Alert variant="error" className="mb-4">
+            Could not load {failedLabels.join(', ')}.{' '}
+            {anyForbidden
+              ? 'You do not have permission to view some of this data.'
+              : 'Try refreshing the page.'}
+          </Alert>
+        );
+      })()}
+
       {isFirstRun ? (
         <FirstRunPanel canCreateProduct={canCreateProduct} />
       ) : (

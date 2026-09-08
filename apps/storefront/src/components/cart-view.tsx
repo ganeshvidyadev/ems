@@ -135,24 +135,32 @@ function CartLine({ item, currency }: { item: CartLineItem; currency: string }) 
             onClick={() => removeItem.mutate({ productId: item.productId, variantId: item.variantId })}
             disabled={busy}
             aria-label={`Remove ${item.name} from cart`}
-            className="shrink-0 rounded p-1.5 text-ink-muted transition hover:text-sale disabled:opacity-40"
+            // `min-h-11 min-w-11` (44px) meets the WCAG 2.5.5 / Apple minimum
+            // touch-target size — a destructive control is the last one that
+            // should be hard to tap accurately (BUG-FE-020).
+            className="grid h-11 w-11 shrink-0 place-items-center rounded text-ink-muted transition hover:text-sale disabled:opacity-40"
           >
             <Trash2 className="h-4 w-4" aria-hidden />
           </button>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex h-9 items-center rounded-theme border border-line">
+          <div className="inline-flex items-center rounded-theme border border-line">
             <button
               type="button"
               onClick={() => setQuantity(item.quantity - 1)}
               disabled={busy}
               aria-label="Decrease quantity"
-              className="grid h-full w-9 place-items-center text-ink-muted transition hover:text-ink disabled:opacity-40"
+              // `min-h-11` directly on the button rather than `h-full` off the
+              // bordered container: `h-full` would compute against the
+              // container's content-box height (its own height minus its
+              // 1px top/bottom border), landing at 42px instead of the
+              // 44px WCAG 2.5.5 minimum (BUG-FE-020).
+              className="grid min-h-11 w-11 place-items-center text-ink-muted transition hover:text-ink disabled:opacity-40"
             >
               {item.quantity === 1 ? <Trash2 className="h-3.5 w-3.5" aria-hidden /> : <Minus className="h-3.5 w-3.5" aria-hidden />}
             </button>
-            <span className="grid h-full w-10 place-items-center border-x border-line text-sm tabular-nums text-ink">
+            <span className="grid min-h-11 w-10 place-items-center border-x border-line text-sm tabular-nums text-ink">
               {busy ? <Spinner className="h-3.5 w-3.5" /> : item.quantity}
             </span>
             <button
@@ -160,7 +168,7 @@ function CartLine({ item, currency }: { item: CartLineItem; currency: string }) 
               onClick={() => setQuantity(item.quantity + 1)}
               disabled={busy || item.quantity >= 999}
               aria-label="Increase quantity"
-              className="grid h-full w-9 place-items-center text-ink-muted transition hover:text-ink disabled:opacity-40"
+              className="grid min-h-11 w-11 place-items-center text-ink-muted transition hover:text-ink disabled:opacity-40"
             >
               <Plus className="h-3.5 w-3.5" aria-hidden />
             </button>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import {
+  Alert,
   Badge,
   Pagination,
   Select,
@@ -16,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/primitives';
+import { isForbidden } from '@/lib/api-client';
 import { useOrders } from '@/lib/queries/orders';
 import { useCurrentStore } from '@/lib/queries/stores';
 import { formatDate, formatMoney } from '@/lib/utils';
@@ -121,6 +123,14 @@ function OrdersPageContent() {
         </Select>
       </div>
 
+      {ordersQuery.isError && (
+        <Alert variant="error" className="mb-4">
+          {isForbidden(ordersQuery.error)
+            ? 'You do not have permission to view orders.'
+            : 'Could not load orders. Try refreshing the page.'}
+        </Alert>
+      )}
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -135,7 +145,7 @@ function OrdersPageContent() {
         <TableBody>
           {ordersQuery.isLoading ? (
             <TableEmptyRow colSpan={6}>Loading…</TableEmptyRow>
-          ) : orders.length === 0 ? (
+          ) : ordersQuery.isError ? null : orders.length === 0 ? (
             <TableEmptyRow colSpan={6}>No orders match these filters.</TableEmptyRow>
           ) : (
             orders.map((order) => (

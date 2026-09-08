@@ -14,8 +14,8 @@ export const createCouponRequestSchema = z
       .string()
       .trim()
       .toUpperCase()
-      .min(3)
-      .max(64)
+      .min(3, 'Must be at least 3 characters')
+      .max(64, 'Must be at most 64 characters')
       .regex(/^[A-Z0-9_-]+$/, 'Letters, digits, hyphens and underscores only'),
     name: z.string().trim().max(255).optional(),
     description: z.string().trim().max(500).optional(),
@@ -38,9 +38,40 @@ export const createCouponRequestSchema = z
     startsAt: z.string().datetime({ offset: true }).optional(),
     endsAt: z.string().datetime({ offset: true }).optional(),
   })
-  .refine((v) => v.discountType !== 'BUY_X_GET_Y' || (v.buyQuantity && v.getQuantity), {
-    message: 'buyQuantity and getQuantity are required for BUY_X_GET_Y coupons',
-    path: ['buyQuantity'],
+  // A single `superRefine` (rather than several chained `.refine()` calls) so this
+  // stays exactly one `ZodEffects` layer — `updateCouponRequestSchema` and the
+  // console form both peel it off with a single `.innerType()`, which a second
+  // chained refine would break.
+  .superRefine((v, ctx) => {
+    if (v.discountType === 'BUY_X_GET_Y' && !(v.buyQuantity && v.getQuantity)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'buyQuantity and getQuantity are required for BUY_X_GET_Y coupons',
+        path: ['buyQuantity'],
+      });
+    }
+    // `discountValue` carries two different meanings depending on `discountType`
+    // — percentage points for PERCENTAGE, minor-unit currency for FIXED_AMOUNT —
+    // so neither could carry a numeric bound on its own. Server-side enforcement
+    // matters more than the console form's mirror of this, since coupons can
+    // also be created directly through the API (BUG-FE-010).
+    if (v.discountType === 'PERCENTAGE') {
+      const n = Number(v.discountValue);
+      if (!Number.isFinite(n) || n <= 0 || n > 100) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Percentage must be between 0 and 100',
+          path: ['discountValue'],
+        });
+      }
+    }
+    if (v.discountType === 'FIXED_AMOUNT' && !/^\d+$/.test(v.discountValue)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Must be a non-negative integer amount in minor units',
+        path: ['discountValue'],
+      });
+    }
   });
 export type CreateCouponRequest = z.infer<typeof createCouponRequestSchema>;
 

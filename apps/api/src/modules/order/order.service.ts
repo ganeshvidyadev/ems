@@ -5,7 +5,11 @@ import { InjectEntityManager } from '@nestjs/typeorm';
 import type { EntityManager } from 'typeorm';
 import { RequestContextService } from '../../common/services/request-context.service';
 import { OutboxService } from '../../common/services/outbox.service';
-import { OrderAlreadyFulfilledError, OrderNotCancellableError } from '../../common/errors/api.errors';
+import {
+  OrderAlreadyFulfilledError,
+  OrderNotCancellableError,
+  OrderNotFulfillableError,
+} from '../../common/errors/api.errors';
 import type { CarrierName } from '../../integrations/shipping/shipping-carrier.port';
 import { ShippingCarrierFactory } from '../../integrations/shipping/shipping-carrier.factory';
 import type { OrderEntity, OrderItemEntity, ShipmentCarrier } from '../../database/entities';
@@ -230,6 +234,9 @@ export class OrderService {
       if (order.fulfilmentStatus === 'FULFILLED') {
         throw new OrderAlreadyFulfilledError('This order has already been fully fulfilled');
       }
+      if (!order.isFulfillable) {
+        throw new OrderNotFulfillableError(order.status);
+      }
 
       // Resolve the requested lines up front — needed both for the quantity
       // bookkeeping below and, if we end up calling a real carrier, to build
@@ -298,6 +305,7 @@ export class OrderService {
       const anyFulfilled = allItems.some((i) => i.quantityFulfilled > 0);
 
       const fromFulfilment = order.fulfilmentStatus;
+      const fromOrderStatus = order.status;
       order.fulfilmentStatus = allFulfilled ? 'FULFILLED' : anyFulfilled ? 'PARTIALLY_FULFILLED' : order.fulfilmentStatus;
       if (allFulfilled && (order.status === 'CONFIRMED' || order.status === 'PROCESSING')) {
         order.status = 'SHIPPED';
@@ -313,6 +321,24 @@ export class OrderService {
         actorId: this.context.userId,
         correlationId: this.context.correlationId ?? null,
       });
+
+      // The FULFILMENT event above records the fulfilment-status change; the
+      // order's own status can change in the same call (CONFIRMED/PROCESSING ->
+      // SHIPPED), which needs its own ORDER event, the same way hold/resume/
+      // cancel/close already write one for every order-status transition —
+      // otherwise the timeline shows a later transition "from SHIPPED" with no
+      // record of the order ever reaching SHIPPED (BUG-FE-018).
+      if (order.status !== fromOrderStatus) {
+        await history.record({
+          orderId: order.id,
+          statusType: 'ORDER',
+          fromStatus: fromOrderStatus,
+          toStatus: order.status,
+          actorType: 'USER',
+          actorId: this.context.userId,
+          correlationId: this.context.correlationId ?? null,
+        });
+      }
 
       return order;
     });
@@ -473,10 +499,19 @@ export class OrderService {
     const items = await this.getItems(order.id);
     const timeline = includeTimeline ? await this.getTimeline(order.id) : undefined;
 
+    // KF-07: `storeId`/`productId`/`variantId` carry internal bigint FK ids on
+    // the entities — the response contract promises public ULIDs like every
+    // other reference field, so each is resolved forward here.
+    const [storePublicIds, productPublicIds, variantPublicIds] = await Promise.all([
+      this.orders.publicIdsFor('stores', [order.storeId]),
+      this.orders.publicIdsFor('products', items.map((i) => i.productId)),
+      this.orders.publicIdsFor('product_variants', items.map((i) => i.variantId)),
+    ]);
+
     return {
       id: order.publicId,
       orderNumber: order.orderNumber,
-      storeId: order.storeId,
+      storeId: storePublicIds.get(order.storeId) ?? order.storeId,
       customerId: order.customerId,
       email: order.email,
       phone: order.phoneE164,
@@ -500,8 +535,8 @@ export class OrderService {
       cancelReason: order.cancelReason,
       items: items.map((item) => ({
         id: item.id,
-        productId: item.productId,
-        variantId: item.variantId,
+        productId: item.productId ? (productPublicIds.get(item.productId) ?? item.productId) : item.productId,
+        variantId: item.variantId ? (variantPublicIds.get(item.variantId) ?? item.variantId) : item.variantId,
         sku: item.sku,
         name: item.name,
         variantTitle: item.variantTitle,

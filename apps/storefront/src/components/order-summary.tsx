@@ -15,6 +15,8 @@ export interface SummaryFigures {
   discount: MoneyDto;
   shipping: MoneyDto;
   tax: MoneyDto;
+  /** Present only once a payment method that carries a fee (COD) has been quoted (BUG-FE-011). */
+  codFee?: MoneyDto;
   total: MoneyDto;
 }
 
@@ -50,6 +52,10 @@ export function OrderSummary({
       />
 
       {isNonZero(figures.tax) && <Row label="Tax" value={formatMoney(figures.tax)} />}
+
+      {figures.codFee && isNonZero(figures.codFee) && (
+        <Row label="Cash-on-delivery fee" value={formatMoney(figures.codFee)} />
+      )}
 
       <div className="flex items-baseline justify-between gap-4 border-t border-line pt-3">
         <dt className="font-heading text-base font-semibold text-ink">Total</dt>

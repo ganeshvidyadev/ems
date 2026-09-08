@@ -20,7 +20,7 @@ export class CheckoutController {
   @Validate(checkoutPricingRequestSchema)
   @ApiOperation({ summary: 'Preview subtotal/discount/shipping/tax/total for a cart' })
   async pricing(@Body() body: ReturnType<typeof checkoutPricingRequestSchema.parse>) {
-    return this.checkout.priceOrder(body.cartId, body.shippingAddress, body.shippingMethod);
+    return this.checkout.priceOrder(body.cartId, body.shippingAddress, body.shippingMethod, body.paymentGateway);
   }
 
   @Post('storefront/checkout/orders')

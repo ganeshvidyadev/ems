@@ -11,8 +11,8 @@ export const emailSchema = z
   .string()
   .trim()
   .toLowerCase()
-  .min(3)
-  .max(255)
+  .min(3, 'Must be at least 3 characters')
+  .max(255, 'Must be at most 255 characters')
   .email('Must be a valid email address');
 
 /**
@@ -126,6 +126,11 @@ export const localeSchema = z
   .regex(/^[a-z]{2}(-[A-Z]{2})?$/, 'Must be a BCP-47 tag such as en-IN');
 
 /** Trimmed, non-empty, length-capped text. */
-export const shortTextSchema = (max = 255) => z.string().trim().min(1).max(max);
+export const shortTextSchema = (max = 255) =>
+  z
+    .string()
+    .trim()
+    .min(1, 'This field is required')
+    .max(max, `Must be at most ${max} characters`);
 export const optionalTextSchema = (max = 255) =>
   z.string().trim().max(max).optional().or(z.literal('').transform(() => undefined));

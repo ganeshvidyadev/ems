@@ -45,7 +45,24 @@ const formSchema = updateCouponRequestSchema
     usageLimitPerCustomer: z.string().trim().optional(),
     startsAt: z.string().trim().optional(),
     endsAt: z.string().trim().optional(),
-  });
+  })
+  // Mirrors the wire schema's `discountType`-aware bound (BUG-FE-010): a
+  // percentage over 100 should never reach the server, on edit just as on create.
+  .refine(
+    (v) => {
+      if (v.discountType !== 'PERCENTAGE' || !v.discountValue) return true;
+      const n = Number(v.discountValue);
+      return Number.isFinite(n) && n > 0 && n <= 100;
+    },
+    { message: 'Percentage must be between 0 and 100', path: ['discountValue'] },
+  )
+  .refine(
+    (v) => {
+      if (v.discountType !== 'FIXED_AMOUNT' || !v.discountValue) return true;
+      return /^\d+(\.\d{1,2})?$/.test(v.discountValue.trim());
+    },
+    { message: 'Enter a valid amount', path: ['discountValue'] },
+  );
 type FormValues = z.input<typeof formSchema>;
 
 /** `datetime-local` wants "YYYY-MM-DDTHH:mm" in local time, not an ISO instant. */
@@ -75,10 +92,13 @@ export default function EditCouponPage() {
       description: coupon.description ?? '',
       status: coupon.status,
       discountType: coupon.discountType === 'BUY_X_GET_Y' ? 'PERCENTAGE' : coupon.discountType,
+      // `discountValue` is a DECIMAL(_,4) on the wire ("150.0000"); normalise the
+      // PERCENTAGE case for display so the edit input reads "150" rather than
+      // "150.0000" (BUG-FE-015). FIXED_AMOUNT already goes through minorStringToRupees.
       discountValue:
         coupon.discountType === 'FIXED_AMOUNT'
           ? minorStringToRupees(coupon.discountValue.split('.')[0] ?? '0')
-          : coupon.discountValue,
+          : String(Number(coupon.discountValue)),
       maxDiscount: coupon.maxDiscountMinor ? minorStringToRupees(coupon.maxDiscountMinor) : '',
       minOrder: coupon.minOrderMinor ? minorStringToRupees(coupon.minOrderMinor) : '',
       usageLimitTotal: coupon.usageLimitTotal?.toString() ?? '',

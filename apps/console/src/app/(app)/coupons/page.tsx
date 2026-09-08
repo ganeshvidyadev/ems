@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import {
+  Alert,
   Badge,
   Button,
   Dialog,
@@ -19,6 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/primitives';
 import { usePermission } from '@/hooks/use-auth';
+import { isForbidden } from '@/lib/api-client';
 import { useCoupons, useDeleteCoupon } from '@/lib/queries/coupons';
 import { formatDate, formatMoney } from '@/lib/utils';
 
@@ -26,7 +28,9 @@ import { formatDate, formatMoney } from '@/lib/utils';
 function describeDiscount(coupon: CouponResponse): string {
   switch (coupon.discountType) {
     case 'PERCENTAGE':
-      return `${coupon.discountValue}% off`;
+      // `discountValue` is a DECIMAL(_,4) on the wire ("12.5000") — normalise
+      // for display so it reads "12.5% off" rather than "12.5000% off" (BUG-FE-015).
+      return `${Number(coupon.discountValue)}% off`;
     case 'FIXED_AMOUNT':
       return `${formatMoney({ amountMinor: coupon.discountValue.split('.')[0] ?? '0', currency: 'INR' })} off`;
     case 'FREE_SHIPPING':
@@ -87,6 +91,14 @@ function CouponsPageContent() {
         )}
       </div>
 
+      {couponsQuery.isError && (
+        <Alert variant="error" className="mb-4">
+          {isForbidden(couponsQuery.error)
+            ? 'You do not have permission to view coupons.'
+            : 'Could not load coupons. Try refreshing the page.'}
+        </Alert>
+      )}
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -101,7 +113,7 @@ function CouponsPageContent() {
         <TableBody>
           {couponsQuery.isLoading ? (
             <TableEmptyRow colSpan={canDelete ? 6 : 5}>Loading…</TableEmptyRow>
-          ) : coupons.length === 0 ? (
+          ) : couponsQuery.isError ? null : coupons.length === 0 ? (
             <TableEmptyRow colSpan={canDelete ? 6 : 5}>No coupons match these filters.</TableEmptyRow>
           ) : (
             coupons.map((coupon) => (

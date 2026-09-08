@@ -111,7 +111,7 @@ export const createProductRequestSchema = z.object({
   brandId: publicIdSchema.optional(),
   taxClassId: publicIdSchema.optional(),
   type: z.enum(PRODUCT_TYPES).default('SIMPLE'),
-  name: z.string().trim().min(1).max(500),
+  name: z.string().trim().min(1, 'Name is required').max(500, 'Must be at most 500 characters'),
   slug: slugSchema.optional(),
   /** Required for every type except VARIABLE, where each variant carries its own SKU. */
   sku: z.string().trim().max(100).optional(),
@@ -145,7 +145,9 @@ export const createProductRequestSchema = z.object({
   attributeValues: z.array(setProductAttributeValueSchema).optional(),
 })
   .refine((p) => p.type === 'VARIABLE' || Boolean(p.sku), {
-    message: 'sku is required unless type is VARIABLE',
+    // Merchant-facing wording — the VARIABLE nuance behind this rule belongs
+    // in API docs, not in a message a form renders verbatim (BUG-FE-022).
+    message: 'SKU is required',
     path: ['sku'],
   })
   .refine((p) => p.type !== 'VARIABLE' || (p.variants && p.variants.length > 0), {

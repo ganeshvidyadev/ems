@@ -35,21 +35,33 @@ export const checkoutFormSchema = z.object({
     }),
   phone: optionalPhone,
 
-  recipientName: z.string().trim().min(1, 'Who should we deliver to?').max(200),
-  addressLine1: z.string().trim().min(1, 'Enter the street address').max(255),
-  addressLine2: z.string().trim().max(255),
-  landmark: z.string().trim().max(255),
-  city: z.string().trim().min(1, 'Enter the city').max(120),
-  stateCode: z.string().trim().max(10),
-  stateName: z.string().trim().max(120),
-  postalCode: z.string().trim().min(1, 'Enter the postal code').max(20),
+  recipientName: z
+    .string()
+    .trim()
+    .min(1, 'Who should we deliver to?')
+    .max(200, 'Must be at most 200 characters'),
+  addressLine1: z
+    .string()
+    .trim()
+    .min(1, 'Enter the street address')
+    .max(255, 'Must be at most 255 characters'),
+  addressLine2: z.string().trim().max(255, 'Must be at most 255 characters'),
+  landmark: z.string().trim().max(255, 'Must be at most 255 characters'),
+  city: z.string().trim().min(1, 'Enter the city').max(120, 'Must be at most 120 characters'),
+  stateCode: z.string().trim().max(10, 'Must be at most 10 characters'),
+  stateName: z.string().trim().max(120, 'Must be at most 120 characters'),
+  postalCode: z
+    .string()
+    .trim()
+    .min(1, 'Enter the postal code')
+    .max(20, 'Must be at most 20 characters'),
   countryCode: z
     .string()
     .trim()
     .length(2, 'Use the two-letter country code')
     .regex(/^[A-Za-z]{2}$/, 'Use the two-letter country code'),
 
-  customerNote: z.string().trim().max(2000),
+  customerNote: z.string().trim().max(2000, 'Must be at most 2000 characters'),
 
   // Only the gateways verified to place a real order in this environment. A
   // selector offering one that 500s is worse than no selector.

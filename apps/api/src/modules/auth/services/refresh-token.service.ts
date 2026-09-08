@@ -303,6 +303,13 @@ export class RefreshTokenService {
       expiresAt: Date;
     }[]
   > {
+    // `t.used_at` on the *latest* row of a family is always NULL by construction —
+    // rotation stamps `used_at` on the token being replaced, then that row stops
+    // being "latest" the moment its successor is inserted. Reading it directly
+    // therefore showed "not since sign-in" for every session, including ones
+    // refreshed many times (BUG-FE-017). `MAX(used_at)` across the whole active
+    // family instead captures the most recent rotation that actually happened —
+    // NULL only for a family that has never been refreshed, which is correct.
     return (await this.dataSource.query(
       `SELECT t.family_id                        AS familyId,
               t.jti                              AS jti,
@@ -310,11 +317,11 @@ export class RefreshTokenService {
               INET6_NTOA(t.ip_address)           AS ipAddress,
               t.user_agent                       AS userAgent,
               f.first_seen                       AS createdAt,
-              t.used_at                          AS lastUsedAt,
+              f.last_used                        AS lastUsedAt,
               t.expires_at                       AS expiresAt
          FROM refresh_tokens t
          JOIN (
-              SELECT family_id, MIN(created_at) AS first_seen, MAX(id) AS latest_id
+              SELECT family_id, MIN(created_at) AS first_seen, MAX(id) AS latest_id, MAX(used_at) AS last_used
                 FROM refresh_tokens
                WHERE user_id = ? AND revoked_at IS NULL AND expires_at > NOW(3)
                GROUP BY family_id
