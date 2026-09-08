@@ -1,47 +1,37 @@
 import { Injectable } from '@nestjs/common';
 import { InjectEntityManager } from '@nestjs/typeorm';
-import type { EntityManager, Repository } from 'typeorm';
+import type { EntityManager } from 'typeorm';
 import { NotFoundError } from '@ems/kernel';
 import { SupportTicketEntity, type SupportTicketStatus } from '../../database/entities';
+import { RequestContextService } from '../../common/services/request-context.service';
+import { TenantScopedRepository } from '../../database/repositories/tenant-scoped.repository';
 
 /**
- * Plain repository, not `TenantScopedRepository` — `support_tickets` is
- * platform-global (see the entity's own doc comment): platform staff manage
- * every tenant's tickets uniformly, and a requester's own "my tickets" view
- * is an explicit `requesterUserId`/`tenantId` filter here, not an ambient scope.
+ * Tenant-scoped like any other tenant-owned table (see the entity's own doc
+ * comment for why it wasn't, and the bug that caused — SEC-001).
+ *
+ * The two `*AcrossTenants` methods are the deliberate exception: platform
+ * staff manage every tenant's tickets uniformly, so they go through
+ * `this.repository` directly rather than the scoped `find`/`findOne`. That
+ * makes "no tenant filter here" visible in the method itself. Callers MUST
+ * verify `context.isPlatformRequest` before calling either — this repository
+ * does not check permissions, the controller/service layer does.
  */
 @Injectable()
-export class SupportTicketRepository {
-  private readonly repository: Repository<SupportTicketEntity>;
-
-  constructor(@InjectEntityManager() private readonly manager: EntityManager) {
-    this.repository = manager.getRepository(SupportTicketEntity);
+export class SupportTicketRepository extends TenantScopedRepository<SupportTicketEntity> {
+  constructor(
+    @InjectEntityManager() manager: EntityManager,
+    context: RequestContextService,
+  ) {
+    super(manager, SupportTicketEntity, context);
   }
 
   generateTicketNumber(): string {
     return `TKT-${Date.now().toString(36).toUpperCase()}`;
   }
 
-  create(data: Partial<SupportTicketEntity>): SupportTicketEntity {
-    return this.repository.create(data);
-  }
-
-  async save(entity: SupportTicketEntity): Promise<SupportTicketEntity> {
-    return this.repository.save(entity);
-  }
-
-  async findByPublicId(publicId: string): Promise<SupportTicketEntity | null> {
-    return this.repository.findOne({ where: { publicId } });
-  }
-
-  async findByPublicIdOrFail(publicId: string): Promise<SupportTicketEntity> {
-    const ticket = await this.findByPublicId(publicId);
-    if (!ticket) throw new NotFoundError('SupportTicket', publicId);
-    return ticket;
-  }
-
   /** Platform view — every tenant's tickets, optionally filtered by status. */
-  async listAll(status?: SupportTicketStatus): Promise<SupportTicketEntity[]> {
+  async listAllAcrossTenants(status?: SupportTicketStatus): Promise<SupportTicketEntity[]> {
     return this.repository.find({
       where: status ? { status } : {},
       order: { createdAt: 'DESC' },
@@ -49,11 +39,27 @@ export class SupportTicketRepository {
     });
   }
 
-  /** A requester's own tickets — the tenant self-service view. */
-  async listForRequester(tenantId: string, requesterUserId: string, status?: SupportTicketStatus): Promise<SupportTicketEntity[]> {
-    return this.repository.find({
-      where: status ? { tenantId, requesterUserId, status } : { tenantId, requesterUserId },
-      order: { createdAt: 'DESC' },
+  /** Platform lookup by id, any tenant. */
+  async findByPublicIdAcrossTenantsOrFail(publicId: string): Promise<SupportTicketEntity> {
+    const ticket = await this.repository.findOne({ where: { publicId } });
+    if (!ticket) throw new NotFoundError('SupportTicket', publicId);
+    return ticket;
+  }
+
+  /** A tenant's own tickets, every requester — the tenant-wide self-service view. */
+  async listForTenant(status?: SupportTicketStatus): Promise<SupportTicketEntity[]> {
+    return this.find({
+      where: status ? { status } : {},
+      order: { createdAt: 'DESC' } as never,
+      take: 200,
+    });
+  }
+
+  /** One requester's own tickets specifically — narrower than `listForTenant`. */
+  async listForRequester(requesterUserId: string, status?: SupportTicketStatus): Promise<SupportTicketEntity[]> {
+    return this.find({
+      where: status ? { requesterUserId, status } : { requesterUserId },
+      order: { createdAt: 'DESC' } as never,
       take: 200,
     });
   }

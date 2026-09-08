@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { publicIdSchema } from '../common/primitives.js';
+import { booleanQuerySchema, publicIdSchema } from '../common/primitives.js';
 import { listQuerySchema, sortQuerySchema } from '../common/pagination.js';
 
 export const INVENTORY_MOVEMENT_TYPES = [
@@ -37,7 +37,7 @@ export type InventoryLevelResponse = z.infer<typeof inventoryLevelResponseSchema
 export const inventoryLevelListQuerySchema = listQuerySchema.extend({
   productId: publicIdSchema.optional(),
   warehouseId: publicIdSchema.optional(),
-  lowStockOnly: z.coerce.boolean().optional(),
+  lowStockOnly: booleanQuerySchema.optional(),
   sort: sortQuerySchema(['quantityAvailable', 'updatedAt'] as const, [
     { field: 'updatedAt', direction: 'DESC' },
   ]),

@@ -94,6 +94,18 @@ export const minorUnitsSchema = z.union([
   z.string().regex(/^-?\d+$/).transform(Number),
 ]);
 
+/**
+ * A boolean query-string flag, parsed correctly.
+ *
+ * `z.coerce.boolean()` is a trap for a query param: it coerces via `Boolean(x)`,
+ * so any non-empty string is `true` — `?flag=false` becomes `true`. Found live
+ * (SEC-001) on `?mineOnly=false`, which silently behaved like `?mineOnly=true`.
+ * This only accepts the literal strings `'true'`/`'false'` (already-boolean
+ * values pass through, for callers that build the query object in code rather
+ * than parsing a URL).
+ */
+export const booleanQuerySchema = z.union([z.boolean(), z.enum(['true', 'false']).transform((v) => v === 'true')]);
+
 export const isoDateTimeSchema = z.string().datetime({ offset: true });
 
 export const timezoneSchema = z.string().max(64).refine(

@@ -27,15 +27,17 @@ export class SupportTicketService {
   ) {}
 
   async create(input: CreateSupportTicketRequest): Promise<SupportTicketEntity> {
-    const tenantId = this.context.tenantId;
     const requesterUserId = this.context.userId;
     const now = new Date();
     const slaDueAt = new Date(now.getTime() + SLA_HOURS[input.priority] * 60 * 60 * 1000);
 
+    // `create()` stamps `tenantId` from the active context itself (and throws
+    // if a caller with no tenant — a platform user — tries to raise one; that
+    // is a deliberate scope decision, not a regression: nothing in this
+    // codebase ever exercised a platform-originated ticket).
     const ticket = await this.tickets.save(
       this.tickets.create({
         ticketNumber: this.tickets.generateTicketNumber(),
-        tenantId,
         requesterUserId,
         subject: input.subject,
         category: input.category ?? null,
@@ -43,34 +45,52 @@ export class SupportTicketService {
         status: 'OPEN',
         slaDueAt,
       }),
-    );
+    ) as SupportTicketEntity;
 
     await this.messages.insert({ ticketId: ticket.id, authorType: 'REQUESTER', authorId: requesterUserId, body: input.body, isInternalNote: false });
 
     return ticket;
   }
 
+  /**
+   * Platform staff reach any tenant's ticket; everyone else is confined to
+   * their own tenant's, via the ordinary tenant-scoped lookup — this is the
+   * fix for SEC-001, where an unscoped `findOne` let any authenticated user
+   * of any tenant address any ticket by public id.
+   */
+  private async resolveTicket(publicId: string): Promise<SupportTicketEntity> {
+    return this.context.isPlatformRequest
+      ? this.tickets.findByPublicIdAcrossTenantsOrFail(publicId)
+      : this.tickets.findByPublicIdOrFail(publicId);
+  }
+
   async get(publicId: string): Promise<SupportTicketEntity> {
-    return this.tickets.findByPublicIdOrFail(publicId);
+    return this.resolveTicket(publicId);
   }
 
   async listMessages(publicId: string, includeInternal: boolean) {
-    const ticket = await this.tickets.findByPublicIdOrFail(publicId);
+    const ticket = await this.resolveTicket(publicId);
     return this.messages.listForTicket(ticket.id, includeInternal);
   }
 
   async list(status: SupportTicketStatus | undefined, mineOnly: boolean): Promise<SupportTicketEntity[]> {
+    if (this.context.isPlatformRequest) {
+      return this.tickets.listAllAcrossTenants(status);
+    }
+    // A tenant caller is ALWAYS scoped to their own tenant, regardless of
+    // `mineOnly` — the flag only narrows further, to just the caller's own
+    // tickets within that tenant. `mineOnly` used to be what chose between
+    // "my tenant" and "every tenant" (SEC-001); it must never make that choice.
     if (mineOnly) {
-      const tenantId = this.context.requireTenantId('list my support tickets');
       const requesterUserId = this.context.userId;
       if (!requesterUserId) return [];
-      return this.tickets.listForRequester(tenantId, requesterUserId, status);
+      return this.tickets.listForRequester(requesterUserId, status);
     }
-    return this.tickets.listAll(status);
+    return this.tickets.listForTenant(status);
   }
 
   async addMessage(publicId: string, input: AddSupportTicketMessageRequest): Promise<void> {
-    const ticket = await this.tickets.findByPublicIdOrFail(publicId);
+    const ticket = await this.resolveTicket(publicId);
     const isPlatformStaff = this.context.isPlatformRequest;
 
     await this.messages.insert({
@@ -89,15 +109,17 @@ export class SupportTicketService {
     await this.tickets.save(ticket);
   }
 
+  // assign/resolve/close are already gated on `platform.support:*` at the
+  // controller, so the caller is always platform staff by the time these run.
   async assign(publicId: string, assignedTo: string): Promise<SupportTicketEntity> {
-    const ticket = await this.tickets.findByPublicIdOrFail(publicId);
+    const ticket = await this.tickets.findByPublicIdAcrossTenantsOrFail(publicId);
     ticket.assignedTo = assignedTo;
     if (ticket.status === 'OPEN') ticket.status = 'IN_PROGRESS';
-    return this.tickets.save(ticket);
+    return this.tickets.save(ticket) as Promise<SupportTicketEntity>;
   }
 
   async close(publicId: string, satisfactionRating?: number): Promise<SupportTicketEntity> {
-    const ticket = await this.tickets.findByPublicIdOrFail(publicId);
+    const ticket = await this.tickets.findByPublicIdAcrossTenantsOrFail(publicId);
     if (ticket.status === 'CLOSED') throw new BusinessRuleError('Ticket is already closed');
 
     const now = new Date();
@@ -105,13 +127,13 @@ export class SupportTicketService {
     ticket.resolvedAt = ticket.resolvedAt ?? now;
     ticket.closedAt = now;
     if (satisfactionRating !== undefined) ticket.satisfactionRating = satisfactionRating;
-    return this.tickets.save(ticket);
+    return this.tickets.save(ticket) as Promise<SupportTicketEntity>;
   }
 
   async resolve(publicId: string): Promise<SupportTicketEntity> {
-    const ticket = await this.tickets.findByPublicIdOrFail(publicId);
+    const ticket = await this.tickets.findByPublicIdAcrossTenantsOrFail(publicId);
     ticket.status = 'RESOLVED';
     ticket.resolvedAt = new Date();
-    return this.tickets.save(ticket);
+    return this.tickets.save(ticket) as Promise<SupportTicketEntity>;
   }
 }

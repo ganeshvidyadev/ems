@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { currencyCodeSchema, publicIdSchema, slugSchema } from '../common/primitives.js';
+import { booleanQuerySchema, currencyCodeSchema, publicIdSchema, slugSchema } from '../common/primitives.js';
 import { listQuerySchema, sortQuerySchema } from '../common/pagination.js';
 
 export const PRODUCT_TYPES = ['SIMPLE', 'VARIABLE', 'DIGITAL', 'BUNDLE', 'SERVICE'] as const;
@@ -208,7 +208,7 @@ export const productListQuerySchema = listQuerySchema.extend({
   brandId: publicIdSchema.optional(),
   categoryId: publicIdSchema.optional(),
   storeId: publicIdSchema.optional(),
-  isFeatured: z.coerce.boolean().optional(),
+  isFeatured: booleanQuerySchema.optional(),
   sort: sortQuerySchema(
     ['publishedAt', 'name', 'priceMinor', 'createdAt', 'totalSold'] as const,
     [{ field: 'publishedAt', direction: 'DESC' }],

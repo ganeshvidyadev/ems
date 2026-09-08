@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { publicIdSchema, slugSchema } from '../common/primitives.js';
+import { booleanQuerySchema, publicIdSchema, slugSchema } from '../common/primitives.js';
 import { listQuerySchema, sortQuerySchema } from '../common/pagination.js';
 
 export const createCategoryRequestSchema = z.object({
@@ -59,7 +59,7 @@ export type CategoryTreeNode = CategoryResponse & { children: CategoryTreeNode[]
 
 export const categoryListQuerySchema = listQuerySchema.extend({
   parentId: publicIdSchema.optional(),
-  isActive: z.coerce.boolean().optional(),
+  isActive: booleanQuerySchema.optional(),
   sort: sortQuerySchema(['name', 'sortOrder', 'createdAt'] as const, [
     { field: 'sortOrder', direction: 'ASC' },
   ]),

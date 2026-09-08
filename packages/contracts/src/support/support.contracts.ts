@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { shortTextSchema } from '../common/primitives.js';
+import { booleanQuerySchema, shortTextSchema } from '../common/primitives.js';
 
 export const SUPPORT_TICKET_STATUSES = [
   'OPEN',
@@ -72,6 +72,6 @@ export type SupportTicketResponse = z.infer<typeof supportTicketResponseSchema>;
 
 export const listSupportTicketsQuerySchema = z.object({
   status: z.enum(SUPPORT_TICKET_STATUSES).optional(),
-  mineOnly: z.coerce.boolean().default(false),
+  mineOnly: booleanQuerySchema.default(false),
 });
 export type ListSupportTicketsQuery = z.infer<typeof listSupportTicketsQuerySchema>;

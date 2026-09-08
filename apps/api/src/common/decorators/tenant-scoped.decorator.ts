@@ -86,13 +86,14 @@ export const PLATFORM_GLOBAL_ENTITIES = [
   'ProductShareEntity',
   'CommissionLedgerEntity',
 
-  // Platform-support surface, not a per-tenant one: only `platform.support:*`
-  // permissions were ever seeded (no tenant-scoped `support:*`), so staff
-  // manage tickets across every tenant uniformly. A tenant's own "my tickets"
-  // read/write is a service-level filter on `tenantId`, not a generic scope.
-  'SupportTicketEntity',
+  // `SupportTicketEntity` itself is `@TenantScoped()` now, like any other
+  // tenant table — it was on this list until SEC-001 (QA Phase 6, a P0
+  // cross-tenant read/write) showed that reasoning was wrong: platform staff
+  // administering every tenant's tickets is a real requirement, but it does
+  // not mean the rows aren't tenant-owned. See the entity's own doc comment.
 
   // Join-table shape, same reasoning as `UserRoleEntity`: no `tenant_id` of its
-  // own, isolation is transitive through `ticket_id` (`support_tickets` above).
+  // own, isolation is transitive through `ticket_id` (`support_tickets`,
+  // which is itself tenant-scoped and checked before any message is reached).
   'SupportTicketMessageEntity',
 ] as const;

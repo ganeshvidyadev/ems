@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { localeSchema, shortTextSchema } from '../common/primitives.js';
+import { booleanQuerySchema, localeSchema, shortTextSchema } from '../common/primitives.js';
 import { paginationQuerySchema } from '../common/pagination.js';
 
 export const NOTIFICATION_CHANNELS = ['EMAIL', 'SMS', 'WHATSAPP', 'PUSH', 'IN_APP'] as const;
@@ -62,6 +62,6 @@ export const notificationResponseSchema = z.object({
 export type NotificationResponse = z.infer<typeof notificationResponseSchema>;
 
 export const listNotificationsQuerySchema = paginationQuerySchema.extend({
-  unreadOnly: z.coerce.boolean().default(false),
+  unreadOnly: booleanQuerySchema.default(false),
 });
 export type ListNotificationsQuery = z.infer<typeof listNotificationsQuerySchema>;

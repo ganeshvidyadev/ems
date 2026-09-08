@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { publicIdSchema, slugSchema } from '../common/primitives.js';
+import { booleanQuerySchema, publicIdSchema, slugSchema } from '../common/primitives.js';
 import { listQuerySchema, sortQuerySchema } from '../common/pagination.js';
 
 export const createBrandRequestSchema = z.object({
@@ -31,6 +31,6 @@ export const brandResponseSchema = z.object({
 export type BrandResponse = z.infer<typeof brandResponseSchema>;
 
 export const brandListQuerySchema = listQuerySchema.extend({
-  isActive: z.coerce.boolean().optional(),
+  isActive: booleanQuerySchema.optional(),
   sort: sortQuerySchema(['name', 'createdAt'] as const, [{ field: 'name', direction: 'ASC' }]),
 });
