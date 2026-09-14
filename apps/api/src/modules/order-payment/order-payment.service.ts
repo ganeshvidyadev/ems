@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { BusinessRuleError, Money, type CurrencyCode } from '@ems/kernel';
 import type { EntityManager } from 'typeorm';
-import { PaymentAlreadyCapturedError, RefundExceedsPaymentError } from '../../common/errors/api.errors';
+import {
+  PaymentAlreadyCapturedError,
+  RefundExceedsPaymentError,
+} from '../../common/errors/api.errors';
 import { RequestContextService } from '../../common/services/request-context.service';
 import type { PaymentEntity, PaymentGateway, RefundEntity } from '../../database/entities';
 import { PaymentGatewayFactory } from '../../integrations/payment/payment-gateway.factory';
@@ -49,7 +52,8 @@ export class OrderPaymentService {
     if (existing) {
       return {
         payment: existing,
-        clientPayload: (existing.gatewayResponse?.['clientPayload'] as Record<string, unknown>) ?? null,
+        clientPayload:
+          (existing.gatewayResponse?.['clientPayload'] as Record<string, unknown>) ?? null,
       };
     }
 
@@ -111,33 +115,53 @@ export class OrderPaymentService {
     signature: string,
   ): Promise<GatewayPayment> {
     const gateway = this.gateways.resolve(gatewayName);
-    return gateway.verifyPayment({ orderId: gatewayOrderId, paymentId: gatewayPaymentId, signature });
+    return gateway.verifyPayment({
+      orderId: gatewayOrderId,
+      paymentId: gatewayPaymentId,
+      signature,
+    });
   }
 
   /** Records a verified capture/failure onto our own row. Idempotent — a second call on an already-settled payment is a no-op. */
-  async settle(manager: EntityManager, paymentId: string, result: GatewayPayment): Promise<PaymentEntity> {
+  async settle(
+    manager: EntityManager,
+    paymentId: string,
+    result: GatewayPayment,
+  ): Promise<PaymentEntity> {
     const scoped = this.payments.withManager(manager);
-    const payment = await scoped.findOneOrFail({ where: { id: paymentId }, lock: { mode: 'pessimistic_write' } });
+    const payment = await scoped.findOneOrFail({
+      where: { id: paymentId },
+      lock: { mode: 'pessimistic_write' },
+    });
 
-    if (!result.paymentId || (payment.gatewayOrderId && result.orderId !== payment.gatewayOrderId)) {
+    if (
+      !result.paymentId ||
+      (payment.gatewayOrderId && result.orderId !== payment.gatewayOrderId)
+    ) {
       throw new BusinessRuleError('Gateway payment does not belong to this order');
     }
-    if (!/^\d+$/.test(result.amountMinor) || BigInt(result.amountMinor) !== BigInt(payment.amountMinor) ||
-        result.currency.toUpperCase() !== payment.currency.toUpperCase()) {
+    if (
+      !/^\d+$/.test(result.amountMinor) ||
+      BigInt(result.amountMinor) !== BigInt(payment.amountMinor) ||
+      result.currency.toUpperCase() !== payment.currency.toUpperCase()
+    ) {
       throw new BusinessRuleError('Gateway payment amount or currency does not match the order');
     }
 
     // A delayed failure/authorization must never undo captured or refunded money.
-    if (['CAPTURED', 'PARTIALLY_REFUNDED', 'REFUNDED', 'DISPUTED'].includes(payment.status)) return payment;
+    if (['CAPTURED', 'PARTIALLY_REFUNDED', 'REFUNDED', 'DISPUTED'].includes(payment.status))
+      return payment;
     // Refunds require their own reconciliation; they are not failed captures.
     if (result.status === 'REFUNDED') throw new BusinessRuleError('Refund requires reconciliation');
 
     if (result.status !== 'CAPTURED') {
-      if (result.status === 'PENDING' && ['AUTHORIZED', 'FAILED'].includes(payment.status)) return payment;
+      if (result.status === 'PENDING' && ['AUTHORIZED', 'FAILED'].includes(payment.status))
+        return payment;
       Object.assign(payment, {
         status: result.status,
-        errorCode: result.status === 'FAILED' ? result.failureCode ?? null : null,
-        errorMessage: result.status === 'FAILED' ? result.failureMessage?.slice(0, 500) ?? null : null,
+        errorCode: result.status === 'FAILED' ? (result.failureCode ?? null) : null,
+        errorMessage:
+          result.status === 'FAILED' ? (result.failureMessage?.slice(0, 500) ?? null) : null,
         gatewayPaymentId: result.paymentId,
         gatewayResponse: result.raw,
         failedAt: result.status === 'FAILED' ? new Date() : null,
@@ -179,7 +203,18 @@ export class OrderPaymentService {
     return this.payments.findByOrder(orderId);
   }
 
-  async findByGatewayRef(gateway: string, gatewayOrderId: string | null, gatewayPaymentId: string | null) {
+  async findRefundByIdempotencyKey(
+    manager: EntityManager,
+    key: string,
+  ): Promise<RefundEntity | null> {
+    return this.refunds.withManager(manager).findByIdempotencyKey(key);
+  }
+
+  async findByGatewayRef(
+    gateway: string,
+    gatewayOrderId: string | null,
+    gatewayPaymentId: string | null,
+  ) {
     return this.payments.findByGatewayRef(gateway, gatewayOrderId, gatewayPaymentId);
   }
 
@@ -209,23 +244,43 @@ export class OrderPaymentService {
     const scopedRefunds = this.refunds.withManager(manager);
 
     const existing = await scopedRefunds.findByIdempotencyKey(idempotencyKey);
-    if (existing) return existing;
+    if (existing) {
+      if (existing.paymentId !== payment.id)
+        throw new BusinessRuleError('Refund idempotency key belongs to another payment');
+      return existing;
+    }
+    Object.assign(
+      payment,
+      await scopedPayments.findOneOrFail({
+        where: { id: payment.id },
+        lock: { mode: 'pessimistic_write' },
+      }),
+    );
 
     if (payment.status !== 'CAPTURED' && payment.status !== 'PARTIALLY_REFUNDED') {
       throw new PaymentAlreadyCapturedError('Only a captured payment can be refunded');
     }
 
     const currency = payment.currency as CurrencyCode;
-    const refundable = Money.fromMinor(payment.amountCapturedMinor, currency).subtract(
-      Money.fromMinor(payment.amountRefundedMinor, currency),
-    );
+    const outstanding = await scopedRefunds.find({
+      where: { paymentId: payment.id, status: 'PENDING' },
+    });
+    const reserved = outstanding.reduce((sum, refund) => sum + BigInt(refund.amountMinor), 0n);
+    const refundable = Money.fromMinor(payment.amountCapturedMinor, currency)
+      .subtract(Money.fromMinor(payment.amountRefundedMinor, currency))
+      .subtract(Money.fromMinor(reserved, currency));
     const requested = amount ?? refundable;
+    if (requested.amountMinor <= 0n) throw new BusinessRuleError('Refund amount must be positive');
 
     if (requested.greaterThan(refundable)) {
-      throw new RefundExceedsPaymentError(requested.amountMinor.toString(), refundable.amountMinor.toString());
+      throw new RefundExceedsPaymentError(
+        requested.amountMinor.toString(),
+        refundable.amountMinor.toString(),
+      );
     }
 
     let gatewayRefundId: string | null = null;
+    let refundStatus: RefundEntity['status'] = 'COMPLETED';
     if (payment.gateway !== 'COD') {
       const gateway = this.gateways.resolve(payment.gateway.toLowerCase() as GatewayName);
       const result = await gateway.refund({
@@ -235,6 +290,12 @@ export class OrderPaymentService {
         idempotencyKey,
       });
       gatewayRefundId = result.refundId;
+      const state = result.status.toUpperCase();
+      refundStatus = ['PROCESSED', 'SUCCEEDED', 'SUCCESS', 'COMPLETED'].includes(state)
+        ? 'COMPLETED'
+        : ['FAILED', 'CANCELLED', 'CANCELED'].includes(state)
+          ? 'FAILED'
+          : 'PENDING';
     }
 
     const refund = await scopedRefunds.insert({
@@ -244,11 +305,13 @@ export class OrderPaymentService {
       amountMinor: requested.amountMinor.toString(),
       currency: payment.currency,
       reason,
-      status: 'COMPLETED',
+      status: refundStatus,
       gatewayRefundId,
       idempotencyKey,
-      processedAt: new Date(),
+      processedAt: refundStatus === 'COMPLETED' ? new Date() : null,
     });
+
+    if (refundStatus !== 'COMPLETED') return refund;
 
     const newRefunded = Money.fromMinor(payment.amountRefundedMinor, currency).add(requested);
     Object.assign(payment, {

@@ -20,7 +20,11 @@ import { CartService, type StoredCart } from '../cart/cart.service';
 import { CouponService } from '../coupon/coupon.service';
 import { GiftCardService } from '../gift-card/gift-card.service';
 import { InventoryService, type StockAllocation } from '../inventory/inventory.service';
-import { OrderItemRepository, OrderRepository, OrderStatusHistoryRepository } from '../order/order.repository';
+import {
+  OrderItemRepository,
+  OrderRepository,
+  OrderStatusHistoryRepository,
+} from '../order/order.repository';
 import { OrderPaymentService } from '../order-payment/order-payment.service';
 import type { GatewayName, GatewayPayment } from '../../integrations/payment/payment-gateway.port';
 import type { PaymentGateway } from '../../database/entities';
@@ -92,7 +96,10 @@ export class CheckoutService {
   // never trusted for the actual charge)
   // =========================================================================
 
-  private async priceLines(cart: StoredCart, address: OrderAddress | undefined): Promise<PricedLine[]> {
+  private async priceLines(
+    cart: StoredCart,
+    address: OrderAddress | undefined,
+  ): Promise<PricedLine[]> {
     if (cart.items.length === 0) throw new CartEmptyError();
     const currency = cart.currency as CurrencyCode;
 
@@ -102,13 +109,20 @@ export class CheckoutService {
         if (!product || product.status !== 'ACTIVE') {
           throw new BusinessRuleError(`'${item.name}' is no longer available`);
         }
-        const variant = item.variantId ? await this.cartProducts.getVariantById(item.variantId) : null;
+        const variant = item.variantId
+          ? await this.cartProducts.getVariantById(item.variantId)
+          : null;
 
         const unitPrice = Money.fromMinor(variant?.priceMinor ?? product.priceMinor, currency);
         const lineSubtotal = unitPrice.multiplyByQuantity(item.quantity);
 
         const { taxRate, taxMinor, breakup } = address
-          ? await this.tax.computeLineTax(product.taxClassId ?? null, lineSubtotal, address.countryCode, address.stateCode ?? null)
+          ? await this.tax.computeLineTax(
+              product.taxClassId ?? null,
+              lineSubtotal,
+              address.countryCode,
+              address.stateCode ?? null,
+            )
           : { taxRate: '0', taxMinor: Money.zero(currency), breakup: [] };
 
         return {
@@ -161,7 +175,10 @@ export class CheckoutService {
     currency: CurrencyCode,
   ): Promise<Money> {
     const flatFallback = () =>
-      Money.fromMinor(SHIPPING_RATES_MINOR[shippingMethod.toUpperCase()] ?? SHIPPING_RATES_MINOR['STANDARD']!, currency);
+      Money.fromMinor(
+        SHIPPING_RATES_MINOR[shippingMethod.toUpperCase()] ?? SHIPPING_RATES_MINOR['STANDARD']!,
+        currency,
+      );
 
     const origin = await this.cartProducts.defaultWarehouseOrigin(storeId);
     if (!origin) return flatFallback();
@@ -178,7 +195,9 @@ export class CheckoutService {
     try {
       carrier = this.shippingCarriers.resolve();
     } catch (error) {
-      this.logger.warn(`No shipping carrier configured; falling back to flat rate: ${error instanceof Error ? error.message : error}`);
+      this.logger.warn(
+        `No shipping carrier configured; falling back to flat rate: ${error instanceof Error ? error.message : error}`,
+      );
       return flatFallback();
     }
 
@@ -215,7 +234,9 @@ export class CheckoutService {
   /** Spreads a discount across lines proportionally to subtotal, using largest-remainder allocation. */
   private applyDiscountToLines(lines: PricedLine[], discount: Money, currency: CurrencyCode): void {
     if (discount.isZero || lines.length === 0) return;
-    const shares = discount.allocate(lines.map((l) => (l.lineSubtotal.isZero ? 0n : l.lineSubtotal.amountMinor)));
+    const shares = discount.allocate(
+      lines.map((l) => (l.lineSubtotal.isZero ? 0n : l.lineSubtotal.amountMinor)),
+    );
     lines.forEach((line, i) => {
       line.lineDiscount = shares[i] ?? Money.zero(currency);
       line.lineTotal = line.lineSubtotal.subtract(line.lineDiscount).add(line.lineTax);
@@ -233,7 +254,10 @@ export class CheckoutService {
     const lines = await this.priceLines(cart, shippingAddress);
     const isCod = paymentGateway === 'cod';
 
-    const subtotal = Money.sum(lines.map((l) => l.lineSubtotal), currency);
+    const subtotal = Money.sum(
+      lines.map((l) => l.lineSubtotal),
+      currency,
+    );
     let discount = Money.zero(currency);
     if (cart.couponCode) {
       try {
@@ -245,9 +269,22 @@ export class CheckoutService {
     this.applyDiscountToLines(lines, discount, currency);
 
     const shipping = shippingAddress
-      ? await this.computeShipping(cart.storeId, lines, shippingAddress, shippingMethod, isCod, currency)
-      : Money.fromMinor(SHIPPING_RATES_MINOR[shippingMethod.toUpperCase()] ?? SHIPPING_RATES_MINOR['STANDARD']!, currency);
-    const tax = Money.sum(lines.map((l) => l.lineTax), currency);
+      ? await this.computeShipping(
+          cart.storeId,
+          lines,
+          shippingAddress,
+          shippingMethod,
+          isCod,
+          currency,
+        )
+      : Money.fromMinor(
+          SHIPPING_RATES_MINOR[shippingMethod.toUpperCase()] ?? SHIPPING_RATES_MINOR['STANDARD']!,
+          currency,
+        );
+    const tax = Money.sum(
+      lines.map((l) => l.lineTax),
+      currency,
+    );
     // Same term `placeOrder()` applies — quoting it here is what BUG-FE-011 was
     // about: previously this preview had no way to know COD was intended, so
     // its total silently undercounted the actually-charged total by this fee.
@@ -274,7 +311,10 @@ export class CheckoutService {
     const currency = cart.currency as CurrencyCode;
 
     const lines = await this.priceLines(cart, input.shippingAddress);
-    const subtotal = Money.sum(lines.map((l) => l.lineSubtotal), currency);
+    const subtotal = Money.sum(
+      lines.map((l) => l.lineSubtotal),
+      currency,
+    );
 
     let discount = Money.zero(currency);
     let coupon: Awaited<ReturnType<CouponService['validate']>>['coupon'] | null = null;
@@ -298,7 +338,10 @@ export class CheckoutService {
     // merchant would otherwise absorb — added on top like shipping, never
     // treated as a discount or folded into the item total.
     const codFee = isCod ? Money.fromMinor(COD_FEE_MINOR, currency) : Money.zero(currency);
-    const tax = Money.sum(lines.map((l) => l.lineTax), currency);
+    const tax = Money.sum(
+      lines.map((l) => l.lineTax),
+      currency,
+    );
     // The order's real total — a gift card is a *payment method* against this
     // total, not a discount on it, so it must never reduce this figure.
     const total = subtotal.subtract(discount).add(shippingCost).add(codFee).add(tax);
@@ -323,7 +366,9 @@ export class CheckoutService {
 
       const orderNumber = await ordersRepo.nextOrderNumber(tx);
       const shippingSnapshot = this.toAddressSnapshot(input.shippingAddress);
-      const billingSnapshot = input.billingAddress ? this.toAddressSnapshot(input.billingAddress) : shippingSnapshot;
+      const billingSnapshot = input.billingAddress
+        ? this.toAddressSnapshot(input.billingAddress)
+        : shippingSnapshot;
 
       const order = await ordersRepo.insert({
         storeId,
@@ -332,7 +377,11 @@ export class CheckoutService {
         email: input.email ?? null,
         phoneE164: input.phone ?? null,
         status: 'PENDING',
-        paymentStatus: giftCardApplied.isZero ? 'PENDING' : remaining.isZero ? 'PAID' : 'PARTIALLY_PAID',
+        paymentStatus: giftCardApplied.isZero
+          ? 'PENDING'
+          : remaining.isZero
+            ? 'PAID'
+            : 'PARTIALLY_PAID',
         fulfilmentStatus: 'UNFULFILLED',
         currency,
         subtotalMinor: subtotal.amountMinor.toString(),
@@ -456,7 +505,11 @@ export class CheckoutService {
         amount: remaining,
         gateway: gatewayValue,
         idempotencyKey,
-        customer: { name: input.shippingAddress.recipientName, email: input.email, phone: input.phone },
+        customer: {
+          name: input.shippingAddress.recipientName,
+          email: input.email,
+          phone: input.phone,
+        },
         description: `Order ${orderNumber}`,
       });
 
@@ -479,7 +532,11 @@ export class CheckoutService {
         paymentStatus: refreshedOrder.paymentStatus,
         payment:
           session.clientPayload !== null
-            ? { paymentId: session.payment.publicId, gateway: session.payment.gateway, clientPayload: session.clientPayload }
+            ? {
+                paymentId: session.payment.publicId,
+                gateway: session.payment.gateway,
+                clientPayload: session.clientPayload,
+              }
             : null,
       };
     });
@@ -540,7 +597,12 @@ export class CheckoutService {
       aggregateType: 'ORDER',
       aggregateId: orderId,
       eventType: 'order.placed',
-      payload: { orderNumber, storeId: order.storeId, totalMinor: order.totalMinor, currency: order.currency },
+      payload: {
+        orderNumber,
+        storeId: order.storeId,
+        totalMinor: order.totalMinor,
+        currency: order.currency,
+      },
     });
 
     this.logger.log(`Order ${orderNumber} confirmed`);
@@ -571,7 +633,12 @@ export class CheckoutService {
     gatewayPaymentId: string,
     signature: string,
   ): Promise<ConfirmOrderPaymentResponse> {
-    const result = await this.orderPayments.verifyCallback(gateway, gatewayOrderId, gatewayPaymentId, signature);
+    const result = await this.orderPayments.verifyCallback(
+      gateway,
+      gatewayOrderId,
+      gatewayPaymentId,
+      signature,
+    );
     return this.settleAndConfirm(gateway, gatewayOrderId, gatewayPaymentId, result);
   }
 
@@ -584,25 +651,45 @@ export class CheckoutService {
     event?: { consumer: string; id: string },
   ): Promise<ConfirmOrderPaymentResponse> {
     return this.manager.transaction(async (tx) => {
-      const existing = await this.orderPayments.findByGatewayRef(gateway.toUpperCase(), gatewayOrderId, gatewayPaymentId);
+      const existing = await this.orderPayments.findByGatewayRef(
+        gateway.toUpperCase(),
+        gatewayOrderId,
+        gatewayPaymentId,
+      );
       if (!existing) {
-        this.logger.warn(`No local payment row for ${gateway} order=${gatewayOrderId} payment=${gatewayPaymentId}`);
+        this.logger.warn(
+          `No local payment row for ${gateway} order=${gatewayOrderId} payment=${gatewayPaymentId}`,
+        );
         throw new NotFoundError('Order payment');
       }
 
       // Lock the order before the payment, matching cancellation/refund lock order.
       const ordersRepo = this.orders.withManager(tx);
-      const order = existing.orderId ? await ordersRepo.findOneOrFail({
-        where: { id: existing.orderId }, lock: { mode: 'pessimistic_write' },
-      }) : null;
+      const order = existing.orderId
+        ? await ordersRepo.findOneOrFail({
+            where: { id: existing.orderId },
+            lock: { mode: 'pessimistic_write' },
+          })
+        : null;
       if (!order) throw new NotFoundError('Order');
       if (event) {
-        const seen = await tx.query('SELECT 1 FROM processed_events WHERE consumer_name = ? AND event_id = ?', [event.consumer, event.id]);
-        if (seen.length) return { status: existing.status, orderId: order.publicId, orderNumber: order.orderNumber };
+        const seen = await tx.query(
+          'SELECT 1 FROM processed_events WHERE consumer_name = ? AND event_id = ?',
+          [event.consumer, event.id],
+        );
+        if (seen.length)
+          return {
+            status: existing.status,
+            orderId: order.publicId,
+            orderNumber: order.orderNumber,
+          };
       }
       const payment = await this.orderPayments.settle(tx, existing.id, result);
       if (event) {
-        await tx.query("INSERT INTO processed_events (consumer_name, event_id, result) VALUES (?, ?, 'OK')", [event.consumer, event.id]);
+        await tx.query(
+          "INSERT INTO processed_events (consumer_name, event_id, result) VALUES (?, ?, 'OK')",
+          [event.consumer, event.id],
+        );
       }
 
       if (payment.status !== 'CAPTURED' || !payment.orderId) {
@@ -667,7 +754,12 @@ export class CheckoutService {
         aggregateType: 'ORDER',
         aggregateId: order.id,
         eventType: 'order.placed',
-        payload: { orderNumber: order.orderNumber, storeId: order.storeId, totalMinor: order.totalMinor, currency: order.currency },
+        payload: {
+          orderNumber: order.orderNumber,
+          storeId: order.storeId,
+          totalMinor: order.totalMinor,
+          currency: order.currency,
+        },
       });
 
       return { status: 'CAPTURED', orderId: order.publicId, orderNumber: order.orderNumber };
@@ -677,17 +769,27 @@ export class CheckoutService {
   /** Called only after signature verification and an authoritative provider read.
    * Tenant comes from persisted gateway references, never webhook headers/metadata.
    */
-  async settleWebhook(gateway: GatewayName, result: GatewayPayment, eventId: string | null): Promise<ConfirmOrderPaymentResponse> {
-    const rows = await this.manager.query(
+  async settleWebhook(
+    gateway: GatewayName,
+    result: GatewayPayment,
+    eventId: string | null,
+  ): Promise<ConfirmOrderPaymentResponse> {
+    const rows = (await this.manager.query(
       `SELECT tenant_id AS tenantId FROM payments WHERE gateway = ? AND order_id IS NOT NULL
        AND (gateway_payment_id = ? OR gateway_order_id = ?) LIMIT 2`,
       [gateway.toUpperCase(), result.paymentId, result.orderId],
-    ) as { tenantId: string }[];
-    if (rows.length !== 1) throw new BusinessRuleError('Gateway reference does not identify one order payment');
-    return runAsTenant(this.context, rows[0]!.tenantId, () => this.settleAndConfirm(
-      gateway, result.orderId, result.paymentId, result,
-      eventId ? { consumer: `order-webhook:${gateway}`, id: eventId } : undefined,
-    ));
+    )) as { tenantId: string }[];
+    if (rows.length !== 1)
+      throw new BusinessRuleError('Gateway reference does not identify one order payment');
+    return runAsTenant(this.context, rows[0]!.tenantId, () =>
+      this.settleAndConfirm(
+        gateway,
+        result.orderId,
+        result.paymentId,
+        result,
+        eventId ? { consumer: `order-webhook:${gateway}`, id: eventId } : undefined,
+      ),
+    );
   }
 
   /**
@@ -709,7 +811,10 @@ export class CheckoutService {
       if (!payment.gatewayPaymentId) continue; // no gateway payment was ever created — nothing to check
 
       try {
-        const result = await this.orderPayments.fetchAuthoritative(payment.gateway, payment.gatewayPaymentId);
+        const result = await this.orderPayments.fetchAuthoritative(
+          payment.gateway,
+          payment.gatewayPaymentId,
+        );
         if (result.status === 'CAPTURED' || result.status === 'FAILED') {
           await this.settleAndConfirm(
             payment.gateway.toLowerCase() as GatewayName,
@@ -735,13 +840,35 @@ export class CheckoutService {
   // Refunds
   // =========================================================================
 
-  async refund(orderPublicId: string, input: CreateRefundRequest, idempotencyKey: string): Promise<RefundResponse> {
+  async refund(
+    orderPublicId: string,
+    input: CreateRefundRequest,
+    idempotencyKey: string,
+  ): Promise<RefundResponse> {
     return this.manager.transaction(async (tx) => {
       const ordersRepo = this.orders.withManager(tx);
-      const order = await ordersRepo.findByPublicIdOrFail(orderPublicId);
+      const order = await ordersRepo.findByPublicIdOrFail(orderPublicId, {
+        lock: { mode: 'pessimistic_write' },
+      });
 
       const payments = await this.orderPayments.findByOrder(order.id);
-      const payment = payments.find((p) => p.status === 'CAPTURED' || p.status === 'PARTIALLY_REFUNDED');
+      const previous = await this.orderPayments.findRefundByIdempotencyKey(tx, idempotencyKey);
+      if (previous) {
+        const previousPayment = payments.find((p) => p.id === previous.paymentId);
+        if (previous.orderId !== order.id || !previousPayment)
+          throw new BusinessRuleError('Refund idempotency key belongs to another order');
+        return {
+          id: previous.publicId,
+          paymentId: previousPayment.publicId,
+          amount: Money.fromMinor(previous.amountMinor, order.currency as CurrencyCode).toJSON(),
+          status: previous.status,
+          reason: previous.reason,
+          createdAt: previous.createdAt.toISOString(),
+        };
+      }
+      const payment = payments.find(
+        (p) => p.status === 'CAPTURED' || p.status === 'PARTIALLY_REFUNDED',
+      );
       if (!payment) throw new NotFoundError('Capturable payment for this order');
 
       const currency = order.currency as CurrencyCode;
@@ -756,19 +883,21 @@ export class CheckoutService {
         idempotencyKey,
       );
 
-      const newRefunded = Money.fromMinor(order.amountRefundedMinor, currency).add(
-        Money.fromMinor(refund.amountMinor, currency),
-      );
-      Object.assign(order, {
-        amountRefundedMinor: newRefunded.amountMinor.toString(),
-        paymentStatus: newRefunded.equals(Money.fromMinor(order.amountPaidMinor, currency))
-          ? 'REFUNDED'
-          : 'PARTIALLY_REFUNDED',
-      });
-      await ordersRepo.save(order);
+      if (refund.status === 'COMPLETED') {
+        const newRefunded = Money.fromMinor(order.amountRefundedMinor, currency).add(
+          Money.fromMinor(refund.amountMinor, currency),
+        );
+        Object.assign(order, {
+          amountRefundedMinor: newRefunded.amountMinor.toString(),
+          paymentStatus: newRefunded.equals(Money.fromMinor(order.amountPaidMinor, currency))
+            ? 'REFUNDED'
+            : 'PARTIALLY_REFUNDED',
+        });
+        await ordersRepo.save(order);
 
-      // A no-op for a non-marketplace order — see the method's own doc comment.
-      await this.marketplace.reverseForRefund(tx, order.id, refund.amountMinor);
+        // A no-op for a non-marketplace order — see the method's own doc comment.
+        await this.marketplace.reverseForRefund(tx, order.id, refund.amountMinor);
+      }
 
       return {
         id: refund.publicId,
