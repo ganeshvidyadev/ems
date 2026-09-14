@@ -94,7 +94,7 @@ export class OrderService {
       const items = this.orderItems.withManager(tx);
       const history = this.statusHistory.withManager(tx);
 
-      const order = await orders.findByPublicIdOrFail(publicId);
+      const order = await orders.findByPublicIdOrFail(publicId, { lock: { mode: 'pessimistic_write' } });
       if (!order.isCancellable) {
         throw new OrderNotCancellableError(order.status);
       }

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Money, type CurrencyCode } from '@ems/kernel';
+import { BusinessRuleError, Money, type CurrencyCode } from '@ems/kernel';
 import type { EntityManager } from 'typeorm';
 import { PaymentAlreadyCapturedError, RefundExceedsPaymentError } from '../../common/errors/api.errors';
 import { RequestContextService } from '../../common/services/request-context.service';
@@ -117,29 +117,36 @@ export class OrderPaymentService {
   /** Records a verified capture/failure onto our own row. Idempotent — a second call on an already-settled payment is a no-op. */
   async settle(manager: EntityManager, paymentId: string, result: GatewayPayment): Promise<PaymentEntity> {
     const scoped = this.payments.withManager(manager);
-    const payment = await scoped.findOneOrFail({ where: { id: paymentId } });
+    const payment = await scoped.findOneOrFail({ where: { id: paymentId }, lock: { mode: 'pessimistic_write' } });
 
-    if (payment.status === 'CAPTURED') return payment; // already settled — the other race winner got here first
+    if (!result.paymentId || (payment.gatewayOrderId && result.orderId !== payment.gatewayOrderId)) {
+      throw new BusinessRuleError('Gateway payment does not belong to this order');
+    }
+    if (!/^\d+$/.test(result.amountMinor) || BigInt(result.amountMinor) !== BigInt(payment.amountMinor) ||
+        result.currency.toUpperCase() !== payment.currency.toUpperCase()) {
+      throw new BusinessRuleError('Gateway payment amount or currency does not match the order');
+    }
 
-    if (result.status !== 'CAPTURED' && result.status !== 'AUTHORIZED') {
+    // A delayed failure/authorization must never undo captured or refunded money.
+    if (['CAPTURED', 'PARTIALLY_REFUNDED', 'REFUNDED', 'DISPUTED'].includes(payment.status)) return payment;
+    // Refunds require their own reconciliation; they are not failed captures.
+    if (result.status === 'REFUNDED') throw new BusinessRuleError('Refund requires reconciliation');
+
+    if (result.status !== 'CAPTURED') {
+      if (result.status === 'PENDING' && ['AUTHORIZED', 'FAILED'].includes(payment.status)) return payment;
       Object.assign(payment, {
-        status: 'FAILED',
-        errorCode: result.failureCode ?? null,
-        errorMessage: result.failureMessage?.slice(0, 500) ?? null,
+        status: result.status,
+        errorCode: result.status === 'FAILED' ? result.failureCode ?? null : null,
+        errorMessage: result.status === 'FAILED' ? result.failureMessage?.slice(0, 500) ?? null : null,
         gatewayPaymentId: result.paymentId,
         gatewayResponse: result.raw,
-        failedAt: new Date(),
+        failedAt: result.status === 'FAILED' ? new Date() : null,
       });
       await scoped.save(payment);
       return payment;
     }
 
     const collected = result.amountMinor;
-    if (collected !== payment.amountMinor) {
-      this.logger.warn(
-        `Order payment ${payment.publicId} collected ${collected} but ${payment.amountMinor} was expected`,
-      );
-    }
 
     Object.assign(payment, {
       status: 'CAPTURED',

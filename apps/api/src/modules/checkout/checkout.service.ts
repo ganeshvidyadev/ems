@@ -11,6 +11,7 @@ import { BusinessRuleError, Money, NotFoundError, type CurrencyCode } from '@ems
 import { InjectEntityManager } from '@nestjs/typeorm';
 import type { EntityManager } from 'typeorm';
 import { RequestContextService } from '../../common/services/request-context.service';
+import { runAsTenant } from '../../common/utils/run-as-tenant.util';
 import { OutboxService } from '../../common/services/outbox.service';
 import { CartEmptyError, OrderEmptyError } from '../../common/errors/api.errors';
 import type { OrderAddressSnapshot } from '../../database/entities';
@@ -580,26 +581,37 @@ export class CheckoutService {
     gatewayOrderId: string | null,
     gatewayPaymentId: string,
     result: GatewayPayment,
+    event?: { consumer: string; id: string },
   ): Promise<ConfirmOrderPaymentResponse> {
     return this.manager.transaction(async (tx) => {
       const existing = await this.orderPayments.findByGatewayRef(gateway.toUpperCase(), gatewayOrderId, gatewayPaymentId);
       if (!existing) {
         this.logger.warn(`No local payment row for ${gateway} order=${gatewayOrderId} payment=${gatewayPaymentId}`);
-        return { status: result.status, orderId: null, orderNumber: null };
+        throw new NotFoundError('Order payment');
       }
 
+      // Lock the order before the payment, matching cancellation/refund lock order.
+      const ordersRepo = this.orders.withManager(tx);
+      const order = existing.orderId ? await ordersRepo.findOneOrFail({
+        where: { id: existing.orderId }, lock: { mode: 'pessimistic_write' },
+      }) : null;
+      if (!order) throw new NotFoundError('Order');
+      if (event) {
+        const seen = await tx.query('SELECT 1 FROM processed_events WHERE consumer_name = ? AND event_id = ?', [event.consumer, event.id]);
+        if (seen.length) return { status: existing.status, orderId: order.publicId, orderNumber: order.orderNumber };
+      }
       const payment = await this.orderPayments.settle(tx, existing.id, result);
+      if (event) {
+        await tx.query("INSERT INTO processed_events (consumer_name, event_id, result) VALUES (?, ?, 'OK')", [event.consumer, event.id]);
+      }
 
       if (payment.status !== 'CAPTURED' || !payment.orderId) {
         return { status: payment.status, orderId: null, orderNumber: null };
       }
 
-      const ordersRepo = this.orders.withManager(tx);
-      const order = await ordersRepo.findOneOrFail({ where: { id: payment.orderId } });
-
       // Already confirmed — the other race winner (a near-simultaneous webhook
       // and client callback) got here first. Idempotent by design.
-      if (order.status === 'CONFIRMED' || order.status === 'PROCESSING' || order.status === 'SHIPPED') {
+      if (order.status !== 'PENDING') {
         return { status: 'CAPTURED', orderId: order.publicId, orderNumber: order.orderNumber };
       }
 
@@ -660,6 +672,22 @@ export class CheckoutService {
 
       return { status: 'CAPTURED', orderId: order.publicId, orderNumber: order.orderNumber };
     });
+  }
+
+  /** Called only after signature verification and an authoritative provider read.
+   * Tenant comes from persisted gateway references, never webhook headers/metadata.
+   */
+  async settleWebhook(gateway: GatewayName, result: GatewayPayment, eventId: string | null): Promise<ConfirmOrderPaymentResponse> {
+    const rows = await this.manager.query(
+      `SELECT tenant_id AS tenantId FROM payments WHERE gateway = ? AND order_id IS NOT NULL
+       AND (gateway_payment_id = ? OR gateway_order_id = ?) LIMIT 2`,
+      [gateway.toUpperCase(), result.paymentId, result.orderId],
+    ) as { tenantId: string }[];
+    if (rows.length !== 1) throw new BusinessRuleError('Gateway reference does not identify one order payment');
+    return runAsTenant(this.context, rows[0]!.tenantId, () => this.settleAndConfirm(
+      gateway, result.orderId, result.paymentId, result,
+      eventId ? { consumer: `order-webhook:${gateway}`, id: eventId } : undefined,
+    ));
   }
 
   /**
