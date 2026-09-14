@@ -23,6 +23,7 @@ import { CartProductLookupRepository } from '../cart/cart-product-lookup.reposit
 import type { PaginatedResult } from '../../database/repositories/tenant-scoped.repository';
 import { OrderItemRepository, OrderRepository, OrderStatusHistoryRepository, type OrderListFilter } from './order.repository';
 import { ShipmentItemRepository, ShipmentRepository } from './shipment.repository';
+import { allocationRange } from './stock-allocations';
 
 /** Assumed per-unit weight when a fulfilment request doesn't supply the real package weight. */
 const DEFAULT_ITEM_WEIGHT_GRAMS = 200;
@@ -104,27 +105,32 @@ export class OrderService {
 
       for (const item of lineItems) {
         const openQty = item.quantityOpen;
-        if (openQty <= 0 || !item.productId || !item.warehouseId) continue;
+        if (openQty <= 0) continue;
 
-        if (wasCommitted) {
-          await this.inventory.restock(tx, {
-            warehouseId: item.warehouseId,
-            productId: item.productId,
-            variantId: item.variantId,
-            quantity: openQty,
-            type: 'ADJUSTMENT',
-            referenceType: 'ORDER_CANCEL',
-            referenceId: order.id,
-          });
-        } else {
-          await this.inventory.releaseByProduct(tx, {
-            warehouseId: item.warehouseId,
-            productId: item.productId,
-            variantId: item.variantId,
-            quantity: openQty,
-            referenceType: 'ORDER',
-            referenceId: order.id,
-          });
+        if (item.productId && item.warehouseId) {
+          const allocations = await this.inventory.orderLineAllocations(tx, item);
+          for (const allocation of allocationRange(allocations, item.quantity, item.quantityFulfilled, openQty)) {
+            if (wasCommitted) {
+              await this.inventory.restock(tx, {
+                warehouseId: allocation.warehouseId,
+                productId: item.productId,
+                variantId: item.variantId,
+                quantity: allocation.quantity,
+                type: 'ADJUSTMENT',
+                referenceType: 'ORDER_CANCEL',
+                referenceId: order.id,
+              });
+            } else {
+              await this.inventory.releaseByProduct(tx, {
+                warehouseId: allocation.warehouseId,
+                productId: item.productId,
+                variantId: item.variantId,
+                quantity: allocation.quantity,
+                referenceType: 'ORDER',
+                referenceId: order.id,
+              });
+            }
+          }
         }
         item.quantityCancelled += openQty;
         await items.save(item);
@@ -230,7 +236,7 @@ export class OrderService {
       const shipmentsRepo = this.shipments.withManager(tx);
       const shipmentItemsRepo = this.shipmentItems.withManager(tx);
 
-      const order = await orders.findByPublicIdOrFail(publicId);
+      const order = await orders.findByPublicIdOrFail(publicId, { lock: { mode: 'pessimistic_write' } });
       if (order.fulfilmentStatus === 'FULFILLED') {
         throw new OrderAlreadyFulfilledError('This order has already been fully fulfilled');
       }
@@ -242,8 +248,17 @@ export class OrderService {
       // bookkeeping below and, if we end up calling a real carrier, to build
       // its item manifest and weight from what's actually being shipped.
       const requestedLines: { line: OrderItemEntity; quantity: number }[] = [];
+      const requestedIds = new Set<string>();
+      if (!input.items.length) throw new BusinessRuleError('At least one order item is required');
       for (const requested of input.items) {
-        const line = await items.findOneOrFail({ where: { id: requested.orderItemId } as never });
+        if (requestedIds.has(requested.orderItemId)) {
+          throw new BusinessRuleError('An order item can only appear once per shipment');
+        }
+        requestedIds.add(requested.orderItemId);
+        if (!Number.isSafeInteger(requested.quantity) || requested.quantity <= 0) {
+          throw new BusinessRuleError('Fulfilment quantity must be a positive integer');
+        }
+        const line = await items.findOneOrFail({ where: { id: requested.orderItemId, orderId: order.id } });
         if (requested.quantity > line.quantityOpen) {
           throw new BusinessRuleError(
             `Cannot fulfil ${requested.quantity} of order item ${requested.orderItemId}; only ${line.quantityOpen} are open`,

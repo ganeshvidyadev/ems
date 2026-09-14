@@ -1,6 +1,7 @@
 import { Column, Entity, PrimaryColumn, VersionColumn } from 'typeorm';
 import { BaseEntity, DATETIME3, NumericIdEntity } from './base.entity';
 import { TenantScoped } from '../../common/decorators/tenant-scoped.decorator';
+import type { OrderStockAllocation } from '../../modules/order/stock-allocations';
 
 export const ORDER_STATUSES = [
   'DRAFT',
@@ -286,6 +287,10 @@ export class OrderItemEntity extends NumericIdEntity {
 
   @Column({ name: 'warehouse_id', type: 'bigint', unsigned: true, nullable: true })
   warehouseId!: string | null;
+
+  /** Server-created checkout allocation snapshot, in picking order. Null means a legacy order. */
+  @Column({ name: 'stock_allocations', type: 'json', nullable: true })
+  stockAllocations!: OrderStockAllocation[] | null;
 
   @Column({ name: 'supplier_tenant_id', type: 'bigint', unsigned: true, nullable: true })
   supplierTenantId!: string | null;

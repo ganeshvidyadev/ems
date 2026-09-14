@@ -86,9 +86,9 @@ export class InventoryLevelRepository extends TenantScopedRepository<InventoryLe
   async releaseReserved(id: string, qty: number): Promise<boolean> {
     const result = (await this.manager.query(
       `UPDATE inventory_levels
-          SET quantity_reserved = GREATEST(quantity_reserved - ?, 0), version = version + 1
-        WHERE id = ? AND tenant_id = ?`,
-      [qty, id, this.tenantId],
+          SET quantity_reserved = quantity_reserved - ?, version = version + 1
+        WHERE id = ? AND tenant_id = ? AND quantity_reserved >= ?`,
+      [qty, id, this.tenantId, qty],
     )) as { affectedRows: number };
     return result.affectedRows > 0;
   }
@@ -111,7 +111,7 @@ export class InventoryLevelRepository extends TenantScopedRepository<InventoryLe
     const result = (await this.manager.query(
       `UPDATE inventory_levels
           SET quantity_on_hand = quantity_on_hand + ?, version = version + 1
-        WHERE id = ? AND tenant_id = ? AND (quantity_on_hand + ?) >= 0`,
+        WHERE id = ? AND tenant_id = ? AND (quantity_on_hand + ?) >= quantity_reserved`,
       [delta, id, this.tenantId, delta],
     )) as { affectedRows: number };
     return result.affectedRows > 0;

@@ -12,6 +12,7 @@ import { InjectEntityManager } from '@nestjs/typeorm';
 import type { EntityManager } from 'typeorm';
 import { RequestContextService } from '../../common/services/request-context.service';
 import { runAsTenant } from '../../common/utils/run-as-tenant.util';
+import { allocationRange } from '../order/stock-allocations';
 import { OutboxService } from '../../common/services/outbox.service';
 import { CartEmptyError, OrderEmptyError } from '../../common/errors/api.errors';
 import type { OrderAddressSnapshot } from '../../database/entities';
@@ -455,11 +456,9 @@ export class CheckoutService {
           lineTaxMinor: line.lineTax.amountMinor.toString(),
           lineTotalMinor: line.lineTotal.amountMinor.toString(),
           taxBreakup: line.taxBreakup.length > 0 ? line.taxBreakup : null,
-          // Only the first warehouse of a (possibly split) allocation is kept —
-          // enough to drive cancellation/restock for the common single-warehouse
-          // case; a line genuinely split across warehouses restocks fully
-          // against this one on cancellation, which is a documented simplification.
+          // Keep the legacy primary warehouse plus the complete durable allocation.
           warehouseId: allocations?.[0]?.warehouseId ?? null,
+          stockAllocations: allocations?.map(({ warehouseId, quantity }) => ({ warehouseId, quantity })) ?? [],
           // Commission is computed and stamped after confirmation
           // (`MarketplaceOrderService.processConfirmedOrder`), against a
           // freshly-read product share rather than anything priced at cart time.
@@ -705,16 +704,19 @@ export class CheckoutService {
       const orderItemsRepo = this.orderItems.withManager(tx);
       const items = await orderItemsRepo.findByOrder(order.id);
 
-      for (const item of items) {
-        if (item.warehouseId && item.productId) {
-          await this.inventory.commitByProduct(tx, {
-            warehouseId: item.warehouseId,
-            productId: item.productId,
-            variantId: item.variantId,
-            quantity: item.quantity - item.quantityCancelled,
-            referenceType: 'ORDER',
-            referenceId: order.id,
-          });
+        for (const item of items) {
+          if (item.warehouseId && item.productId) {
+            const allocations = await this.inventory.orderLineAllocations(tx, item);
+            for (const allocation of allocationRange(allocations, item.quantity, 0, item.quantity - item.quantityCancelled)) {
+              await this.inventory.commitByProduct(tx, {
+                warehouseId: allocation.warehouseId,
+                productId: item.productId,
+                variantId: item.variantId,
+                quantity: allocation.quantity,
+                referenceType: 'ORDER',
+                referenceId: order.id,
+              });
+            }
         }
       }
 

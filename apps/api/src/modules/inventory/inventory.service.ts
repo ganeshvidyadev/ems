@@ -10,6 +10,7 @@ import type { InventoryLevelEntity, InventoryMovementType } from '../../database
 import { ProductRepository } from '../product/product.repository';
 import { InventoryLevelRepository, InventoryMovementRepository } from './inventory.repository';
 import { WarehouseRepository } from './warehouse.repository';
+import type { OrderStockAllocation } from '../order/stock-allocations';
 
 export interface StockAllocation {
   warehouseId: string;
@@ -36,6 +37,31 @@ export class InventoryService {
     private readonly products: ProductRepository,
     private readonly warehouses: WarehouseRepository,
   ) {}
+
+  /** Recover pre-snapshot checkout allocations from the immutable reservation journal.
+   * Multiple lines with the same SKU can make legacy attribution ambiguous; fail
+   * rather than putting all stock back into the first warehouse.
+   */
+  async orderLineAllocations(manager: EntityManager, item: {
+    orderId: string; productId: string | null; variantId: string | null;
+    quantity: number; warehouseId: string | null; stockAllocations: OrderStockAllocation[] | null;
+  }): Promise<OrderStockAllocation[]> {
+    if (item.stockAllocations !== null && item.stockAllocations !== undefined) return item.stockAllocations;
+    if (!item.productId || !item.warehouseId) return [];
+    const rows = await manager.query(
+      `SELECT warehouse_id AS warehouseId, SUM(quantity_delta) AS quantity
+       FROM inventory_movements WHERE tenant_id = ? AND reference_type = 'ORDER'
+       AND reference_id = ? AND product_id = ? AND variant_id <=> ? AND type = 'RESERVATION'
+       GROUP BY warehouse_id ORDER BY MIN(id)`,
+      [this.context.requireTenantId('recover order allocation'), item.orderId, item.productId, item.variantId],
+    ) as { warehouseId: string; quantity: string | number }[];
+    if (!rows.length) return [{ warehouseId: item.warehouseId, quantity: item.quantity }];
+    const allocations = rows.map((row) => ({ warehouseId: String(row.warehouseId), quantity: Number(row.quantity) }));
+    if (allocations.reduce((sum, row) => sum + row.quantity, 0) !== item.quantity) {
+      throw new BusinessRuleError('Legacy order stock allocations require reconciliation');
+    }
+    return allocations;
+  }
 
   /**
    * `InventoryLevelEntity`/`InventoryMovementEntity` key everything by the
@@ -155,7 +181,7 @@ export class InventoryService {
       });
       const applied = await levels.adjustOnHand(slot.id, input.quantityDelta);
       if (!applied) {
-        throw new BusinessRuleError('Adjustment would take stock below zero');
+          throw new BusinessRuleError('Adjustment would take stock below its reserved quantity');
       }
 
       const refreshed = await levels.findOneOrFail({ where: { id: slot.id } });
@@ -331,7 +357,8 @@ export class InventoryService {
     const movementsRepo = this.scopedTo(manager, this.movements);
 
     for (const allocation of allocations) {
-      await levels.releaseReserved(allocation.levelId, allocation.quantity);
+      const released = await levels.releaseReserved(allocation.levelId, allocation.quantity);
+      if (!released) throw new ConflictError('Reservation could not be released — stock state changed unexpectedly');
       const refreshed = await levels.findOneOrFail({ where: { id: allocation.levelId } });
       await movementsRepo.record({
         warehouseId: allocation.warehouseId,

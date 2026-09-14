@@ -6,6 +6,7 @@ import { Permissions, Public, Validate } from '../../common/decorators';
 import { ShippingCarrierFactory } from '../../integrations/shipping/shipping-carrier.factory';
 import type { ShipmentEntity, ShipmentEventEntity } from '../../database/entities';
 import { ShipmentRepository } from './shipment.repository';
+import { OrderRepository } from './order.repository';
 import { ShipmentTrackingService } from './shipment-tracking.service';
 
 @ApiTags('shipments')
@@ -15,14 +16,16 @@ export class ShipmentController {
     private readonly shipments: ShipmentRepository,
     private readonly tracking: ShipmentTrackingService,
     private readonly shippingCarriers: ShippingCarrierFactory,
+    private readonly orders: OrderRepository,
   ) {}
 
   @Get('console/orders/:orderId/shipments')
   @Permissions('shipment:read')
   @ApiOperation({ summary: 'List shipments for an order' })
   async listForOrder(@Param('orderId') orderId: string) {
-    const rows = await this.shipments.findByOrder(orderId);
-    return rows.map((s) => this.toResponse(s));
+    const order = await this.orders.findByPublicIdOrFail(orderId);
+    const rows = await this.shipments.findByOrder(order.id);
+    return rows.map((s) => ({ ...this.toResponse(s), orderId: order.publicId }));
   }
 
   @Get('console/shipments/:id')
