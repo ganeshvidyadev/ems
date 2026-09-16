@@ -16,6 +16,7 @@ import {
   type TdHTMLAttributes,
 } from 'react';
 import { cn } from '@/lib/utils';
+import { useAdminTheme } from './admin-theme';
 
 /**
  * Minimal ShadCN-style primitives.
@@ -89,7 +90,7 @@ export interface ButtonProps
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, loading, disabled, asChild, children, ...props }, ref) => {
-    const classes = cn(buttonVariants({ variant, size }), className);
+    const classes = cn('admin-button', buttonVariants({ variant, size }), className);
 
     if (asChild) {
       // `loading`/`disabled` are meaningless on an anchor and there is no `disabled`
@@ -170,7 +171,7 @@ export function Field({
   const hintId = `${htmlFor}-hint`;
 
   return (
-    <div className="space-y-1.5">
+    <div className="admin-field space-y-1.5">
       <label htmlFor={htmlFor} className="text-sm font-medium leading-none">
         {label}
       </label>
@@ -221,7 +222,7 @@ export function Alert({
       // behind other live-region updates.
       role={variant === 'error' ? 'alert' : 'status'}
       aria-live={variant === 'error' ? 'assertive' : 'polite'}
-      className={cn('rounded-md border px-3 py-2.5 text-sm', styles[variant], className)}
+      className={cn('admin-alert rounded-md border px-3 py-2.5 text-sm', styles[variant], className)}
     >
       {title && <p className="font-medium">{title}</p>}
       <div className={cn(title && 'mt-0.5 opacity-90')}>{children}</div>
@@ -259,7 +260,7 @@ export function Card({
 }: { className?: string; children: React.ReactNode } & VariantProps<typeof cardVariants> &
   Pick<HTMLAttributes<HTMLDivElement>, 'id' | 'style'>) {
   return (
-    <div className={cn(cardVariants({ variant }), className)} {...props}>
+    <div className={cn('admin-card', cardVariants({ variant }), className)} {...props}>
       {children}
     </div>
   );
@@ -289,7 +290,7 @@ export function CardHeader({
   className?: string;
 }) {
   return (
-    <div className={cn('flex items-start justify-between gap-4 p-6 pb-4', className)}>
+    <div className={cn('admin-card-header flex items-start justify-between gap-4 p-6 pb-4', className)}>
       <div className="space-y-1">
         <Heading
           className={cn(
@@ -307,7 +308,7 @@ export function CardHeader({
 }
 
 export function CardBody({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn('p-6 pt-0', className)}>{children}</div>;
+  return <div className={cn('admin-card-body p-6 pt-0', className)}>{children}</div>;
 }
 
 // ---------------------------------------------------------------------------
@@ -381,7 +382,7 @@ export function Badge({
   variant,
   children,
 }: { className?: string; children: ReactNode } & VariantProps<typeof badgeVariants>) {
-  return <span className={cn(badgeVariants({ variant }), className)}>{children}</span>;
+  return <span className={cn('admin-badge', badgeVariants({ variant }), className)}>{children}</span>;
 }
 
 // ---------------------------------------------------------------------------
@@ -395,8 +396,14 @@ export function Badge({
  * drop the second boundary rather than the caller re-implementing the wrapper.
  */
 export function Table({ children, className }: { children: ReactNode; className?: string }) {
+  const mantis = useAdminTheme();
   return (
-    <div className={cn('w-full overflow-x-auto rounded-md border', className)}>
+    <div
+      className={cn('admin-table w-full overflow-x-auto rounded-md border', className)}
+      tabIndex={mantis ? 0 : undefined}
+      role={mantis ? 'region' : undefined}
+      aria-label={mantis ? 'Scrollable data table' : undefined}
+    >
       <table className="w-full caption-bottom text-sm">{children}</table>
     </div>
   );
@@ -434,7 +441,7 @@ export function TableCell({ className, children, ...props }: TdHTMLAttributes<HT
 export function TableEmptyRow({ colSpan, children }: { colSpan: number; children: ReactNode }) {
   return (
     <tr>
-      <td colSpan={colSpan} className="p-10 text-center text-sm text-muted-foreground">
+      <td colSpan={colSpan} className="admin-table-empty p-10 text-center text-sm text-muted-foreground">
         {children}
       </td>
     </tr>
@@ -459,13 +466,14 @@ export function Dialog({
   description?: string;
   children: ReactNode;
 }) {
+  const mantis = useAdminTheme();
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
         <DialogPrimitive.Content
           aria-modal="true"
-          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border bg-card p-6 shadow-lg"
+          className={cn('fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border bg-card p-6 shadow-lg', mantis && 'mantis-admin mantis-dialog')}
         >
           <DialogPrimitive.Title className="text-lg font-semibold">{title}</DialogPrimitive.Title>
           {description && (
@@ -505,7 +513,7 @@ export function Pagination({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between px-1 py-3">
+    <div className="admin-pagination flex items-center justify-between px-1 py-3">
       <p className="text-sm text-muted-foreground">
         Page {page} of {totalPages}
       </p>
@@ -736,7 +744,7 @@ export function StatCard({
     <div
       aria-busy={loading || undefined}
       className={cn(
-        'rounded-lg bg-card p-5 shadow-card transition-shadow duration-base ease-out-soft',
+        'admin-stat rounded-lg bg-card p-5 shadow-card transition-shadow duration-base ease-out-soft',
         'hover:shadow-raised',
         className,
       )}

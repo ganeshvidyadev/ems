@@ -1,0 +1,2483 @@
+{
+  "results": [
+    {
+      "route": "/",
+      "width": 1440,
+      "documentWidth": 1440,
+      "heading": "Dashboard",
+      "theme": true,
+      "overflow": false,
+      "body": " tote\nMain warehouse\n3\nof 5\nActivity\n\nNothing new\n\nOrder, payment and stock notifications land here."
+    },
+    {
+      "route": "/themes",
+      "width": 1440,
+      "documentWidth": 1440,
+      "heading": "Company themes",
+      "theme": true,
+      "overflow": false,
+      "body": "Allowed themes\nDefault (always allowed)\nOrganic\nFamms\nLive theme\nDefault\nOrganic\nSave theme settings"
+    },
+    {
+      "route": "/products",
+      "width": 1440,
+      "documentWidth": 1440,
+      "heading": "Products",
+      "theme": true,
+      "overflow": false,
+      "body": "offee mug\n\nMUG-002\n\n\tACTIVE\t₹1,299.00\t15 Sept 2026, 3:30 pm\t\nEdit\nDelete\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/products/new",
+      "width": 1440,
+      "documentWidth": 1425,
+      "heading": "New product",
+      "theme": true,
+      "overflow": false,
+      "body": "description\n\nOptional\n\nDescription\n\nOptional\n\nTrack inventory for this product\nCancel\nCreate product"
+    },
+    {
+      "route": "/products/01JTEST00000000000000000001",
+      "width": 1440,
+      "documentWidth": 1425,
+      "heading": "Everyday cotton tote",
+      "theme": true,
+      "overflow": false,
+      "body": "ort description\n\nOptional\n\nDescription\n\nOptional\n\nTrack inventory for this product\nBack\nSave changes"
+    },
+    {
+      "route": "/orders",
+      "width": 1440,
+      "documentWidth": 1440,
+      "heading": "Orders",
+      "theme": true,
+      "overflow": false,
+      "body": "xample.test\n\n\tCONFIRMED\tPAID\tUNFULFILLED\t₹2,598.00\t15 Sept 2026, 3:30 pm\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/orders/01JTEST00000000000000000001",
+      "width": 1440,
+      "documentWidth": 1440,
+      "heading": "EMS-2026-1042",
+      "theme": true,
+      "overflow": false,
+      "body": ".00\nTotal\n₹2,598.00\nPaid\n₹2,598.00\nShipping address\n\nNo shipping address.\n\nTimeline\n\nNo history yet."
+    },
+    {
+      "route": "/inventory",
+      "width": 1440,
+      "documentWidth": 1440,
+      "heading": "Inventory",
+      "theme": true,
+      "overflow": false,
+      "body": "e\tOn hand\tReserved\tAvailable\tReorder point\n\n\nEveryday cotton tote\n\nTOTE-001\n\n\tMain warehouse\t4\t1\t3\t5"
+    },
+    {
+      "route": "/inventory/01JTEST00000000000000000001",
+      "width": 1440,
+      "documentWidth": 1440,
+      "heading": "Everyday cotton tote",
+      "theme": true,
+      "overflow": false,
+      "body": "ovement history\nType\tChange\tAfter\tReason\tWhen\nNo movements recorded yet.\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/customers",
+      "width": 1440,
+      "documentWidth": 1440,
+      "heading": "Customers",
+      "theme": true,
+      "overflow": false,
+      "body": "iti Sharma\taditi@example.test\t12\t₹28,450.00\tACTIVE\t15 Sept 2026, 3:30 pm\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/customers/new",
+      "width": 1440,
+      "documentWidth": 1440,
+      "heading": "New customer",
+      "theme": true,
+      "overflow": false,
+      "body": "d\n\nOptional — leave blank for a guest-style account\n\nAccepts marketing emails\nCancel\nCreate customer"
+    },
+    {
+      "route": "/customers/01JTEST00000000000000000001",
+      "width": 1440,
+      "documentWidth": 1425,
+      "heading": "Aditi Sharma",
+      "theme": true,
+      "overflow": false,
+      "body": "ress\tType\tDefault\t\nNo addresses on file.\nWishlist\nAdd product\nProduct\tAdded\t\nNothing wishlisted yet."
+    },
+    {
+      "route": "/coupons",
+      "width": 1440,
+      "documentWidth": 1440,
+      "heading": "Coupons",
+      "theme": true,
+      "overflow": false,
+      "body": "WELCOME10\n\nWelcome discount\n\n\t10% off\t18 / 100\tACTIVE\tNo end date\tDelete\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/coupons/new",
+      "width": 1440,
+      "documentWidth": 1425,
+      "heading": "New coupon",
+      "theme": true,
+      "overflow": false,
+      "body": "\nCombinable with other coupons\nApply automatically at checkout (no code needed)\nCancel\nCreate coupon"
+    },
+    {
+      "route": "/coupons/01JTEST00000000000000000001",
+      "width": 1440,
+      "documentWidth": 1425,
+      "heading": "WELCOME10",
+      "theme": true,
+      "overflow": false,
+      "body": "\n\nCombinable with other coupons\nApply automatically at checkout (no code needed)\nCancel\nSave changes"
+    },
+    {
+      "route": "/sessions",
+      "width": 1440,
+      "documentWidth": 1440,
+      "heading": "Active sessions",
+      "theme": true,
+      "overflow": false,
+      "body": "27.0.0.2 · last used yesterday\n\nRevoke\n\nChanging your password signs out every device automatically."
+    },
+    {
+      "route": "/system",
+      "width": 1440,
+      "documentWidth": 1440,
+      "heading": "System status",
+      "theme": true,
+      "overflow": false,
+      "body": "10s\nmysql\nup\n2 ms\nredis\nup\n1 ms\nmongodb\nup\n3 ms\nSchema\nMigrations\nup-to-date\nAPI reference (Swagger)"
+    },
+    {
+      "test": "dialog",
+      "width": 1440,
+      "fits": true,
+      "theme": true,
+      "scrollable": true
+    },
+    {
+      "test": "dialog-focus-trap",
+      "width": 1440,
+      "passed": true
+    },
+    {
+      "test": "dialog-escape",
+      "width": 1440,
+      "passed": true
+    },
+    {
+      "route": "/",
+      "width": 1280,
+      "documentWidth": 1265,
+      "heading": "Dashboard",
+      "theme": true,
+      "overflow": false,
+      "body": " tote\nMain warehouse\n3\nof 5\nActivity\n\nNothing new\n\nOrder, payment and stock notifications land here."
+    },
+    {
+      "route": "/themes",
+      "width": 1280,
+      "documentWidth": 1280,
+      "heading": "Company themes",
+      "theme": true,
+      "overflow": false,
+      "body": "Allowed themes\nDefault (always allowed)\nOrganic\nFamms\nLive theme\nDefault\nOrganic\nSave theme settings"
+    },
+    {
+      "route": "/products",
+      "width": 1280,
+      "documentWidth": 1280,
+      "heading": "Products",
+      "theme": true,
+      "overflow": false,
+      "body": "offee mug\n\nMUG-002\n\n\tACTIVE\t₹1,299.00\t15 Sept 2026, 3:30 pm\t\nEdit\nDelete\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/products/new",
+      "width": 1280,
+      "documentWidth": 1265,
+      "heading": "New product",
+      "theme": true,
+      "overflow": false,
+      "body": "description\n\nOptional\n\nDescription\n\nOptional\n\nTrack inventory for this product\nCancel\nCreate product"
+    },
+    {
+      "route": "/products/01JTEST00000000000000000001",
+      "width": 1280,
+      "documentWidth": 1265,
+      "heading": "Everyday cotton tote",
+      "theme": true,
+      "overflow": false,
+      "body": "ort description\n\nOptional\n\nDescription\n\nOptional\n\nTrack inventory for this product\nBack\nSave changes"
+    },
+    {
+      "route": "/orders",
+      "width": 1280,
+      "documentWidth": 1280,
+      "heading": "Orders",
+      "theme": true,
+      "overflow": false,
+      "body": "xample.test\n\n\tCONFIRMED\tPAID\tUNFULFILLED\t₹2,598.00\t15 Sept 2026, 3:30 pm\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/orders/01JTEST00000000000000000001",
+      "width": 1280,
+      "documentWidth": 1280,
+      "heading": "EMS-2026-1042",
+      "theme": true,
+      "overflow": false,
+      "body": ".00\nTotal\n₹2,598.00\nPaid\n₹2,598.00\nShipping address\n\nNo shipping address.\n\nTimeline\n\nNo history yet."
+    },
+    {
+      "route": "/inventory",
+      "width": 1280,
+      "documentWidth": 1280,
+      "heading": "Inventory",
+      "theme": true,
+      "overflow": false,
+      "body": "e\tOn hand\tReserved\tAvailable\tReorder point\n\n\nEveryday cotton tote\n\nTOTE-001\n\n\tMain warehouse\t4\t1\t3\t5"
+    },
+    {
+      "route": "/inventory/01JTEST00000000000000000001",
+      "width": 1280,
+      "documentWidth": 1280,
+      "heading": "Everyday cotton tote",
+      "theme": true,
+      "overflow": false,
+      "body": "ovement history\nType\tChange\tAfter\tReason\tWhen\nNo movements recorded yet.\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/customers",
+      "width": 1280,
+      "documentWidth": 1280,
+      "heading": "Customers",
+      "theme": true,
+      "overflow": false,
+      "body": "iti Sharma\taditi@example.test\t12\t₹28,450.00\tACTIVE\t15 Sept 2026, 3:30 pm\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/customers/new",
+      "width": 1280,
+      "documentWidth": 1280,
+      "heading": "New customer",
+      "theme": true,
+      "overflow": false,
+      "body": "d\n\nOptional — leave blank for a guest-style account\n\nAccepts marketing emails\nCancel\nCreate customer"
+    },
+    {
+      "route": "/customers/01JTEST00000000000000000001",
+      "width": 1280,
+      "documentWidth": 1265,
+      "heading": "Aditi Sharma",
+      "theme": true,
+      "overflow": false,
+      "body": "ress\tType\tDefault\t\nNo addresses on file.\nWishlist\nAdd product\nProduct\tAdded\t\nNothing wishlisted yet."
+    },
+    {
+      "route": "/coupons",
+      "width": 1280,
+      "documentWidth": 1280,
+      "heading": "Coupons",
+      "theme": true,
+      "overflow": false,
+      "body": "WELCOME10\n\nWelcome discount\n\n\t10% off\t18 / 100\tACTIVE\tNo end date\tDelete\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/coupons/new",
+      "width": 1280,
+      "documentWidth": 1265,
+      "heading": "New coupon",
+      "theme": true,
+      "overflow": false,
+      "body": "\nCombinable with other coupons\nApply automatically at checkout (no code needed)\nCancel\nCreate coupon"
+    },
+    {
+      "route": "/coupons/01JTEST00000000000000000001",
+      "width": 1280,
+      "documentWidth": 1265,
+      "heading": "WELCOME10",
+      "theme": true,
+      "overflow": false,
+      "body": "\n\nCombinable with other coupons\nApply automatically at checkout (no code needed)\nCancel\nSave changes"
+    },
+    {
+      "route": "/sessions",
+      "width": 1280,
+      "documentWidth": 1280,
+      "heading": "Active sessions",
+      "theme": true,
+      "overflow": false,
+      "body": "27.0.0.2 · last used yesterday\n\nRevoke\n\nChanging your password signs out every device automatically."
+    },
+    {
+      "route": "/system",
+      "width": 1280,
+      "documentWidth": 1280,
+      "heading": "System status",
+      "theme": true,
+      "overflow": false,
+      "body": "10s\nmysql\nup\n2 ms\nredis\nup\n1 ms\nmongodb\nup\n3 ms\nSchema\nMigrations\nup-to-date\nAPI reference (Swagger)"
+    },
+    {
+      "test": "dialog",
+      "width": 1280,
+      "fits": true,
+      "theme": true,
+      "scrollable": true
+    },
+    {
+      "test": "dialog-focus-trap",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "test": "dialog-escape",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "route": "/",
+      "width": 768,
+      "documentWidth": 753,
+      "heading": "Dashboard",
+      "theme": true,
+      "overflow": false,
+      "body": " tote\nMain warehouse\n3\nof 5\nActivity\n\nNothing new\n\nOrder, payment and stock notifications land here."
+    },
+    {
+      "route": "/themes",
+      "width": 768,
+      "documentWidth": 768,
+      "heading": "Company themes",
+      "theme": true,
+      "overflow": false,
+      "body": "Allowed themes\nDefault (always allowed)\nOrganic\nFamms\nLive theme\nDefault\nOrganic\nSave theme settings"
+    },
+    {
+      "route": "/products",
+      "width": 768,
+      "documentWidth": 768,
+      "heading": "Products",
+      "theme": true,
+      "overflow": false,
+      "body": "offee mug\n\nMUG-002\n\n\tACTIVE\t₹1,299.00\t15 Sept 2026, 3:30 pm\t\nEdit\nDelete\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/products/new",
+      "width": 768,
+      "documentWidth": 753,
+      "heading": "New product",
+      "theme": true,
+      "overflow": false,
+      "body": "description\n\nOptional\n\nDescription\n\nOptional\n\nTrack inventory for this product\nCancel\nCreate product"
+    },
+    {
+      "route": "/products/01JTEST00000000000000000001",
+      "width": 768,
+      "documentWidth": 753,
+      "heading": "Everyday cotton tote",
+      "theme": true,
+      "overflow": false,
+      "body": "ort description\n\nOptional\n\nDescription\n\nOptional\n\nTrack inventory for this product\nBack\nSave changes"
+    },
+    {
+      "route": "/orders",
+      "width": 768,
+      "documentWidth": 768,
+      "heading": "Orders",
+      "theme": true,
+      "overflow": false,
+      "body": "xample.test\n\n\tCONFIRMED\tPAID\tUNFULFILLED\t₹2,598.00\t15 Sept 2026, 3:30 pm\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/orders/01JTEST00000000000000000001",
+      "width": 768,
+      "documentWidth": 768,
+      "heading": "EMS-2026-1042",
+      "theme": true,
+      "overflow": false,
+      "body": ".00\nTotal\n₹2,598.00\nPaid\n₹2,598.00\nShipping address\n\nNo shipping address.\n\nTimeline\n\nNo history yet."
+    },
+    {
+      "route": "/inventory",
+      "width": 768,
+      "documentWidth": 768,
+      "heading": "Inventory",
+      "theme": true,
+      "overflow": false,
+      "body": "e\tOn hand\tReserved\tAvailable\tReorder point\n\n\nEveryday cotton tote\n\nTOTE-001\n\n\tMain warehouse\t4\t1\t3\t5"
+    },
+    {
+      "route": "/inventory/01JTEST00000000000000000001",
+      "width": 768,
+      "documentWidth": 768,
+      "heading": "Everyday cotton tote",
+      "theme": true,
+      "overflow": false,
+      "body": "ovement history\nType\tChange\tAfter\tReason\tWhen\nNo movements recorded yet.\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/customers",
+      "width": 768,
+      "documentWidth": 768,
+      "heading": "Customers",
+      "theme": true,
+      "overflow": false,
+      "body": "iti Sharma\taditi@example.test\t12\t₹28,450.00\tACTIVE\t15 Sept 2026, 3:30 pm\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/customers/new",
+      "width": 768,
+      "documentWidth": 768,
+      "heading": "New customer",
+      "theme": true,
+      "overflow": false,
+      "body": "d\n\nOptional — leave blank for a guest-style account\n\nAccepts marketing emails\nCancel\nCreate customer"
+    },
+    {
+      "route": "/customers/01JTEST00000000000000000001",
+      "width": 768,
+      "documentWidth": 753,
+      "heading": "Aditi Sharma",
+      "theme": true,
+      "overflow": false,
+      "body": "ress\tType\tDefault\t\nNo addresses on file.\nWishlist\nAdd product\nProduct\tAdded\t\nNothing wishlisted yet."
+    },
+    {
+      "route": "/coupons",
+      "width": 768,
+      "documentWidth": 768,
+      "heading": "Coupons",
+      "theme": true,
+      "overflow": false,
+      "body": "WELCOME10\n\nWelcome discount\n\n\t10% off\t18 / 100\tACTIVE\tNo end date\tDelete\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/coupons/new",
+      "width": 768,
+      "documentWidth": 753,
+      "heading": "New coupon",
+      "theme": true,
+      "overflow": false,
+      "body": "\nCombinable with other coupons\nApply automatically at checkout (no code needed)\nCancel\nCreate coupon"
+    },
+    {
+      "route": "/coupons/01JTEST00000000000000000001",
+      "width": 768,
+      "documentWidth": 753,
+      "heading": "WELCOME10",
+      "theme": true,
+      "overflow": false,
+      "body": "\n\nCombinable with other coupons\nApply automatically at checkout (no code needed)\nCancel\nSave changes"
+    },
+    {
+      "route": "/sessions",
+      "width": 768,
+      "documentWidth": 768,
+      "heading": "Active sessions",
+      "theme": true,
+      "overflow": false,
+      "body": "27.0.0.2 · last used yesterday\n\nRevoke\n\nChanging your password signs out every device automatically."
+    },
+    {
+      "route": "/system",
+      "width": 768,
+      "documentWidth": 768,
+      "heading": "System status",
+      "theme": true,
+      "overflow": false,
+      "body": "10s\nmysql\nup\n2 ms\nredis\nup\n1 ms\nmongodb\nup\n3 ms\nSchema\nMigrations\nup-to-date\nAPI reference (Swagger)"
+    },
+    {
+      "test": "dialog",
+      "width": 768,
+      "fits": true,
+      "theme": true,
+      "scrollable": true
+    },
+    {
+      "test": "dialog-focus-trap",
+      "width": 768,
+      "passed": true
+    },
+    {
+      "test": "dialog-escape",
+      "width": 768,
+      "passed": true
+    },
+    {
+      "test": "drawer-navigation",
+      "width": 768,
+      "passed": true
+    },
+    {
+      "route": "/",
+      "width": 375,
+      "documentWidth": 360,
+      "heading": "Dashboard",
+      "theme": true,
+      "overflow": false,
+      "body": " tote\nMain warehouse\n3\nof 5\nActivity\n\nNothing new\n\nOrder, payment and stock notifications land here."
+    },
+    {
+      "route": "/themes",
+      "width": 375,
+      "documentWidth": 360,
+      "heading": "Company themes",
+      "theme": true,
+      "overflow": false,
+      "body": "Allowed themes\nDefault (always allowed)\nOrganic\nFamms\nLive theme\nDefault\nOrganic\nSave theme settings"
+    },
+    {
+      "route": "/products",
+      "width": 375,
+      "documentWidth": 375,
+      "heading": "Products",
+      "theme": true,
+      "overflow": false,
+      "body": "offee mug\n\nMUG-002\n\n\tACTIVE\t₹1,299.00\t15 Sept 2026, 3:30 pm\t\nEdit\nDelete\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/products/new",
+      "width": 375,
+      "documentWidth": 360,
+      "heading": "New product",
+      "theme": true,
+      "overflow": false,
+      "body": "description\n\nOptional\n\nDescription\n\nOptional\n\nTrack inventory for this product\nCancel\nCreate product"
+    },
+    {
+      "route": "/products/01JTEST00000000000000000001",
+      "width": 375,
+      "documentWidth": 360,
+      "heading": "Everyday cotton tote",
+      "theme": true,
+      "overflow": false,
+      "body": "ort description\n\nOptional\n\nDescription\n\nOptional\n\nTrack inventory for this product\nBack\nSave changes"
+    },
+    {
+      "route": "/orders",
+      "width": 375,
+      "documentWidth": 375,
+      "heading": "Orders",
+      "theme": true,
+      "overflow": false,
+      "body": "xample.test\n\n\tCONFIRMED\tPAID\tUNFULFILLED\t₹2,598.00\t15 Sept 2026, 3:30 pm\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/orders/01JTEST00000000000000000001",
+      "width": 375,
+      "documentWidth": 360,
+      "heading": "EMS-2026-1042",
+      "theme": true,
+      "overflow": false,
+      "body": ".00\nTotal\n₹2,598.00\nPaid\n₹2,598.00\nShipping address\n\nNo shipping address.\n\nTimeline\n\nNo history yet."
+    },
+    {
+      "route": "/inventory",
+      "width": 375,
+      "documentWidth": 375,
+      "heading": "Inventory",
+      "theme": true,
+      "overflow": false,
+      "body": "e\tOn hand\tReserved\tAvailable\tReorder point\n\n\nEveryday cotton tote\n\nTOTE-001\n\n\tMain warehouse\t4\t1\t3\t5"
+    },
+    {
+      "route": "/inventory/01JTEST00000000000000000001",
+      "width": 375,
+      "documentWidth": 375,
+      "heading": "Everyday cotton tote",
+      "theme": true,
+      "overflow": false,
+      "body": "ovement history\nType\tChange\tAfter\tReason\tWhen\nNo movements recorded yet.\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/customers",
+      "width": 375,
+      "documentWidth": 375,
+      "heading": "Customers",
+      "theme": true,
+      "overflow": false,
+      "body": "iti Sharma\taditi@example.test\t12\t₹28,450.00\tACTIVE\t15 Sept 2026, 3:30 pm\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/customers/new",
+      "width": 375,
+      "documentWidth": 360,
+      "heading": "New customer",
+      "theme": true,
+      "overflow": false,
+      "body": "d\n\nOptional — leave blank for a guest-style account\n\nAccepts marketing emails\nCancel\nCreate customer"
+    },
+    {
+      "route": "/customers/01JTEST00000000000000000001",
+      "width": 375,
+      "documentWidth": 360,
+      "heading": "Aditi Sharma",
+      "theme": true,
+      "overflow": false,
+      "body": "ress\tType\tDefault\t\nNo addresses on file.\nWishlist\nAdd product\nProduct\tAdded\t\nNothing wishlisted yet."
+    },
+    {
+      "route": "/coupons",
+      "width": 375,
+      "documentWidth": 375,
+      "heading": "Coupons",
+      "theme": true,
+      "overflow": false,
+      "body": "WELCOME10\n\nWelcome discount\n\n\t10% off\t18 / 100\tACTIVE\tNo end date\tDelete\n\nPage 1 of 3\n\nPrevious\nNext"
+    },
+    {
+      "route": "/coupons/new",
+      "width": 375,
+      "documentWidth": 360,
+      "heading": "New coupon",
+      "theme": true,
+      "overflow": false,
+      "body": "\nCombinable with other coupons\nApply automatically at checkout (no code needed)\nCancel\nCreate coupon"
+    },
+    {
+      "route": "/coupons/01JTEST00000000000000000001",
+      "width": 375,
+      "documentWidth": 360,
+      "heading": "WELCOME10",
+      "theme": true,
+      "overflow": false,
+      "body": "\n\nCombinable with other coupons\nApply automatically at checkout (no code needed)\nCancel\nSave changes"
+    },
+    {
+      "route": "/sessions",
+      "width": 375,
+      "documentWidth": 375,
+      "heading": "Active sessions",
+      "theme": true,
+      "overflow": false,
+      "body": "27.0.0.2 · last used yesterday\n\nRevoke\n\nChanging your password signs out every device automatically."
+    },
+    {
+      "route": "/system",
+      "width": 375,
+      "documentWidth": 375,
+      "heading": "System status",
+      "theme": true,
+      "overflow": false,
+      "body": "10s\nmysql\nup\n2 ms\nredis\nup\n1 ms\nmongodb\nup\n3 ms\nSchema\nMigrations\nup-to-date\nAPI reference (Swagger)"
+    },
+    {
+      "test": "keyboard-table-scroll",
+      "passed": true
+    },
+    {
+      "test": "dialog",
+      "width": 375,
+      "fits": true,
+      "theme": true,
+      "scrollable": true
+    },
+    {
+      "test": "dialog-focus-trap",
+      "width": 375,
+      "passed": true
+    },
+    {
+      "test": "dialog-escape",
+      "width": 375,
+      "passed": true
+    },
+    {
+      "test": "drawer-navigation",
+      "width": 375,
+      "passed": true
+    },
+    {
+      "test": "desktop-collapse",
+      "passed": true
+    },
+    {
+      "test": "search-pagination",
+      "passed": true
+    },
+    {
+      "test": "status-filter",
+      "passed": true
+    },
+    {
+      "test": "publish",
+      "passed": true
+    },
+    {
+      "test": "delete-confirmation",
+      "passed": true
+    },
+    {
+      "test": "form-validation",
+      "passed": true
+    },
+    {
+      "test": "create-product-contract",
+      "passed": true
+    },
+    {
+      "test": "edit-product",
+      "passed": true
+    },
+    {
+      "test": "create-customer",
+      "passed": true
+    },
+    {
+      "test": "create-coupon",
+      "passed": true
+    },
+    {
+      "test": "theme-settings-save",
+      "passed": true
+    },
+    {
+      "test": "logout-callback-and-route",
+      "passed": true
+    },
+    {
+      "test": "login-form-callback",
+      "passed": true
+    },
+    {
+      "test": "permission-controlled-actions",
+      "passed": true
+    },
+    {
+      "test": "tenant-theme-isolation",
+      "passed": true
+    },
+    {
+      "test": "empty-state",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "requests": [
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=1"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/low-stock"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/notifications?limit=6"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/low-stock"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/notifications?limit=6"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-08-18&to=2026-09-16&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-07-19&to=2026-08-17&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=1&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-08-18&to=2026-09-16&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-07-19&to=2026-08-17&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=1&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/platform/themes"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/platform/themes"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/brands?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/categories?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/brands?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/categories?limit=100"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/brands?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/categories?limit=100"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/orders/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/orders/01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/low-stock"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=20"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/addresses"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/wishlist"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/addresses"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/wishlist"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/coupons?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/coupons?page=1&limit=20"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/coupons/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/coupons/01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/auth/sessions"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/auth/sessions"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/health/ready"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/health/startup"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=1"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/low-stock"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/notifications?limit=6"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/low-stock"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/notifications?limit=6"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-08-18&to=2026-09-16&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-07-19&to=2026-08-17&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=1&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-08-18&to=2026-09-16&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-07-19&to=2026-08-17&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=1&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/platform/themes"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/platform/themes"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/brands?limit=100"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/categories?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/brands?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/categories?limit=100"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/brands?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/categories?limit=100"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/orders/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/orders/01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/low-stock"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=20"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/addresses"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/wishlist"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/addresses"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/wishlist"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/coupons?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/coupons?page=1&limit=20"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/coupons/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/coupons/01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/auth/sessions"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/auth/sessions"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/health/ready"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/health/startup"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=1"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/low-stock"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/notifications?limit=6"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/low-stock"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/notifications?limit=6"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-08-18&to=2026-09-16&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-07-19&to=2026-08-17&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=1&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-08-18&to=2026-09-16&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-07-19&to=2026-08-17&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=1&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/platform/themes"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/platform/themes"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/brands?limit=100"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/categories?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/brands?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/categories?limit=100"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/brands?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/categories?limit=100"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/orders/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/orders/01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/low-stock"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=20"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/addresses"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/wishlist"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/addresses"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/wishlist"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/coupons?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/coupons?page=1&limit=20"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/coupons/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/coupons/01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/auth/sessions"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/auth/sessions"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/health/ready"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/health/startup"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/low-stock"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/notifications?limit=6"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/low-stock"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/notifications?limit=6"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-08-18&to=2026-09-16&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-07-19&to=2026-08-17&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=1&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-08-18&to=2026-09-16&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/reports/sales-summary?from=2026-07-19&to=2026-08-17&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=1&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/platform/themes"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/platform/themes"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/brands?limit=100"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/categories?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/brands?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/categories?limit=100"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/brands?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/categories?limit=100"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/orders?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/orders/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/orders/01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/low-stock"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=5&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers?page=1&limit=20"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/addresses"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/wishlist"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/addresses"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/wishlist"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/coupons?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/coupons?page=1&limit=20"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/coupons/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/coupons/01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/auth/sessions"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/auth/sessions"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/health/ready"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/health/startup"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/levels?productId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/warehouses"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/inventory/movements/01JTEST00000000000000000001?page=1&limit=20"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&q=cotton&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&q=cotton&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=2&limit=20&q=cotton&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=2&limit=20&q=cotton&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=2&limit=20&q=cotton&status=DRAFT&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=2&limit=20&q=cotton&status=DRAFT&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&q=cotton&status=DRAFT&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&q=cotton&status=DRAFT&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001/publish"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001/publish"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&q=cotton&status=DRAFT&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "DELETE",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&q=cotton&status=DRAFT&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/brands?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/categories?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/brands?limit=100"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/categories?limit=100"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/console/products",
+      "body": "{\"name\":\"Fixture product\",\"sku\":\"FIX-001\",\"shortDescription\":\"\",\"description\":\"\",\"status\":\"DRAFT\",\"visibility\":\"VISIBLE\",\"currency\":\"INR\",\"trackInventory\":true,\"allowBackorder\":false,\"requiresShipping\":true,\"isFeatured\":false,\"isShareable\":false,\"price\":\"19.99\",\"comparePrice\":\"\",\"categoryId\":\"\",\"storeId\":\"01JTEST00000000000000000001\",\"type\":\"SIMPLE\",\"priceMinor\":\"1999\"}"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "PUT",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001",
+      "body": "{\"name\":\"Updated fixture product\",\"sku\":\"TOTE-001\",\"shortDescription\":\"\",\"description\":\"Durable everyday carry with reinforced handles.\",\"status\":\"DRAFT\",\"visibility\":\"VISIBLE\",\"trackInventory\":true,\"price\":\"1299.00\",\"comparePrice\":\"\",\"categoryId\":\"\",\"priceMinor\":\"129900\"}"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/console/customers",
+      "body": "{\"email\":\"fixture@example.test\",\"phone\":\"+919876543210\",\"acceptsMarketing\":false}"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/addresses"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/wishlist"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/addresses"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/customers/01JTEST00000000000000000001/wishlist"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/coupons"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/console/coupons",
+      "body": "{\"code\":\"FIXTURE10\",\"discountType\":\"PERCENTAGE\",\"discountValue\":\"10\",\"appliesTo\":\"ORDER\",\"customerEligibility\":\"ALL\",\"combinable\":false,\"autoApply\":false}"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/coupons/01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/coupons/01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/platform/themes"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/platform/themes"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/platform/themes/01JTEST00000000000000000001"
+    },
+    {
+      "method": "PUT",
+      "url": "http://localhost:4000/api/v1/platform/themes/01JTEST00000000000000000001",
+      "body": "{\"selectedTheme\":\"organic\",\"allowedThemes\":[\"default\",\"organic\",\"famms\"]}"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/auth/logout"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/logout"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/auth/login"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/login",
+      "body": "{\"email\":\"admin@example.test\",\"password\":\"FixturePass123!\",\"rememberDevice\":false}"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "OPTIONS",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:4000/api/v1/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/stores"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:4000/api/v1/console/products?page=1&limit=20&storeId=01JTEST00000000000000000001"
+    }
+  ]
+}

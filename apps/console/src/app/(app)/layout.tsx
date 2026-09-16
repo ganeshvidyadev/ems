@@ -6,6 +6,7 @@ import { useEffect, type ReactNode } from 'react';
 import { Button } from '@/components/ui/primitives';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
+import { MantisAdminShell } from '@/components/ui/mantis-admin-shell';
 
 /**
  * Authenticated shell.
@@ -44,6 +45,19 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         />
         <span className="sr-only">Loading</span>
       </div>
+    );
+  }
+
+  if (user.userType === 'PLATFORM' && user.roles.includes('PLATFORM_SUPER_ADMIN')) {
+    return (
+      <MantisAdminShell
+        user={user}
+        pathname={pathname}
+        items={[{ href: '/themes', label: 'Company themes' }, ...NAV_ITEMS]}
+        logout={logout}
+      >
+        {children}
+      </MantisAdminShell>
     );
   }
 
