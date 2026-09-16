@@ -7,6 +7,7 @@ import { useState, type FormEvent } from 'react';
 import { useHydrateCartId } from '@/lib/cart-id';
 import { useStore } from '@/lib/store-context';
 import { useCart } from '@/lib/use-cart';
+import type { StorefrontTheme } from '@/lib/theme';
 
 /**
  * The persistent shop chrome: store name, search, cart.
@@ -17,12 +18,26 @@ import { useCart } from '@/lib/use-cart';
  * layout rather than fetched here, so the header renders complete in the first
  * HTML instead of flashing a placeholder.
  */
-export function SiteHeader() {
+export function SiteHeader({ theme = 'default' }: { theme?: StorefrontTheme }) {
   const { name, tenantSlug } = useStore();
 
   // Mounted on every page, so this is where the stored cart id gets loaded — one
   // place, rather than each page remembering to hydrate it.
   useHydrateCartId(tenantSlug);
+
+  if (theme !== 'default') return (
+    <header className={`theme-header ${theme}-header`}>
+      <div className="theme-container theme-header-inner">
+        <Link href="/" className="theme-logo" aria-label={`${name} home`}>
+          <img src={theme === 'organic' ? '/themes/organic/images/logo.svg' : '/themes/famms/images/logo.png'} alt={theme === 'organic' ? 'Organic' : 'Famms'} width={220} height={60} />
+          <span>{name}</span>
+        </Link>
+        <nav aria-label="Main navigation"><Link href="/">Home</Link><Link href="/products">Products</Link></nav>
+        <div className="theme-header-search"><HeaderSearch /></div>
+        <CartLink />
+      </div>
+    </header>
+  );
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-surface">

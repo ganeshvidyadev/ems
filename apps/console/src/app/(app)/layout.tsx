@@ -81,6 +81,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             aria-label="Main"
             className="flex min-w-0 flex-1 gap-1 overflow-x-auto text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
+            {user.userType === 'PLATFORM' && user.roles.includes('PLATFORM_SUPER_ADMIN') && (
+              <NavLink href="/themes" pathname={pathname}>Company themes</NavLink>
+            )}
             {NAV_ITEMS.map((item) => (
               <NavLink key={item.href} href={item.href} pathname={pathname}>
                 {item.label}

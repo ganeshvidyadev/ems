@@ -5,6 +5,8 @@ import { ProductGrid } from '@/components/product-card';
 import { Alert, EmptyState } from '@/components/ui';
 import { getStoreSummary } from '@/lib/store';
 import { storefrontFetchPage } from '@/lib/tenant';
+import { getStorefrontTheme } from '@/lib/theme';
+import { ThemeHome } from '@/components/theme-home';
 
 /**
  * The shop front.
@@ -41,7 +43,9 @@ async function loadHome(): Promise<{
 }
 
 export default async function HomePage() {
-  const [store, { featured, latest, failed }] = await Promise.all([getStoreSummary(), loadHome()]);
+  const [store, { featured, latest, failed }, theme] = await Promise.all([getStoreSummary(), loadHome(), getStorefrontTheme()]);
+
+  if (theme !== 'default') return <ThemeHome theme={theme} name={store.name} featured={featured} latest={latest} failed={failed} />;
 
   // Featured products already appear in the featured shelf; repeating them
   // immediately below under a different heading makes a small catalogue look
@@ -78,7 +82,7 @@ export default async function HomePage() {
           {store.name}
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-base text-ink-muted">
-          Desk setups, seating and accessories — picked to actually last, and priced in {store.currency}.
+          Explore the latest products from {store.name}, with prices in {store.currency}.
         </p>
         <div className="mt-6 flex justify-center">
           <Link

@@ -29,6 +29,12 @@ export class TenantEntity extends BaseEntity {
   @Column({ name: 'business_name', type: 'varchar', length: 255 })
   businessName!: string;
 
+  @Column({ name: 'storefront_theme', type: 'varchar', length: 64, default: 'default' })
+  storefrontTheme!: string;
+
+  @Column({ name: 'allowed_storefront_themes', type: 'json', nullable: true })
+  allowedStorefrontThemes!: string[] | null;
+
   @Column({ name: 'legal_name', type: 'varchar', length: 255, nullable: true })
   legalName!: string | null;
 

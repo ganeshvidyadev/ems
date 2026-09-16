@@ -9,7 +9,7 @@ import { ProductThumb } from '@/components/product-thumb';
 import { StarRating } from '@/components/star-rating';
 import { Badge } from '@/components/ui';
 import { discountPercent, formatMinor } from '@/lib/money';
-import { storefrontFetch } from '@/lib/tenant';
+import { StorefrontApiError, storefrontFetch } from '@/lib/tenant';
 
 type Params = { slug: string };
 
@@ -29,10 +29,11 @@ async function loadProduct(slug: string): Promise<ProductResponse | null> {
       tags: ['products', `product:${slug}`],
       revalidate: 60,
     });
-  } catch {
+  } catch (error) {
     // The API answers 404 for a product that is missing, archived or hidden. All
     // three are "not found" to a shopper, and `storefrontFetch` throws on each.
-    return null;
+    if (error instanceof StorefrontApiError && error.status === 404) return null;
+    throw error;
   }
 }
 

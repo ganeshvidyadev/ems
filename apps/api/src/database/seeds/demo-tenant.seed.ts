@@ -74,7 +74,9 @@ export async function seedDemoTenants(dataSource: DataSource): Promise<DemoSeedR
         tenant = manager.create(TenantEntity, {
           publicId: newPublicId(),
           slug: spec.slug,
-          businessName: spec.businessName,
+            businessName: spec.businessName,
+            storefrontTheme: spec.slug === 'northwind' ? 'organic' : 'famms',
+            allowedStorefrontThemes: ['default', spec.slug === 'northwind' ? 'organic' : 'famms'],
           contactEmail: spec.contactEmail,
           status: 'ACTIVE',
           provisioningStep: 'COMPLETED',

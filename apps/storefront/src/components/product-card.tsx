@@ -19,7 +19,7 @@ export function ProductCard({ product }: { product: ProductResponse }) {
   return (
     <Link
       href={`/products/${product.slug}`}
-      className="group flex flex-col gap-3 rounded-theme border border-line bg-surface p-3 transition hover:border-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      className="store-product-card group flex flex-col gap-3 rounded-theme border border-line bg-surface p-3 transition hover:border-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
     >
       <div className="relative">
         <ProductThumb name={product.name} className="aspect-square w-full" textClassName="text-4xl" />
@@ -57,7 +57,7 @@ export function ProductCard({ product }: { product: ProductResponse }) {
 /** The grid itself, so every page that shows products agrees on the breakpoints. */
 export function ProductGrid({ products }: { products: ProductResponse[] }) {
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+    <div className="store-product-grid grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}

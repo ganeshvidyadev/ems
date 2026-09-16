@@ -5,7 +5,10 @@ import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { getStoreSummary } from '@/lib/store';
 import { getTenantContext } from '@/lib/tenant';
+import { getStorefrontTheme } from '@/lib/theme';
+import { ThemeFooter } from '@/components/theme-footer';
 import './globals.css';
+import './themes.css';
 
 /**
  * Metadata is generated per request because it is per tenant — the title, the
@@ -37,16 +40,12 @@ export default async function RootLayout({
 }) {
   const tenant = await getTenantContext();
   const store = await getStoreSummary();
+  const theme = await getStorefrontTheme();
 
   return (
     <html lang="en">
-      {/*
-        Theme variables will be injected here as an inline style once the theme
-        module lands (Phase 7). Inline rather than a stylesheet because the values
-        differ per request and a cached stylesheet would serve one tenant's brand
-        colours to another.
-      */}
-      <body data-tenant={tenant.slug ?? undefined} className="flex min-h-screen flex-col">
+      {/* The server resolves the company's permitted design for each request. */}
+      <body data-tenant={tenant.slug ?? undefined} data-theme={theme} className="flex min-h-screen flex-col">
         {/*
           The store summary is resolved once here and handed to the client tree as a
           prop. Every client component that needs the store's public id — add to
@@ -61,11 +60,11 @@ export default async function RootLayout({
             tenantSlug: tenant.slug ?? '',
           }}
         >
-          <SiteHeader />
+          <SiteHeader theme={theme} />
           <main className="flex-1">
-            <div className="mx-auto max-w-content px-4 py-8">{children}</div>
+            <div className="storefront-content mx-auto max-w-content px-4 py-8">{children}</div>
           </main>
-          <SiteFooter name={store.name} currency={store.currency} />
+          {theme === 'default' ? <SiteFooter name={store.name} currency={store.currency} /> : <ThemeFooter theme={theme} name={store.name} currency={store.currency} />}
         </Providers>
       </body>
     </html>

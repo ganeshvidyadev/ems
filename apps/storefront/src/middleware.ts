@@ -35,6 +35,7 @@ export function middleware(request: NextRequest): NextResponse {
   headers.set('x-ems-hostname', hostname);
 
   const subdomain = extractSubdomain(hostname);
+  headers.delete('x-ems-tenant-slug');
   if (subdomain) headers.set('x-ems-tenant-slug', subdomain);
 
   // Distinguishes a free subdomain from a merchant's custom domain, which the API

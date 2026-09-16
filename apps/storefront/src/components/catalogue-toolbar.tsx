@@ -1,7 +1,6 @@
 'use client';
 
 import { Search, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 
 /**
@@ -24,8 +23,7 @@ const SORT_OPTIONS = [
   { value: '-totalSold', label: 'Best selling' },
 ] as const;
 
-export function CatalogueToolbar({ q, sort }: { q: string; sort: string }) {
-  const router = useRouter();
+export function CatalogueToolbar({ q, sort, onNavigate }: { q: string; sort: string; onNavigate: (href: string) => void }) {
   const [value, setValue] = useState(q);
 
   // Keeps the box in step with the URL when the shopper uses the back button or
@@ -43,7 +41,7 @@ export function CatalogueToolbar({ q, sort }: { q: string; sort: string }) {
     // old page number meaningless, and landing on an empty page 4 looks like a bug.
 
     const qs = params.toString();
-    router.push(qs ? `/products?${qs}` : '/products');
+    onNavigate(qs ? `/products?${qs}` : '/products');
   }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {

@@ -27,6 +27,13 @@ export async function getTenantContext(): Promise<TenantContext> {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
+export class StorefrontApiError extends Error {
+  constructor(public readonly status: number, path: string) {
+    super(`Storefront API ${status} for ${path}`);
+    this.name = 'StorefrontApiError';
+  }
+}
+
 /**
  * Fetches from the storefront API on the tenant's behalf.
  *
@@ -46,6 +53,7 @@ export async function storefrontFetch<T>(
   const tenant = await getTenantContext();
 
   const response = await fetch(`${API_BASE}/storefront${path}`, {
+    signal: AbortSignal.timeout(10_000),
     headers: {
       // Forwarded explicitly: the internal rewrite does not preserve `Host`, and
       // proxies rewrite it freely.
@@ -59,7 +67,7 @@ export async function storefrontFetch<T>(
   });
 
   if (!response.ok) {
-    throw new Error(`Storefront API ${response.status} for ${path}`);
+    throw new StorefrontApiError(response.status, path);
   }
 
   const body = (await response.json()) as { success: boolean; data: T };
@@ -95,6 +103,7 @@ export async function storefrontFetchPage<T>(
   const tenant = await getTenantContext();
 
   const response = await fetch(`${API_BASE}/storefront${path}`, {
+    signal: AbortSignal.timeout(10_000),
     headers: {
       'x-ems-hostname': tenant.hostname,
       Accept: 'application/json',
@@ -106,7 +115,7 @@ export async function storefrontFetchPage<T>(
   });
 
   if (!response.ok) {
-    throw new Error(`Storefront API ${response.status} for ${path}`);
+    throw new StorefrontApiError(response.status, path);
   }
 
   const body = (await response.json()) as {

@@ -5,7 +5,7 @@
  * page does not jump when the real cards arrive. A centred spinner would collapse
  * the layout to nothing and then push everything back down.
  */
-export default function ProductsLoading() {
+export function CatalogueSkeleton() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">

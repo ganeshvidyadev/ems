@@ -1,7 +1,7 @@
 import type { ProductResponse } from '@ems/contracts';
 import { PackageOpen, SearchX } from 'lucide-react';
 import type { Metadata } from 'next';
-import { CatalogueToolbar } from '@/components/catalogue-toolbar';
+import { CatalogueResults } from '@/components/catalogue-results';
 import { Pagination } from '@/components/pagination';
 import { ProductGrid } from '@/components/product-card';
 import { Alert, EmptyState } from '@/components/ui';
@@ -67,7 +67,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         )}
       </header>
 
-      <CatalogueToolbar q={q} sort={sort} />
+      <CatalogueResults q={q} sort={sort}>
 
       {!result && <Alert>We could not load the catalogue just now. Please refresh in a moment.</Alert>}
 
@@ -93,6 +93,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
           />
         </>
       )}
+      </CatalogueResults>
     </div>
   );
 }
