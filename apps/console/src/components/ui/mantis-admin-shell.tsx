@@ -41,6 +41,7 @@ import {
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
 import { AdminThemeContext } from './admin-theme';
+import { GlobalSearchPalette } from './global-search-palette';
 
 type NavigationItem = { href: string; label: string };
 /** A labeled section of the sidebar — see `SUPER_ADMIN_NAV` in layout.tsx. */
@@ -154,6 +155,7 @@ export function MantisAdminShell({
             </Dialog.Portal>
           </Dialog.Root>
           <span className="mantis-topbar-title">EMS Console</span>
+          <GlobalSearchPalette />
           <div className="mantis-account">
             <Dropdown.Root>
               <Dropdown.Trigger asChild>
