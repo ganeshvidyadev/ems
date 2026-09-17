@@ -20,6 +20,7 @@ export * from './platform-audit-log/platform-audit-log.contracts.js';
 export * from './platform-analytics/platform-analytics.contracts.js';
 export * from './platform-settings/platform-settings.contracts.js';
 export * from './platform-health/platform-health.contracts.js';
+export * from './platform-quota/platform-quota.contracts.js';
 export * from './store/store.contracts.js';
 export * from './warehouse/warehouse.contracts.js';
 export * from './job/job.contracts.js';

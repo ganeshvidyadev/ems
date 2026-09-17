@@ -172,6 +172,7 @@ const SUPER_ADMIN_NAV = [
       { href: '/plans', label: 'Plans' },
       { href: '/billing', label: 'Billing' },
       { href: '/settlements', label: 'Settlements' },
+      { href: '/quota', label: 'Usage & quotas' },
     ],
   },
   {
