@@ -6,6 +6,7 @@ import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import {
   Activity,
   Boxes,
+  Cable,
   ChevronDown,
   ChevronRight,
   CircleUserRound,
@@ -60,6 +61,7 @@ const icons: Record<string, LucideIcon> = {
   '/quota': Gauge,
   '/billing': Receipt,
   '/support': LifeBuoy,
+  '/integrations': Cable,
   '/tenant-export': DatabaseBackup,
   '/audit-log': History,
   '/logs': ScrollText,

@@ -66,6 +66,7 @@ import { PlatformHealthModule } from './modules/platform-health/platform-health.
 import { PlatformQuotaModule } from './modules/platform-quota/platform-quota.module';
 import { PlatformAlertModule } from './modules/platform-alert/platform-alert.module';
 import { PlatformSearchModule } from './modules/platform-search/platform-search.module';
+import { PlatformIntegrationModule } from './modules/platform-integration/platform-integration.module';
 import { QueueModule } from './queues/queue.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -185,6 +186,7 @@ import { RequestContextService } from './common/services/request-context.service
     PlatformQuotaModule,
     PlatformAlertModule,
     PlatformSearchModule,
+    PlatformIntegrationModule,
     HealthModule,
   ],
   providers: [

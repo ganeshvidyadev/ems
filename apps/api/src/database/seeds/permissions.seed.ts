@@ -114,6 +114,7 @@ export const PERMISSION_SPECS: readonly PermissionSpec[] = [
   { resource: 'platform.health', actions: ['read'], scope: 'PLATFORM', description: 'Platform health overview' },
   { resource: 'platform.quota', actions: ['read'], scope: 'PLATFORM', description: 'Cross-tenant quota usage' },
   { resource: 'platform.alert', actions: ['read', 'update'], scope: 'PLATFORM', description: 'Platform alert center' },
+  { resource: 'platform.integration', actions: ['read'], scope: 'PLATFORM', description: 'Cross-tenant integration connections' },
 ];
 
 export interface PermissionRow {

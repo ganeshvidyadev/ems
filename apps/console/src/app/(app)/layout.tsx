@@ -181,6 +181,7 @@ const SUPER_ADMIN_NAV = [
     items: [
       { href: '/support', label: 'Support tickets' },
       { href: '/queues', label: 'Jobs & queues' },
+      { href: '/integrations', label: 'Integrations' },
       { href: '/tenant-export', label: 'Tenant data export' },
     ],
   },
