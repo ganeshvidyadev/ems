@@ -3,9 +3,11 @@ import type { Request } from 'express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   createTenantRequestSchema,
+  impersonateTenantRequestSchema,
   suspendTenantRequestSchema,
   tenantListQuerySchema,
   type CreateTenantRequest,
+  type ImpersonateTenantRequest,
   type SuspendTenantRequest,
 } from '@ems/contracts';
 import { buildPaginationMeta } from '@ems/contracts';
@@ -99,8 +101,34 @@ export class PlatformTenantController {
 
   @Post(':id/impersonate')
   @Permissions('platform.tenant:impersonate')
+  @Validate(impersonateTenantRequestSchema)
   @ApiOperation({ summary: "Get a 15-minute session as this tenant's owner, for support investigation" })
-  async impersonate(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser, @Req() request: Request) {
-    return this.tenants.impersonate(id, actorFrom(user, request));
+  async impersonate(
+    @Param('id') id: string,
+    @Body() body: ImpersonateTenantRequest,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() request: Request,
+  ) {
+    return this.tenants.impersonate(id, body.reason, body.referenceId, actorFrom(user, request));
+  }
+
+  /**
+   * Called by the impersonated caller's own session when they exit — not the
+   * admin's, there is no admin-side request at this point. No `@Permissions()`:
+   * any authenticated caller may end their own current impersonation, the same
+   * "authenticated but permissionless" shape as changing one's own password.
+   * A no-op if the caller isn't actually impersonating (nothing to record).
+   */
+  @Post('exit-impersonation')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "End the caller's own active impersonation session" })
+  async exitImpersonation(@CurrentUser() user: AuthenticatedUser, @Req() request: Request) {
+    if (user.actingAs && user.tenantId) {
+      await this.tenants.exitImpersonation(user.tenantId, user.actingAs, user.jti, {
+        ip: request.ip,
+        userAgent: request.headers['user-agent'],
+      });
+    }
+    return { ok: true };
   }
 }

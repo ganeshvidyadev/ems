@@ -93,6 +93,8 @@ export default function TenantDetailPage() {
   const [tab, setTab] = useState<Tab>('overview');
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [suspendReason, setSuspendReason] = useState('');
+  const [impersonateOpen, setImpersonateOpen] = useState(false);
+  const [impersonateReason, setImpersonateReason] = useState('');
 
   if (tenant.isError) {
     return (
@@ -133,18 +135,7 @@ export default function TenantDetailPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           {canImpersonate && t.status !== 'DELETED' && (
-            <Button
-              variant="outline"
-              loading={impersonate.isPending}
-              onClick={() =>
-                impersonate.mutate(t.id, {
-                  onSuccess: (result) => {
-                    enterImpersonation(result.user, result.accessToken);
-                    router.push('/');
-                  },
-                })
-              }
-            >
+            <Button variant="outline" onClick={() => setImpersonateOpen(true)}>
               Impersonate
             </Button>
           )}
@@ -246,6 +237,48 @@ export default function TenantDetailPage() {
               }
             >
               Suspend
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={impersonateOpen}
+        onOpenChange={(open) => {
+          setImpersonateOpen(open);
+          if (!open) setImpersonateReason('');
+        }}
+        title="Impersonate this tenant?"
+        description={`You'll see the console as ${t.businessName}'s owner for up to 15 minutes. This is recorded in the audit log.`}
+      >
+        <div className="space-y-4">
+          <Field label="Reason" htmlFor="impersonateReason" hint="Required — shown in the audit log">
+            <Textarea
+              id="impersonateReason"
+              value={impersonateReason}
+              onChange={(e) => setImpersonateReason(e.target.value)}
+            />
+          </Field>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setImpersonateOpen(false)}>
+              Never mind
+            </Button>
+            <Button
+              loading={impersonate.isPending}
+              disabled={impersonateReason.trim().length < 5}
+              onClick={() =>
+                impersonate.mutate(
+                  { id: t.id, reason: impersonateReason.trim() },
+                  {
+                    onSuccess: (result) => {
+                      enterImpersonation(result.user, result.accessToken);
+                      router.push('/');
+                    },
+                  },
+                )
+              }
+            >
+              Impersonate
             </Button>
           </div>
         </div>

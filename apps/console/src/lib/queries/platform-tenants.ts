@@ -1,5 +1,6 @@
 import type {
   CreateTenantRequest,
+  ImpersonateTenantRequest,
   SuspendTenantRequest,
   TenantOverviewResponse,
   TenantResponse,
@@ -90,7 +91,8 @@ export interface ImpersonateResult {
 
 export function useImpersonateTenant() {
   return useMutation({
-    mutationFn: (id: string) => apiPost<ImpersonateResult>(`/platform/tenants/${id}/impersonate`),
+    mutationFn: ({ id, ...body }: { id: string } & ImpersonateTenantRequest) =>
+      apiPost<ImpersonateResult>(`/platform/tenants/${id}/impersonate`, body),
   });
 }
 

@@ -6,7 +6,14 @@ import {
   createRefundRequestSchema,
   placeOrderRequestSchema,
 } from '@ems/contracts';
-import { Idempotent, IdempotencyKey, Permissions, Public, Validate } from '../../common/decorators';
+import {
+  BlockedDuringImpersonation,
+  Idempotent,
+  IdempotencyKey,
+  Permissions,
+  Public,
+  Validate,
+} from '../../common/decorators';
 import { MalformedRequestError } from '../../common/errors/api.errors';
 import { CheckoutService } from './checkout.service';
 
@@ -46,6 +53,7 @@ export class CheckoutController {
 
   @Post('console/orders/:id/refund')
   @Permissions('order:refund')
+  @BlockedDuringImpersonation()
   @Idempotent()
   @Validate(createRefundRequestSchema)
   @ApiOperation({ summary: 'Refund a captured payment, in whole or in part' })

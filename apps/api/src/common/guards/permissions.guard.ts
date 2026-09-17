@@ -5,8 +5,8 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import { IS_PUBLIC_KEY, PERMISSIONS_KEY, PLATFORM_ONLY_KEY } from '../decorators';
-import { PermissionDeniedError } from '../errors/api.errors';
+import { BLOCKED_DURING_IMPERSONATION_KEY, IS_PUBLIC_KEY, PERMISSIONS_KEY, PLATFORM_ONLY_KEY } from '../decorators';
+import { ImpersonationRestrictedError, PermissionDeniedError } from '../errors/api.errors';
 import { PermissionResolverService } from '../../modules/auth/services/permission-resolver.service';
 import { AuthLogService } from '../../modules/auth/services/auth-log.service';
 
@@ -18,6 +18,8 @@ interface AuthenticatedRequest extends Request {
     permissions: string[];
     roles: string[];
     tokenType?: string;
+    /** Set only on an impersonation token — see `@BlockedDuringImpersonation()`. */
+    actingAs?: string;
   };
 }
 
@@ -57,6 +59,19 @@ export class PermissionsGuard implements CanActivate {
       handler,
       controller,
     ]);
+    const blockedDuringImpersonation = this.reflector.getAllAndOverride<boolean>(
+      BLOCKED_DURING_IMPERSONATION_KEY,
+      [handler, controller],
+    );
+
+    const request = executionContext.switchToHttp().getRequest<AuthenticatedRequest>();
+
+    // Checked even for an otherwise-permissionless route: `change-password`/`mfa/*`
+    // carry no `@Permissions()` of their own (any authenticated user may act on
+    // their own account) and would bypass the check below entirely otherwise.
+    if (blockedDuringImpersonation && request.user?.actingAs) {
+      throw new ImpersonationRestrictedError();
+    }
 
     if (!platformOnly && (!required || required.length === 0)) {
       // Authenticated but permissionless — legitimate for "my own profile" routes.
@@ -65,7 +80,6 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    const request = executionContext.switchToHttp().getRequest<AuthenticatedRequest>();
     const user = request.user;
 
     if (!user) throw new PermissionDeniedError(required ?? ['authenticated']);

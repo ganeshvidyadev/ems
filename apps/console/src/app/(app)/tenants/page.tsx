@@ -77,6 +77,8 @@ function TenantsPageContent() {
   const [suspendTarget, setSuspendTarget] = useState<TenantResponse | null>(null);
   const [suspendReason, setSuspendReason] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<TenantResponse | null>(null);
+  const [impersonateTarget, setImpersonateTarget] = useState<TenantResponse | null>(null);
+  const [impersonateReason, setImpersonateReason] = useState('');
 
   function setPage(next: number) {
     const params = new URLSearchParams(searchParams);
@@ -166,19 +168,7 @@ function TenantsPageContent() {
                 <TableCell>
                   <div className="flex flex-wrap gap-2">
                     {canImpersonate && tenant.status !== 'DELETED' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        loading={impersonate.isPending}
-                        onClick={() =>
-                          impersonate.mutate(tenant.id, {
-                            onSuccess: (result) => {
-                              enterImpersonation(result.user, result.accessToken);
-                              router.push('/');
-                            },
-                          })
-                        }
-                      >
+                      <Button size="sm" variant="outline" onClick={() => setImpersonateTarget(tenant)}>
                         Impersonate
                       </Button>
                     )}
@@ -253,6 +243,55 @@ function TenantsPageContent() {
               }}
             >
               Suspend
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={impersonateTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setImpersonateTarget(null);
+            setImpersonateReason('');
+          }
+        }}
+        title="Impersonate this tenant?"
+        description={
+          impersonateTarget
+            ? `You'll see the console as ${impersonateTarget.businessName}'s owner for up to 15 minutes. This is recorded in the audit log.`
+            : undefined
+        }
+      >
+        <div className="space-y-4">
+          <Field label="Reason" htmlFor="impersonateReason" hint="Required — shown in the audit log">
+            <Textarea
+              id="impersonateReason"
+              value={impersonateReason}
+              onChange={(e) => setImpersonateReason(e.target.value)}
+            />
+          </Field>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setImpersonateTarget(null)}>
+              Never mind
+            </Button>
+            <Button
+              loading={impersonate.isPending}
+              disabled={impersonateReason.trim().length < 5}
+              onClick={() => {
+                if (!impersonateTarget) return;
+                impersonate.mutate(
+                  { id: impersonateTarget.id, reason: impersonateReason.trim() },
+                  {
+                    onSuccess: (result) => {
+                      enterImpersonation(result.user, result.accessToken);
+                      router.push('/');
+                    },
+                  },
+                );
+              }}
+            >
+              Impersonate
             </Button>
           </div>
         </div>

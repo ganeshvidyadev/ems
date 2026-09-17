@@ -125,6 +125,19 @@ export const suspendTenantRequestSchema = z.object({
 });
 export type SuspendTenantRequest = z.infer<typeof suspendTenantRequestSchema>;
 
+/**
+ * A reason is required, not optional: `platform_super_admin`'s own permission
+ * catalogue entry documents impersonation as "time-boxed" investigative access, and
+ * an unattributed reason defeats the point of an audit trail that exists specifically
+ * to answer "why was this admin looking at this merchant's account".
+ */
+export const impersonateTenantRequestSchema = z.object({
+  reason: z.string().trim().min(5).max(255),
+  /** Free-form — a support ticket id, an internal ref, whatever the admin has. */
+  referenceId: z.string().trim().max(64).optional(),
+});
+export type ImpersonateTenantRequest = z.infer<typeof impersonateTenantRequestSchema>;
+
 // ---------------------------------------------------------------------------
 // Domains
 // ---------------------------------------------------------------------------

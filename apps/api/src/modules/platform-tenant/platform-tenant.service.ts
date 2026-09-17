@@ -244,9 +244,19 @@ export class PlatformTenantService {
   /**
    * Mints a 15-minute access token carrying the tenant's owner identity, so a
    * platform admin can reproduce what a merchant sees. See `TokenService.signImpersonationToken`
-   * for why this needs no separate "exit" state.
+   * for why this needs no separate "exit" state at the token level.
+   *
+   * The token's own `jti` doubles as the impersonation session id: it is already a
+   * unique identifier minted once per token, so this reuses it as the correlation
+   * key between the `tenant.impersonated` (start) and `tenant.impersonation_exited`
+   * (end) audit rows rather than inventing a second one.
    */
-  async impersonate(publicId: string, actor: AuditActor): Promise<ImpersonationResult> {
+  async impersonate(
+    publicId: string,
+    reason: string,
+    referenceId: string | undefined,
+    actor: AuditActor,
+  ): Promise<ImpersonationResult> {
     const tenant = await this.get(publicId);
     if (!tenant.ownerUserId) throw new BusinessRuleError('This tenant has no owner account to impersonate');
 
@@ -270,7 +280,13 @@ export class PlatformTenantService {
 
     await this.audit(actor, 'tenant.impersonated', tenant.id, {
       severity: 'CRITICAL',
-      after: { impersonatedUserId: user.id, impersonatedEmail: user.email },
+      after: {
+        impersonatedUserId: user.id,
+        impersonatedEmail: user.email,
+        reason,
+        referenceId: referenceId ?? null,
+        sessionId: access.jti,
+      },
     });
 
     return {
@@ -279,6 +295,39 @@ export class PlatformTenantService {
       tokenType: 'Bearer',
       user: await this.auth.toUserSummary(user, authorization),
     };
+  }
+
+  /**
+   * Records that an impersonation session ended — previously nothing did.
+   *
+   * Called by the impersonated caller's own token (see `AuthController.exitImpersonation`),
+   * not the admin's — there is no admin-side request at exit, only the console
+   * silently swapping the identity back. `sessionId` is that token's own `jti`,
+   * which is exactly the `jti` `impersonate()` recorded as `sessionId` at the
+   * start (same token throughout the session), so it correlates the two rows
+   * without needing a dedicated session table.
+   *
+   * Best-effort by nature: exit is client-initiated, so a browser closed
+   * mid-session leaves the *start* event on record with no matching end — same as
+   * a crashed process leaves a log with no clean-shutdown line.
+   */
+  async exitImpersonation(
+    tenantId: string,
+    actingAsPublicId: string,
+    sessionId: string,
+    meta: { ip?: string | null; userAgent?: string | null },
+  ): Promise<void> {
+    const admin = await this.dataSource
+      .getRepository(UserEntity)
+      .findOne({ where: { publicId: actingAsPublicId } });
+    if (!admin) return; // Admin account gone since — nothing to attribute the exit to.
+
+    await this.audit(
+      { id: admin.id, publicId: admin.publicId, ip: meta.ip, userAgent: meta.userAgent },
+      'tenant.impersonation_exited',
+      tenantId,
+      { severity: 'INFO', after: { sessionId } },
+    );
   }
 
   toResponse(tenant: TenantEntity, primaryDomain: string | null = null): TenantResponse {

@@ -201,6 +201,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const exitImpersonation = useCallback(async () => {
+    // Best-effort and before `refresh()`: this must run while the impersonation
+    // token is still the active bearer token, since the server reads the exiting
+    // admin's identity from *that* token's own claims — `refresh()` immediately
+    // below overwrites it with the admin's real session. A failure here (network
+    // blip) must not block the admin from actually exiting, so it's swallowed
+    // rather than surfaced.
+    try {
+      await apiPost('/platform/tenants/exit-impersonation');
+    } catch {
+      // Audit-trail best-effort only — see comment above.
+    }
     // Same reasoning in reverse: the impersonated tenant's cached queries must not
     // flash under the restored admin identity before they refetch.
     queryClient.clear();

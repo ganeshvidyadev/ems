@@ -69,6 +69,14 @@ export class PermissionDeniedError extends DomainError {
   }
 }
 
+export class ImpersonationRestrictedError extends DomainError {
+  readonly code = ErrorCode.PERMISSION_DENIED;
+
+  constructor() {
+    super('This action cannot be performed while impersonating another account — exit impersonation first');
+  }
+}
+
 export class TenantSuspendedError extends DomainError {
   readonly code = ErrorCode.TENANT_SUSPENDED;
 

@@ -18,6 +18,7 @@ export const IDEMPOTENT_KEY = 'ems:idempotent';
 export const READ_ONLY_KEY = 'ems:read-only';
 export const PLAN_QUOTA_KEY = 'ems:plan-quota';
 export const ALLOW_ONBOARDING_KEY = 'ems:allow-onboarding';
+export const BLOCKED_DURING_IMPERSONATION_KEY = 'ems:blocked-during-impersonation';
 
 /**
  * Opts a route out of authentication.
@@ -71,6 +72,17 @@ export const PlanQuota = (limitKey: string) => SetMetadata(PLAN_QUOTA_KEY, limit
  * would race the saga.
  */
 export const AllowDuringOnboarding = () => SetMetadata(ALLOW_ONBOARDING_KEY, true);
+
+/**
+ * Refuses a route while the caller is impersonating (`actingAs` set on the token).
+ *
+ * A platform admin reproducing a merchant's bug reasonably needs to see everything
+ * the merchant sees — this is not a broad "impersonation is read-only" rule. It is
+ * for the specific, narrow set of actions that are dangerous or improper to take
+ * *as* someone else: moving their money (a refund) or changing their own account's
+ * security posture (password, MFA) out from under them without their knowledge.
+ */
+export const BlockedDuringImpersonation = () => SetMetadata(BLOCKED_DURING_IMPERSONATION_KEY, true);
 
 /** `@Validate(schema)` — shorthand for a body-validating Zod pipe. */
 export const Validate = <S extends ZodTypeAny>(schema: S) =>
