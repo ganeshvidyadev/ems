@@ -159,6 +159,7 @@ const SUPER_ADMIN_NAV = [
     label: 'Overview',
     items: [
       { href: '/analytics', label: 'Analytics' },
+      { href: '/alerts', label: 'Alert center' },
       { href: '/platform-health', label: 'Platform health' },
     ],
   },

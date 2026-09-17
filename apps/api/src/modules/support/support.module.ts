@@ -7,5 +7,8 @@ import { SupportTicketController } from './support-ticket.controller';
 @Module({
   controllers: [SupportTicketController],
   providers: [SupportTicketRepository, SupportTicketMessageRepository, SupportTicketService],
+  // For PlatformAlertModule's SLA-breach check — reusing `findBreachedAcrossTenants()`
+  // rather than a second raw-SQL copy of the same query.
+  exports: [SupportTicketRepository],
 })
 export class SupportModule {}

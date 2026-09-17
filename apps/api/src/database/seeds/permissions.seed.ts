@@ -113,6 +113,7 @@ export const PERMISSION_SPECS: readonly PermissionSpec[] = [
   // distinct from `platform.log`'s raw browse and `platform.queue`'s per-queue detail.
   { resource: 'platform.health', actions: ['read'], scope: 'PLATFORM', description: 'Platform health overview' },
   { resource: 'platform.quota', actions: ['read'], scope: 'PLATFORM', description: 'Cross-tenant quota usage' },
+  { resource: 'platform.alert', actions: ['read', 'update'], scope: 'PLATFORM', description: 'Platform alert center' },
 ];
 
 export interface PermissionRow {

@@ -39,6 +39,20 @@ export class SupportTicketRepository extends TenantScopedRepository<SupportTicke
     });
   }
 
+  /**
+   * Every open ticket past its own SLA, across every tenant — the bulk counterpart
+   * to `SupportTicketEntity.isOverdue`, which only ever checked one ticket at a time.
+   * `idx_support_tickets_sla` was added anticipating this query; nothing ran it until now.
+   */
+  async findBreachedAcrossTenants(): Promise<SupportTicketEntity[]> {
+    return this.repository
+      .createQueryBuilder('t')
+      .where('t.sla_due_at IS NOT NULL')
+      .andWhere('t.sla_due_at < NOW()')
+      .andWhere('t.status NOT IN (:...terminal)', { terminal: ['RESOLVED', 'CLOSED'] })
+      .getMany();
+  }
+
   /** Platform lookup by id, any tenant. */
   async findByPublicIdAcrossTenantsOrFail(publicId: string): Promise<SupportTicketEntity> {
     const ticket = await this.repository.findOne({ where: { publicId } });
