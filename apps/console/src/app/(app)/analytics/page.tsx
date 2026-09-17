@@ -76,6 +76,30 @@ export default function PlatformAnalyticsPage() {
         ) : (
           <StatCard label="MRR" value={analytics.isLoading ? '—' : '₹0.00'} loading={analytics.isLoading} />
         )}
+        {analytics.data?.arr.length ? (
+          analytics.data.arr.map((a) => (
+            <StatCard
+              key={a.currency}
+              label={`ARR (${a.currency})`}
+              value={formatMoney({ amountMinor: a.arrMinor, currency: a.currency })}
+              hint="Annualized run rate (MRR × 12)"
+            />
+          ))
+        ) : (
+          <StatCard label="ARR" value={analytics.isLoading ? '—' : '₹0.00'} loading={analytics.isLoading} hint="Annualized run rate" />
+        )}
+        <StatCard
+          label="Churn rate (30d)"
+          value={analytics.isLoading ? '—' : `${analytics.data?.churnRatePercentage ?? 0}%`}
+          loading={analytics.isLoading}
+          hint="Cancelled vs active base (30d)"
+        />
+        <StatCard
+          label="Trial conversion"
+          value={analytics.isLoading ? '—' : `${analytics.data?.trialConversionRatePercentage ?? 0}%`}
+          loading={analytics.isLoading}
+          hint="Trials converted to paid"
+        />
         <StatCard
           label="Open support tickets"
           value={analytics.data?.openSupportTickets ?? '—'}
