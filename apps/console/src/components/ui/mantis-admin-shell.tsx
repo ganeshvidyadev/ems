@@ -214,6 +214,7 @@ export function MantisAdminShell({
             {user.userType === 'PLATFORM' ? 'EMS Platform' : (user.tenant?.businessName ?? 'EMS Console')}
           </span>
           <GlobalSearchPalette />
+          <NotificationsBell />
           <div className="mantis-account">
             <Dropdown.Root>
               <Dropdown.Trigger asChild>
@@ -322,3 +323,70 @@ function Sidebar({
     </nav>
   );
 }
+
+function NotificationsBell() {
+  const [unreadCount, setUnreadCount] = useState(2);
+
+  return (
+    <Dropdown.Root>
+      <Dropdown.Trigger asChild>
+        <button
+          type="button"
+          className="relative inline-flex items-center justify-center rounded-lg p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+          aria-label="View notifications"
+        >
+          <Bell className="size-4" />
+          {unreadCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+            </span>
+          )}
+        </button>
+      </Dropdown.Trigger>
+      <Dropdown.Portal>
+        <Dropdown.Content
+          align="end"
+          sideOffset={8}
+          className="mantis-admin z-50 w-80 rounded-xl border border-slate-200 bg-white p-2 shadow-xl animate-in fade-in-50"
+        >
+          <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2 text-xs">
+            <span className="font-bold text-slate-900">Activity & Alerts</span>
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setUnreadCount(0)}
+                className="text-[11px] font-semibold text-blue-600 hover:text-blue-700"
+              >
+                Mark all as read
+              </button>
+            )}
+          </div>
+          <div className="divide-y divide-slate-100 max-h-64 overflow-y-auto">
+            <div className="p-2.5 hover:bg-slate-50 rounded-lg text-xs space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-slate-900">New Order Received</span>
+                <span className="text-[10px] text-slate-400">10m ago</span>
+              </div>
+              <p className="text-[11px] text-slate-600">Order #ORD-1042 was placed by customer.</p>
+              <Link href="/orders" className="text-[10px] font-semibold text-blue-600 hover:underline inline-block">
+                View order →
+              </Link>
+            </div>
+            <div className="p-2.5 hover:bg-slate-50 rounded-lg text-xs space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-amber-800">Low Stock Warning</span>
+                <span className="text-[10px] text-slate-400">1h ago</span>
+              </div>
+              <p className="text-[11px] text-slate-600">Variant inventory is below threshold (2 items remaining).</p>
+              <Link href="/inventory" className="text-[10px] font-semibold text-blue-600 hover:underline inline-block">
+                Adjust stock →
+              </Link>
+            </div>
+          </div>
+        </Dropdown.Content>
+      </Dropdown.Portal>
+    </Dropdown.Root>
+  );
+}
+

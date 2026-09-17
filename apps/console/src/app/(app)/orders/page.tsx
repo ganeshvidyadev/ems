@@ -1,12 +1,14 @@
 'use client';
 
 import type { OrderListQuery, OrderResponse } from '@ems/contracts';
+import { Download } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import {
   Alert,
   Badge,
+  Button,
   Pagination,
   Select,
   Table,
@@ -79,48 +81,84 @@ function OrdersPageContent() {
   const orders = ordersQuery.data?.data ?? [];
   const pagination = ordersQuery.data?.meta.pagination;
 
+  function exportOrdersCsv() {
+    if (!orders || orders.length === 0) return;
+    const headers = ['Order Number', 'Date', 'Customer Email', 'Status', 'Payment Status', 'Fulfilment Status', 'Currency', 'Total Amount'];
+    const rows = orders.map((o) => [
+      o.orderNumber,
+      formatDate(o.placedAt ?? o.createdAt),
+      o.email ?? '',
+      o.status,
+      o.paymentStatus,
+      o.fulfilmentStatus,
+      o.currency,
+      (Number(o.total.amountMinor) / 100).toFixed(2),
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `orders-export-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   return (
     <PageShell>
-      <div className="mb-4 flex flex-wrap gap-3">
-        <Select value={status} onChange={(e) => { setStatus(e.target.value as OrderListQuery['status'] | ''); setPage(1); }} className="w-44">
-          <option value="">All statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="CONFIRMED">Confirmed</option>
-          <option value="PROCESSING">Processing</option>
-          <option value="SHIPPED">Shipped</option>
-          <option value="DELIVERED">Delivered</option>
-          <option value="COMPLETED">Completed</option>
-          <option value="CANCELLED">Cancelled</option>
-          <option value="ON_HOLD">On hold</option>
-          <option value="RETURNED">Returned</option>
-          <option value="FAILED">Failed</option>
-        </Select>
-        <Select
-          value={paymentStatus}
-          onChange={(e) => { setPaymentStatus(e.target.value as OrderListQuery['paymentStatus'] | ''); setPage(1); }}
-          className="w-44"
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-3">
+          <Select value={status} onChange={(e) => { setStatus(e.target.value as OrderListQuery['status'] | ''); setPage(1); }} className="w-44">
+            <option value="">All statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="CONFIRMED">Confirmed</option>
+            <option value="PROCESSING">Processing</option>
+            <option value="SHIPPED">Shipped</option>
+            <option value="DELIVERED">Delivered</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="CANCELLED">Cancelled</option>
+            <option value="ON_HOLD">On hold</option>
+            <option value="RETURNED">Returned</option>
+            <option value="FAILED">Failed</option>
+          </Select>
+          <Select
+            value={paymentStatus}
+            onChange={(e) => { setPaymentStatus(e.target.value as OrderListQuery['paymentStatus'] | ''); setPage(1); }}
+            className="w-44"
+          >
+            <option value="">All payment statuses</option>
+            <option value="PENDING">Payment pending</option>
+            <option value="PAID">Paid</option>
+            <option value="PARTIALLY_PAID">Partially paid</option>
+            <option value="REFUNDED">Refunded</option>
+            <option value="PARTIALLY_REFUNDED">Partially refunded</option>
+            <option value="FAILED">Failed</option>
+            <option value="VOIDED">Voided</option>
+          </Select>
+          <Select
+            value={fulfilmentStatus}
+            onChange={(e) => { setFulfilmentStatus(e.target.value as OrderListQuery['fulfilmentStatus'] | ''); setPage(1); }}
+            className="w-48"
+          >
+            <option value="">All fulfilment statuses</option>
+            <option value="UNFULFILLED">Unfulfilled</option>
+            <option value="PARTIALLY_FULFILLED">Partially fulfilled</option>
+            <option value="FULFILLED">Fulfilled</option>
+            <option value="RETURNED">Returned</option>
+            <option value="PARTIALLY_RETURNED">Partially returned</option>
+          </Select>
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={orders.length === 0}
+          onClick={exportOrdersCsv}
+          className="inline-flex items-center gap-1.5"
         >
-          <option value="">All payment statuses</option>
-          <option value="PENDING">Payment pending</option>
-          <option value="PAID">Paid</option>
-          <option value="PARTIALLY_PAID">Partially paid</option>
-          <option value="REFUNDED">Refunded</option>
-          <option value="PARTIALLY_REFUNDED">Partially refunded</option>
-          <option value="FAILED">Failed</option>
-          <option value="VOIDED">Voided</option>
-        </Select>
-        <Select
-          value={fulfilmentStatus}
-          onChange={(e) => { setFulfilmentStatus(e.target.value as OrderListQuery['fulfilmentStatus'] | ''); setPage(1); }}
-          className="w-48"
-        >
-          <option value="">All fulfilment statuses</option>
-          <option value="UNFULFILLED">Unfulfilled</option>
-          <option value="PARTIALLY_FULFILLED">Partially fulfilled</option>
-          <option value="FULFILLED">Fulfilled</option>
-          <option value="RETURNED">Returned</option>
-          <option value="PARTIALLY_RETURNED">Partially returned</option>
-        </Select>
+          <Download className="size-3.5 text-slate-600" />
+          Export Orders CSV
+        </Button>
       </div>
 
       {ordersQuery.isError && (

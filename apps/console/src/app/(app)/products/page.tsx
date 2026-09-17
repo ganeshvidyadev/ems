@@ -1,6 +1,7 @@
 'use client';
 
 import type { ProductListQuery, ProductResponse } from '@ems/contracts';
+import { Download } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
@@ -105,10 +106,43 @@ function ProductsPageContent() {
   const canShowActions = canUpdate || canDelete || canPublish;
   const colSpan = canShowActions ? 5 : 4;
 
+  function exportProductsCsv() {
+    if (!products || products.length === 0) return;
+    const headers = ['Product Name', 'Slug', 'Status', 'Base Price', 'Variants Count', 'Created At'];
+    const rows = products.map((p) => [
+      p.name,
+      p.slug,
+      p.status,
+      (Number(p.priceMinor) / 100).toFixed(2),
+      p.variants?.length ?? 0,
+      formatDate(p.createdAt),
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `products-catalog-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   return (
     <PageShell
       action={
-        canCreate && <Button onClick={() => router.push('/products/new')}>New product</Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={products.length === 0}
+            onClick={exportProductsCsv}
+            className="inline-flex items-center gap-1.5"
+          >
+            <Download className="size-3.5 text-slate-600" />
+            Export Catalog CSV
+          </Button>
+          {canCreate && <Button onClick={() => router.push('/products/new')}>New product</Button>}
+        </div>
       }
     >
       <form onSubmit={onSearchSubmit} className="mb-4 flex flex-wrap gap-3">
