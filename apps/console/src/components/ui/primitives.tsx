@@ -417,8 +417,12 @@ export function TableBody({ children, className }: { children: ReactNode; classN
   return <tbody className={cn('[&_tr:last-child]:border-0', className)}>{children}</tbody>;
 }
 
-export function TableRow({ children, className }: { children: ReactNode; className?: string }) {
-  return <tr className={cn('border-b transition-colors hover:bg-muted/50', className)}>{children}</tr>;
+export function TableRow({ className, children, ...props }: HTMLAttributes<HTMLTableRowElement>) {
+  return (
+    <tr className={cn('border-b transition-colors hover:bg-muted/50', className)} {...props}>
+      {children}
+    </tr>
+  );
 }
 
 export function TableHead({ className, children, ...props }: ThHTMLAttributes<HTMLTableCellElement>) {

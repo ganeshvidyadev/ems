@@ -1,6 +1,7 @@
 'use client';
 
 import type { LoginResponse, UserSummary } from '@ems/contracts';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import {
   createContext,
@@ -17,10 +18,15 @@ import { useAuthStore } from '@/store/auth.store';
 interface AuthContextValue {
   user: UserSummary | null;
   status: 'unknown' | 'authenticating' | 'authenticated' | 'unauthenticated';
+  impersonating: boolean;
   login: (email: string, password: string, tenantSlug?: string) => Promise<LoginResponse>;
   completeMfa: (mfaToken: string, code: string, method: 'TOTP' | 'RECOVERY_CODE') => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<boolean>;
+  /** Swaps the in-memory session to a tenant owner's, without touching the admin's own refresh cookie. */
+  enterImpersonation: (user: UserSummary, accessToken: string) => void;
+  /** Restores the admin's own session early, via the still-valid refresh cookie. */
+  exitImpersonation: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -63,7 +69,8 @@ function isAuthRoute(pathname: string): boolean {
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const { user, status, setSession, clearSession, setStatus } = useAuthStore();
+  const queryClient = useQueryClient();
+  const { user, status, impersonating, setSession, clearSession, setStatus } = useAuthStore();
   const [bootstrapped, setBootstrapped] = useState(false);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -169,6 +176,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applySession],
   );
 
+  /**
+   * Deliberately does not clear or reschedule the refresh timer: the admin's own
+   * refresh cookie is untouched by impersonation (see `TokenService.signImpersonationToken`),
+   * so leaving the timer running would silently refresh the admin BACK into their
+   * own session mid-impersonation. It is cleared and rescheduled by `refresh()`
+   * itself the moment the impersonation token expires and that call fires.
+   */
+  const enterImpersonation = useCallback(
+    (impersonatedUser: UserSummary, accessToken: string) => {
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+      // Otherwise the admin's own cached dashboard/order/product queries render
+      // first paint under the impersonated identity — same shape, wrong tenant's data.
+      queryClient.clear();
+      setSession(impersonatedUser, accessToken, true);
+    },
+    [setSession, queryClient],
+  );
+
+  const exitImpersonation = useCallback(async () => {
+    // Same reasoning in reverse: the impersonated tenant's cached queries must not
+    // flash under the restored admin identity before they refetch.
+    queryClient.clear();
+    return refresh();
+  }, [refresh, queryClient]);
+
   const logout = useCallback(async () => {
     try {
       await apiPost('/auth/logout');
@@ -179,19 +211,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (refreshTimer.current) clearTimeout(refreshTimer.current);
       setAccessToken(null);
       clearSession();
+      queryClient.clear();
       router.replace('/login');
     }
-  }, [clearSession, router]);
+  }, [clearSession, router, queryClient]);
 
   return (
     <AuthContext.Provider
       value={{
         user,
         status: bootstrapped ? status : 'authenticating',
+        impersonating,
         login,
         completeMfa,
         logout,
         refresh,
+        enterImpersonation,
+        exitImpersonation,
       }}
     >
       {children}

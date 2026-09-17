@@ -12,9 +12,12 @@ export const THEME_CATEGORIES = [
   'handmade',
   'general',
 ] as const;
+export type ThemeCategory = (typeof THEME_CATEGORIES)[number];
 
 export const THEME_TEMPLATE_STATUSES = ['ACTIVE', 'ARCHIVED'] as const;
+export type ThemeTemplateStatus = (typeof THEME_TEMPLATE_STATUSES)[number];
 export const TENANT_THEME_STATUSES = ['DRAFT', 'PUBLISHED', 'ARCHIVED'] as const;
+export type TenantThemeStatus = (typeof TENANT_THEME_STATUSES)[number];
 
 export const themeTemplateResponseSchema = z.object({
   id: z.string(),

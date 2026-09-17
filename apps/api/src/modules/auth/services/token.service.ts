@@ -38,6 +38,13 @@ export interface AccessTokenClaims {
   jti: string;
   /** Refresh-token family, so revoking a family can also match live access tokens. */
   fam?: string;
+  /**
+   * The platform admin's own public id, present only on an impersonation token
+   * (see `signImpersonationToken`). Never set by a normal login — this is what an
+   * audit reader uses to tell "the merchant did this" from "support did this while
+   * impersonating the merchant".
+   */
+  actingAs?: string;
 }
 
 export interface MfaChallengeClaims {
@@ -91,6 +98,44 @@ export class TokenService {
   signAccessToken(claims: Omit<AccessTokenClaims, 'jti' | 'typ'> & { typ?: 'access' }): SignedToken {
     const jti = newPublicId();
     const expiresInSeconds = parseDuration(this.config.accessTtl);
+
+    const token = jwt.sign(
+      { ...claims, typ: 'access', jti },
+      this.config.privateKey,
+      {
+        algorithm: 'RS256',
+        expiresIn: expiresInSeconds,
+        issuer: this.config.issuer,
+        audience: this.config.audience,
+        keyid: this.config.keyId,
+      },
+    );
+
+    return {
+      token,
+      jti,
+      expiresAt: new Date(Date.now() + expiresInSeconds * 1_000),
+      expiresInSeconds,
+    };
+  }
+
+  /**
+   * A platform admin browsing the console as a tenant user they are investigating.
+   *
+   * Deliberately `typ: 'access'`, not a distinct type — the whole point is that the
+   * console works completely normally underneath the impersonated identity, which is
+   * exactly what `typ: 'mfa'`'s separate rejection path exists to prevent for a
+   * challenge token. What actually time-boxes this is that it is **access-token
+   * only**: no refresh-token family is issued alongside it, so when the 15 minutes
+   * are up the next request 401s and the ordinary refresh flow silently restores the
+   * admin's *own* session from their still-valid refresh cookie — there is no
+   * separate "exit impersonation" token state to get wrong.
+   */
+  signImpersonationToken(
+    claims: Omit<AccessTokenClaims, 'jti' | 'typ' | 'fam'> & { actingAs: string },
+  ): SignedToken {
+    const jti = newPublicId();
+    const expiresInSeconds = 15 * 60;
 
     const token = jwt.sign(
       { ...claims, typ: 'access', jti },

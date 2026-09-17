@@ -91,6 +91,7 @@ export class JwtAuthGuard implements CanActivate {
       jti: claims.jti,
       familyId: claims.fam,
       tokenType: claims.typ,
+      actingAs: claims.actingAs,
     };
 
     // Tenant context from the *verified* claim. Platform tokens carry `tid: null` and

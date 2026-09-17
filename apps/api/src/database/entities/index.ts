@@ -26,6 +26,7 @@ export * from './provisioning-task.entity';
 export * from './outbox-event.entity';
 export * from './processed-event.entity';
 export * from './audit-log.entity';
+export * from './platform-setting.entity';
 export * from './api-key.entity';
 export * from './job-run.entity';
 export * from './brand.entity';
@@ -84,6 +85,7 @@ import { ProvisioningTaskEntity } from './provisioning-task.entity';
 import { OutboxEventEntity } from './outbox-event.entity';
 import { ProcessedEventEntity } from './processed-event.entity';
 import { AuditLogEntity } from './audit-log.entity';
+import { PlatformSettingEntity } from './platform-setting.entity';
 import { ApiKeyEntity } from './api-key.entity';
 import { JobRunEntity } from './job-run.entity';
 import { BrandEntity } from './brand.entity';
@@ -144,6 +146,7 @@ export const ALL_ENTITIES = [
   OutboxEventEntity,
   ProcessedEventEntity,
   AuditLogEntity,
+  PlatformSettingEntity,
   ApiKeyEntity,
   JobRunEntity,
   BrandEntity,

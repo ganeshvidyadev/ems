@@ -21,7 +21,7 @@ import { MantisAdminShell } from '@/components/ui/mantis-admin-shell';
  * cannot use.
  */
 export default function AppLayout({ children }: { children: ReactNode }) {
-  const { user, status, logout } = useAuth();
+  const { user, status, logout, impersonating, exitImpersonation } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -53,7 +53,23 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       <MantisAdminShell
         user={user}
         pathname={pathname}
-        items={[{ href: '/themes', label: 'Company themes' }, ...NAV_ITEMS]}
+        items={[
+          { href: '/analytics', label: 'Analytics' },
+          { href: '/tenants', label: 'Tenants' },
+          { href: '/platform-staff', label: 'Platform staff' },
+          { href: '/themes', label: 'Company themes' },
+          { href: '/theme-templates', label: 'Theme templates' },
+          { href: '/plans', label: 'Plans' },
+          { href: '/settlements', label: 'Settlements' },
+          { href: '/billing', label: 'Billing' },
+          { href: '/support', label: 'Support tickets' },
+          { href: '/tenant-export', label: 'Tenant data export' },
+          { href: '/audit-log', label: 'Audit log' },
+          { href: '/logs', label: 'Log explorer' },
+          { href: '/queues', label: 'Queues' },
+          { href: '/platform-settings', label: 'Platform settings' },
+          ...NAV_ITEMS,
+        ]}
         logout={logout}
       >
         {children}
@@ -63,6 +79,21 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen">
+      {impersonating && (
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-warning px-4 py-2 text-sm font-medium text-warning-foreground">
+          <span>
+            Viewing as {user.firstName} · {user.tenant?.businessName ?? 'this tenant'} (impersonating)
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-warning-foreground/40 bg-transparent text-warning-foreground hover:bg-warning-foreground/10"
+            onClick={() => void exitImpersonation()}
+          >
+            Exit impersonation
+          </Button>
+        </div>
+      )}
       {/*
         Skip link. Keyboard and screen-reader users otherwise tab through eight nav
         links on every single page load before reaching the content they came for.

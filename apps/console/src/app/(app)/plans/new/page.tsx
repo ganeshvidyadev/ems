@@ -1,0 +1,132 @@
+'use client';
+
+import type { PlanLimitKey } from '@ems/contracts';
+import { PLAN_LIMIT_KEYS } from '@ems/contracts';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Alert, Button, Card, CardBody, CardHeader, Field, Input, Textarea } from '@/components/ui/primitives';
+import { rupeesToMinorString } from '@/lib/money';
+import { useCreatePlan } from '@/lib/queries/platform-plans';
+
+const LIMIT_LABEL: Record<PlanLimitKey, string> = {
+  max_products: 'Products',
+  max_orders_per_month: 'Orders / month',
+  max_staff_users: 'Staff users',
+  max_storage_mb: 'Storage (MB)',
+  max_stores: 'Stores',
+  max_warehouses: 'Warehouses',
+  max_channels: 'Sales channels',
+  max_custom_domains: 'Custom domains',
+};
+
+export default function NewPlanPage() {
+  const router = useRouter();
+  const createPlan = useCreatePlan();
+
+  const [code, setCode] = useState('');
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [priceMonthly, setPriceMonthly] = useState('0');
+  const [priceYearly, setPriceYearly] = useState('0');
+  const [trialDays, setTrialDays] = useState('14');
+  const [isPublic, setIsPublic] = useState(true);
+  const [limits, setLimits] = useState<Record<string, string>>({});
+
+  const canSubmit = /^[a-z0-9-]{2,}$/.test(code) && name.trim().length >= 2;
+
+  return (
+    <main className="mx-auto max-w-2xl space-y-6 p-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">New plan</h1>
+        <p className="text-sm text-muted-foreground">Adds a plan to the catalogue. Leave a limit blank for unlimited.</p>
+      </div>
+
+      <Card>
+        <CardHeader title="Plan details" />
+        <CardBody className="space-y-4">
+          {createPlan.isError && <Alert variant="error">Could not create this plan. Check the code isn&apos;t already used.</Alert>}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Code" htmlFor="code" hint="Lowercase letters, digits and hyphens">
+              <Input id="code" value={code} onChange={(e) => setCode(e.target.value.toLowerCase())} />
+            </Field>
+            <Field label="Name" htmlFor="name">
+              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+            </Field>
+          </div>
+
+          <Field label="Description" htmlFor="description" hint="Optional">
+            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
+          </Field>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="Monthly price (₹)" htmlFor="priceMonthly">
+              <Input id="priceMonthly" value={priceMonthly} onChange={(e) => setPriceMonthly(e.target.value)} />
+            </Field>
+            <Field label="Yearly price (₹)" htmlFor="priceYearly">
+              <Input id="priceYearly" value={priceYearly} onChange={(e) => setPriceYearly(e.target.value)} />
+            </Field>
+            <Field label="Trial days" htmlFor="trialDays">
+              <Input id="trialDays" inputMode="numeric" value={trialDays} onChange={(e) => setTrialDays(e.target.value)} />
+            </Field>
+          </div>
+
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" className="size-4" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
+            Public — listed on the pricing page. Leave unchecked for a negotiated, admin-assigned-only plan.
+          </label>
+
+          <div>
+            <p className="mb-2 text-sm font-medium">Limits</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {PLAN_LIMIT_KEYS.map((key) => (
+                <Field key={key} label={LIMIT_LABEL[key]} htmlFor={key} hint="Blank = unlimited">
+                  <Input
+                    id={key}
+                    inputMode="numeric"
+                    value={limits[key] ?? ''}
+                    onChange={(e) => setLimits((prev) => ({ ...prev, [key]: e.target.value }))}
+                  />
+                </Field>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => router.push('/plans')}>
+              Cancel
+            </Button>
+            <Button
+              loading={createPlan.isPending}
+              disabled={!canSubmit}
+              onClick={() => {
+                const numericLimits: Record<string, number> = {};
+                for (const [key, value] of Object.entries(limits)) {
+                  if (value.trim() !== '') numericLimits[key] = Number(value);
+                }
+                createPlan.mutate(
+                  {
+                    code,
+                    name: name.trim(),
+                    description: description.trim() || undefined,
+                    priceMonthlyMinor: rupeesToMinorString(priceMonthly || '0'),
+                    priceYearlyMinor: rupeesToMinorString(priceYearly || '0'),
+                    currency: 'INR',
+                    trialDays: Number(trialDays) || 0,
+                    isPublic,
+                    sortOrder: 0,
+                    features: [],
+                    limits: numericLimits as never,
+                  },
+                  { onSuccess: () => router.push('/plans') },
+                );
+              }}
+            >
+              Create plan
+            </Button>
+          </div>
+        </CardBody>
+      </Card>
+    </main>
+  );
+}
