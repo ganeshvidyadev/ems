@@ -92,6 +92,7 @@ export const tenantListQuerySchema = listQuerySchema.extend({
     [{ field: 'createdAt', direction: 'DESC' }],
   ),
 });
+export type TenantListQuery = z.infer<typeof tenantListQuerySchema>;
 
 export const suspendTenantRequestSchema = z.object({
   reason: z.string().trim().min(5).max(255),
@@ -99,6 +100,7 @@ export const suspendTenantRequestSchema = z.object({
   mode: z.enum(['READ_ONLY', 'FULL']).default('READ_ONLY'),
   notifyOwner: z.boolean().default(true),
 });
+export type SuspendTenantRequest = z.infer<typeof suspendTenantRequestSchema>;
 
 // ---------------------------------------------------------------------------
 // Domains

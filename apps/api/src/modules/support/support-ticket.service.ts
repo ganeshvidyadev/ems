@@ -1,17 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { BusinessRuleError } from '@ems/kernel';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { BusinessRuleError, NotFoundError } from '@ems/kernel';
 import type {
   AddSupportTicketMessageRequest,
   CreateSupportTicketRequest,
   SupportTicketPriority,
 } from '@ems/contracts';
 import { RequestContextService } from '../../common/services/request-context.service';
-import type { SupportTicketEntity, SupportTicketStatus } from '../../database/entities';
+import { UserEntity, type SupportTicketEntity, type SupportTicketStatus } from '../../database/entities';
+import { PlatformSettingsService } from '../platform-settings/platform-settings.service';
 import { SupportTicketRepository } from './support-ticket.repository';
 import { SupportTicketMessageRepository } from './support-ticket-message.repository';
 
-/** Time-to-first-response SLA, by priority — the clock `isOverdue` measures against. */
-const SLA_HOURS: Record<SupportTicketPriority, number> = {
+/** Time-to-first-response SLA, by priority — the clock `isOverdue` measures against.
+ * Overridable via `platform.settings` (`support_sla_hours`); these are only the
+ * fallback for a platform that has never set it. */
+const DEFAULT_SLA_HOURS: Record<SupportTicketPriority, number> = {
   URGENT: 4,
   HIGH: 8,
   NORMAL: 24,
@@ -24,12 +29,15 @@ export class SupportTicketService {
     private readonly tickets: SupportTicketRepository,
     private readonly messages: SupportTicketMessageRepository,
     private readonly context: RequestContextService,
+    private readonly settings: PlatformSettingsService,
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   async create(input: CreateSupportTicketRequest): Promise<SupportTicketEntity> {
     const requesterUserId = this.context.userId;
     const now = new Date();
-    const slaDueAt = new Date(now.getTime() + SLA_HOURS[input.priority] * 60 * 60 * 1000);
+    const slaHours = await this.settings.get('support_sla_hours', DEFAULT_SLA_HOURS);
+    const slaDueAt = new Date(now.getTime() + slaHours[input.priority] * 60 * 60 * 1000);
 
     // `create()` stamps `tenantId` from the active context itself (and throws
     // if a caller with no tenant — a platform user — tries to raise one; that
@@ -111,9 +119,22 @@ export class SupportTicketService {
 
   // assign/resolve/close are already gated on `platform.support:*` at the
   // controller, so the caller is always platform staff by the time these run.
-  async assign(publicId: string, assignedTo: string): Promise<SupportTicketEntity> {
+  //
+  // `assignedTo` on the wire is always a public id — the only kind of user id
+  // a client ever holds (see `UserSummary.id`) — but `SupportTicketEntity.assignedTo`
+  // is the internal bigint foreign key, like every other user reference on this
+  // entity (`requesterUserId`, `authorId`). Resolving here, rather than trusting
+  // the caller's string straight into that column, is what the earlier version
+  // of this method skipped: MySQL rejected the 26-character public id with
+  // "Data truncated for column 'assigned_to'" the first time this shipped a UI.
+  async assign(publicId: string, assignedToPublicId: string): Promise<SupportTicketEntity> {
     const ticket = await this.tickets.findByPublicIdAcrossTenantsOrFail(publicId);
-    ticket.assignedTo = assignedTo;
+    const assignee = await this.dataSource
+      .getRepository(UserEntity)
+      .findOne({ where: { publicId: assignedToPublicId } });
+    if (!assignee) throw new NotFoundError('User', assignedToPublicId);
+
+    ticket.assignedTo = assignee.id;
     if (ticket.status === 'OPEN') ticket.status = 'IN_PROGRESS';
     return this.tickets.save(ticket) as Promise<SupportTicketEntity>;
   }

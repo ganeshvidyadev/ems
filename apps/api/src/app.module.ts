@@ -54,10 +54,19 @@ import { SupportModule } from './modules/support/support.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { PlatformOpsModule } from './modules/platform-ops/platform-ops.module';
 import { TenantExportModule } from './modules/tenant-export/tenant-export.module';
+import { PlatformTenantModule } from './modules/platform-tenant/platform-tenant.module';
+import { PlatformPlanModule } from './modules/platform-plan/platform-plan.module';
+import { PlatformThemeTemplateModule } from './modules/platform-theme-template/platform-theme-template.module';
+import { PlatformUserModule } from './modules/platform-user/platform-user.module';
+import { PlatformBillingModule } from './modules/platform-billing/platform-billing.module';
+import { PlatformAuditLogModule } from './modules/platform-audit-log/platform-audit-log.module';
+import { PlatformAnalyticsModule } from './modules/platform-analytics/platform-analytics.module';
+import { PlatformSettingsModule } from './modules/platform-settings/platform-settings.module';
 import { QueueModule } from './queues/queue.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
 import { TenantStatusGuard } from './common/guards/tenant-status.guard';
+import { MaintenanceModeGuard } from './common/guards/maintenance-mode.guard';
 import { PlanQuotaGuard } from './common/guards/plan-quota.guard';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
@@ -160,20 +169,31 @@ import { RequestContextService } from './common/services/request-context.service
     AnalyticsModule,
     PlatformOpsModule,
     TenantExportModule,
+    PlatformTenantModule,
+    PlatformPlanModule,
+    PlatformThemeTemplateModule,
+    PlatformUserModule,
+    PlatformBillingModule,
+    PlatformAuditLogModule,
+    PlatformAnalyticsModule,
+    PlatformSettingsModule,
     HealthModule,
   ],
   providers: [
     // Guard order is the registration order, and it matters:
-    //   1. JwtAuthGuard      — authenticate, and set tenant context from the verified
-    //                          `tid` claim. Everything below depends on that context.
-    //   2. TenantStatusGuard — is this tenant allowed to act at all? Checked before
-    //                          permissions so a suspended tenant gets 403 SUSPENDED
-    //                          rather than a misleading "missing permission".
-    //   3. PermissionsGuard  — does this user hold the required permission?
+    //   1. JwtAuthGuard          — authenticate, and set tenant context from the verified
+    //                              `tid` claim. Everything below depends on that context.
+    //   2. MaintenanceModeGuard  — is the whole platform accepting writes at all? Checked
+    //                              before any tenant- or user-specific state.
+    //   3. TenantStatusGuard     — is this tenant allowed to act at all? Checked before
+    //                              permissions so a suspended tenant gets 403 SUSPENDED
+    //                              rather than a misleading "missing permission".
+    //   4. PermissionsGuard      — does this user hold the required permission?
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: MaintenanceModeGuard },
     { provide: APP_GUARD, useClass: TenantStatusGuard },
     { provide: APP_GUARD, useClass: PermissionsGuard },
-    //   4. PlanQuotaGuard — last, because it is the most expensive check (it counts rows).
+    //   5. PlanQuotaGuard — last, because it is the most expensive check (it counts rows).
     //      No point counting products for a caller who is about to be rejected as
     //      unauthenticated, suspended, or unauthorised.
     { provide: APP_GUARD, useClass: PlanQuotaGuard },

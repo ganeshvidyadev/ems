@@ -265,3 +265,20 @@ function unwrap<T>(body: ApiResponse<T>): T {
 export function withIdempotency(key: string, config: AxiosRequestConfig = {}): AxiosRequestConfig {
   return { ...config, headers: { ...config.headers, 'Idempotency-Key': key } };
 }
+
+/**
+ * File download (CSV/export endpoints). These respond with the raw file body,
+ * not the `{ success, data }` envelope, so they go through `http` directly
+ * with `responseType: 'blob'` rather than `apiGet`'s `unwrap`.
+ */
+export async function apiDownload(url: string, filename: string, config?: AxiosRequestConfig): Promise<void> {
+  const response = await http.get<Blob>(url, { ...config, responseType: 'blob' });
+  const href = URL.createObjectURL(response.data);
+  const link = document.createElement('a');
+  link.href = href;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(href);
+}

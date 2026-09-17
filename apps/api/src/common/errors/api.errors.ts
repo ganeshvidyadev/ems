@@ -77,6 +77,14 @@ export class TenantSuspendedError extends DomainError {
   }
 }
 
+export class ServiceUnavailableError extends DomainError {
+  readonly code = ErrorCode.SERVICE_UNAVAILABLE;
+
+  constructor(message?: string | null) {
+    super(message?.trim() || 'The platform is temporarily unavailable for maintenance');
+  }
+}
+
 export class SubscriptionPastDueError extends DomainError {
   readonly code = ErrorCode.SUBSCRIPTION_PAST_DUE;
 

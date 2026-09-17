@@ -19,8 +19,10 @@ interface AuthState {
   user: UserSummary | null;
   /** Distinguishes "not logged in" from "we haven't checked yet". */
   status: 'unknown' | 'authenticating' | 'authenticated' | 'unauthenticated';
+  /** True while browsing as a tenant's owner via platform-admin impersonation. */
+  impersonating: boolean;
 
-  setSession: (user: UserSummary, accessToken: string) => void;
+  setSession: (user: UserSummary, accessToken: string, impersonating?: boolean) => void;
   clearSession: () => void;
   setStatus: (status: AuthState['status']) => void;
 
@@ -32,15 +34,16 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   status: 'unknown',
+  impersonating: false,
 
-  setSession: (user, accessToken) => {
+  setSession: (user, accessToken, impersonating = false) => {
     setAccessToken(accessToken);
-    set({ user, status: 'authenticated' });
+    set({ user, status: 'authenticated', impersonating });
   },
 
   clearSession: () => {
     setAccessToken(null);
-    set({ user: null, status: 'unauthenticated' });
+    set({ user: null, status: 'unauthenticated', impersonating: false });
   },
 
   setStatus: (status) => set({ status }),

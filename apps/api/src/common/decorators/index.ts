@@ -94,6 +94,8 @@ export interface AuthenticatedUser {
   familyId?: string;
   /** `access` | `storefront` | `mfa`. An `mfa` token must not satisfy permissions. */
   tokenType?: string;
+  /** Set only on an impersonation token — the platform admin's own public id. */
+  actingAs?: string;
 }
 
 /** Injects the authenticated user, or a single field of it. */
