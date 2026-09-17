@@ -24,6 +24,10 @@ export const QueueName = {
   DEAD_LETTER: 'dead-letter',
 } as const;
 
+// The const object above and this type share a name deliberately (the standard TS
+// "enum-like object" idiom) — they occupy separate value/type namespaces, so this is
+// not a real collision, but base `no-redeclare` doesn't know that.
+// eslint-disable-next-line no-redeclare
 export type QueueName = (typeof QueueName)[keyof typeof QueueName];
 
 export const ALL_QUEUES: readonly QueueName[] = Object.values(QueueName);

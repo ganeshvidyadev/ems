@@ -26,7 +26,10 @@ out/
 apps/api/keys/
 
 # Logs
-logs/
+# Anchored to the repo root — an unanchored `logs/` also matches
+# apps/console/src/app/(app)/logs/, the Log Explorer route, and silently
+# drops it from every `git add`.
+/logs/
 *.log
 npm-debug.log*
 pnpm-debug.log*

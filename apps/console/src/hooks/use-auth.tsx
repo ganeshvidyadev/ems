@@ -84,6 +84,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshTimer.current = setTimeout(() => {
       void refresh();
     }, delayMs);
+    // `refresh` is intentionally omitted: it's declared below via a circular chain
+    // (scheduleRefresh -> refresh -> applySession -> scheduleRefresh) that a self-
+    // rescheduling timer needs, and including it here isn't even possible — `refresh`
+    // isn't declared yet at this point in the render. Its own deps (`applySession`,
+    // `clearSession`) are stable across renders, so the closure stays current.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const applySession = useCallback(

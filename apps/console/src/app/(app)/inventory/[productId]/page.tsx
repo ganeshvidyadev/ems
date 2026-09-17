@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { INVENTORY_MOVEMENT_TYPES, type InventoryLevelResponse } from '@ems/contracts';
+import type { InventoryLevelResponse } from '@ems/contracts';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';

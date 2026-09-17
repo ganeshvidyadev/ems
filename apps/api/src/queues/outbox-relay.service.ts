@@ -8,9 +8,8 @@ import { ConfigService } from '@nestjs/config';
 import { InjectDataSource } from '@nestjs/typeorm';
 import type { Queue } from 'bullmq';
 import { DataSource } from 'typeorm';
-import { OutboxEventEntity } from '../database/entities/outbox-event.entity';
 import type { QueueConfig } from '../config/configuration';
-import { QueueName, queuesForEvent } from './queue-names.enum';
+import { queuesForEvent } from './queue-names.enum';
 import { QueueRegistry } from './queue.registry';
 
 /** Terminal after this many attempts; the row goes to DEAD for manual replay. */

@@ -2,7 +2,6 @@
 
 import type { InventoryLevelResponse, NotificationResponse, OrderResponse } from '@ems/contracts';
 import {
-  AlertTriangle,
   Bell,
   Boxes,
   IndianRupee,

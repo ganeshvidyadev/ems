@@ -29,6 +29,8 @@ export function SiteHeader({ theme = 'default' }: { theme?: StorefrontTheme }) {
     <header className={`theme-header ${theme}-header`}>
       <div className="theme-container theme-header-inner">
         <Link href="/" className="theme-logo" aria-label={`${name} home`}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- plain <img>, not next/image,
+              matches this file's other theme-logo usages (see theme-footer.tsx). */}
           <img src={theme === 'organic' ? '/themes/organic/images/logo.svg' : '/themes/famms/images/logo.png'} alt={theme === 'organic' ? 'Organic' : 'Famms'} width={220} height={60} />
           <span>{name}</span>
         </Link>

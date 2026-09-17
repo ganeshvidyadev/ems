@@ -15,6 +15,8 @@ export function ThemeFooter({
       <div className="theme-container theme-footer-grid">
         <div>
           <Link href="/" className="theme-logo">
+            {/* eslint-disable-next-line @next/next/no-img-element -- plain <img>, not
+                next/image, matches site-header.tsx's own theme-logo usage. */}
             <img
               src={
                 theme === 'organic'

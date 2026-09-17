@@ -13,7 +13,7 @@ import {
   type SupportTicketMessageResponse,
   type SupportTicketResponse,
 } from '@ems/contracts';
-import { Permissions, Validate } from '../../common/decorators';
+import { Permissions } from '../../common/decorators';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import type { SupportTicketEntity, SupportTicketMessageEntity } from '../../database/entities';
 import { SupportTicketService } from './support-ticket.service';

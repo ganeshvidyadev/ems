@@ -3,7 +3,6 @@ import { InjectEntityManager } from '@nestjs/typeorm';
 import type { EntityManager } from 'typeorm';
 import type {
   CreateMenuItemRequest,
-  CreateMenuRequest,
   MenuItemResponse,
   MenuResponse,
   UpdateMenuItemRequest,

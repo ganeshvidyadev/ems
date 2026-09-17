@@ -73,7 +73,6 @@ export class MfaService {
     }
 
     const secret = authenticator.generateSecret(20);
-    const label = `${this.app.name}:${user.email}`;
     const otpauthUri = authenticator.keyuri(user.email, this.app.name, secret);
 
     // Encrypted at the application layer with AES-256-GCM: a database dump must not
