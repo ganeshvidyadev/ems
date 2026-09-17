@@ -196,3 +196,21 @@ export const provisioningStatusSchema = z.object({
   storefrontUrl: z.string().nullable(),
 });
 export type ProvisioningStatus = z.infer<typeof provisioningStatusSchema>;
+
+export const changeTenantPlanRequestSchema = z.object({
+  planCode: z.string().trim().min(1).max(64),
+  billingCycle: z.enum(['MONTHLY', 'YEARLY']).optional(),
+});
+export type ChangeTenantPlanRequest = z.infer<typeof changeTenantPlanRequestSchema>;
+
+export const extendTenantTrialRequestSchema = z.object({
+  additionalDays: z.number().int().min(1).max(365),
+  reason: z.string().trim().min(3).max(255).optional(),
+});
+export type ExtendTenantTrialRequest = z.infer<typeof extendTenantTrialRequestSchema>;
+
+export const cancelTenantSubscriptionRequestSchema = z.object({
+  immediately: z.boolean().default(false),
+  reason: z.string().trim().min(3).max(255).optional(),
+});
+export type CancelTenantSubscriptionRequest = z.infer<typeof cancelTenantSubscriptionRequestSchema>;

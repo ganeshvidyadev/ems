@@ -2,11 +2,17 @@ import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query
 import type { Request } from 'express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
+  cancelTenantSubscriptionRequestSchema,
+  changeTenantPlanRequestSchema,
   createTenantRequestSchema,
+  extendTenantTrialRequestSchema,
   impersonateTenantRequestSchema,
   suspendTenantRequestSchema,
   tenantListQuerySchema,
+  type CancelTenantSubscriptionRequest,
+  type ChangeTenantPlanRequest,
   type CreateTenantRequest,
+  type ExtendTenantTrialRequest,
   type ImpersonateTenantRequest,
   type SuspendTenantRequest,
 } from '@ems/contracts';
@@ -110,6 +116,56 @@ export class PlatformTenantController {
     @Req() request: Request,
   ) {
     return this.tenants.impersonate(id, body.reason, body.referenceId, actorFrom(user, request));
+  }
+
+  @Post(':id/subscription/change-plan')
+  @Permissions('platform.plan:assign')
+  @Validate(changeTenantPlanRequestSchema)
+  @ApiOperation({ summary: 'Change a tenant plan and cycle on their behalf' })
+  async changePlan(
+    @Param('id') id: string,
+    @Body() body: ChangeTenantPlanRequest,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() request: Request,
+  ) {
+    return this.tenants.changePlan(id, body, actorFrom(user, request));
+  }
+
+  @Post(':id/subscription/extend-trial')
+  @Permissions('platform.tenant:update')
+  @Validate(extendTenantTrialRequestSchema)
+  @ApiOperation({ summary: 'Extend a tenant trial by a specified number of days' })
+  async extendTrial(
+    @Param('id') id: string,
+    @Body() body: ExtendTenantTrialRequest,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() request: Request,
+  ) {
+    return this.tenants.extendTrial(id, body, actorFrom(user, request));
+  }
+
+  @Post(':id/subscription/cancel')
+  @Permissions('platform.tenant:suspend')
+  @Validate(cancelTenantSubscriptionRequestSchema)
+  @ApiOperation({ summary: 'Cancel a tenant subscription immediately or at period end' })
+  async cancelSubscription(
+    @Param('id') id: string,
+    @Body() body: CancelTenantSubscriptionRequest,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() request: Request,
+  ) {
+    return this.tenants.cancelSubscription(id, body, actorFrom(user, request));
+  }
+
+  @Post(':id/subscription/resume')
+  @Permissions('platform.tenant:reactivate')
+  @ApiOperation({ summary: 'Resume a scheduled cancellation for a tenant' })
+  async resumeSubscription(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() request: Request,
+  ) {
+    return this.tenants.resumeSubscription(id, actorFrom(user, request));
   }
 
   /**

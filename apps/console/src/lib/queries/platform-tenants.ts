@@ -107,3 +107,49 @@ export function usePlans() {
     queryFn: () => apiGet<PlanSummary[]>('/plans'),
   });
 }
+
+export function useChangeTenantPlan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      ...body
+    }: { id: string } & import('@ems/contracts').ChangeTenantPlanRequest) =>
+      apiPost<TenantOverviewResponse>(`/platform/tenants/${id}/subscription/change-plan`, body),
+    onSuccess: () => invalidate(queryClient),
+  });
+}
+
+export function useExtendTenantTrial() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      ...body
+    }: { id: string } & import('@ems/contracts').ExtendTenantTrialRequest) =>
+      apiPost<TenantOverviewResponse>(`/platform/tenants/${id}/subscription/extend-trial`, body),
+    onSuccess: () => invalidate(queryClient),
+  });
+}
+
+export function useCancelTenantSubscription() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      ...body
+    }: { id: string } & import('@ems/contracts').CancelTenantSubscriptionRequest) =>
+      apiPost<TenantOverviewResponse>(`/platform/tenants/${id}/subscription/cancel`, body),
+    onSuccess: () => invalidate(queryClient),
+  });
+}
+
+export function useResumeTenantSubscription() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiPost<TenantOverviewResponse>(`/platform/tenants/${id}/subscription/resume`),
+    onSuccess: () => invalidate(queryClient),
+  });
+}
+

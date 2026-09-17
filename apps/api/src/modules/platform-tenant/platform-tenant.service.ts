@@ -3,7 +3,10 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { newPublicId, slugify, BusinessRuleError, NotFoundError } from '@ems/kernel';
 import type {
+  CancelTenantSubscriptionRequest,
+  ChangeTenantPlanRequest,
   CreateTenantRequest,
+  ExtendTenantTrialRequest,
   TenantListQuery,
   TenantOverviewResponse,
   TenantResponse,
@@ -13,7 +16,7 @@ import { PermissionResolverService } from '../auth/services/permission-resolver.
 import { TokenService } from '../auth/services/token.service';
 import { SubscriptionService } from '../subscription/services/subscription.service';
 import { CacheService } from '../../common/services/cache.service';
-import { TenantEntity, TenantDomainEntity, UserEntity } from '../../database/entities';
+import { SubscriptionEntity, TenantEntity, TenantDomainEntity, UserEntity } from '../../database/entities';
 
 export interface PlatformTenantList {
   items: TenantEntity[];
@@ -352,6 +355,81 @@ export class PlatformTenantService {
       createdAt: tenant.createdAt.toISOString(),
       updatedAt: tenant.updatedAt.toISOString(),
     };
+  }
+
+  async changePlan(
+    publicId: string,
+    input: ChangeTenantPlanRequest,
+    actor: AuditActor,
+  ): Promise<TenantOverviewResponse> {
+    const tenant = await this.get(publicId);
+    const sub = await this.subscriptions.changePlan(tenant.id, input.planCode, input.billingCycle);
+    await this.audit(actor, 'subscription.plan_changed', tenant.id, {
+      severity: 'WARNING',
+      after: { planCode: input.planCode, billingCycle: input.billingCycle, subscriptionId: sub.id },
+    });
+    return this.overview(publicId);
+  }
+
+  async extendTrial(
+    publicId: string,
+    input: ExtendTenantTrialRequest,
+    actor: AuditActor,
+  ): Promise<TenantOverviewResponse> {
+    const tenant = await this.get(publicId);
+    const subscription = await this.subscriptions.findByTenant(tenant.id);
+    if (!subscription) throw new NotFoundError('Subscription');
+
+    const baseDate = subscription.trialEnd && subscription.trialEnd.getTime() > Date.now()
+      ? subscription.trialEnd
+      : (tenant.trialEndsAt && tenant.trialEndsAt.getTime() > Date.now() ? tenant.trialEndsAt : new Date());
+
+    const newTrialEnd = new Date(baseDate.getTime() + input.additionalDays * 86_400_000);
+
+    subscription.trialEnd = newTrialEnd;
+    subscription.currentPeriodEnd = newTrialEnd;
+    subscription.status = 'TRIALING';
+    await this.dataSource.getRepository(SubscriptionEntity).save(subscription);
+
+    tenant.trialEndsAt = newTrialEnd;
+    if (tenant.status === 'PENDING' || tenant.status === 'PAST_DUE' || tenant.status === 'CANCELLED') {
+      tenant.status = 'TRIAL';
+    }
+    await this.dataSource.getRepository(TenantEntity).save(tenant);
+
+    await this.audit(actor, 'subscription.trial_extended', tenant.id, {
+      severity: 'INFO',
+      after: { additionalDays: input.additionalDays, newTrialEnd: newTrialEnd.toISOString(), reason: input.reason },
+    });
+
+    return this.overview(publicId);
+  }
+
+  async cancelSubscription(
+    publicId: string,
+    input: CancelTenantSubscriptionRequest,
+    actor: AuditActor,
+  ): Promise<TenantOverviewResponse> {
+    const tenant = await this.get(publicId);
+    const sub = await this.subscriptions.cancel(tenant.id, input.immediately);
+    await this.audit(actor, input.immediately ? 'subscription.cancelled_immediately' : 'subscription.cancel_scheduled', tenant.id, {
+      severity: 'CRITICAL',
+      after: { immediately: input.immediately, reason: input.reason, subscriptionId: sub.id },
+    });
+    return this.overview(publicId);
+  }
+
+  async resumeSubscription(
+    publicId: string,
+    actor: AuditActor,
+  ): Promise<TenantOverviewResponse> {
+    const tenant = await this.get(publicId);
+    const sub = await this.subscriptions.resume(tenant.id);
+    await this.audit(actor, 'subscription.resumed', tenant.id, {
+      severity: 'INFO',
+      after: { subscriptionId: sub.id },
+    });
+    return this.overview(publicId);
   }
 
   private async allocateSlug(manager: DataSource['manager'], businessName: string): Promise<string> {
