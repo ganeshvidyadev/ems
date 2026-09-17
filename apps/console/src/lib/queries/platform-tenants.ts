@@ -1,6 +1,8 @@
 import type {
   CreateTenantRequest,
+  ImpersonateTenantRequest,
   SuspendTenantRequest,
+  TenantOverviewResponse,
   TenantResponse,
   TenantStatus,
 } from '@ems/contracts';
@@ -31,6 +33,14 @@ export function usePlatformTenant(id: string | undefined) {
   return useQuery({
     queryKey: [TENANTS_KEY, id],
     queryFn: () => apiGet<TenantResponse>(`/platform/tenants/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
+export function usePlatformTenantOverview(id: string | undefined) {
+  return useQuery({
+    queryKey: [TENANTS_KEY, id, 'overview'],
+    queryFn: () => apiGet<TenantOverviewResponse>(`/platform/tenants/${id}/overview`),
     enabled: Boolean(id),
   });
 }
@@ -81,7 +91,8 @@ export interface ImpersonateResult {
 
 export function useImpersonateTenant() {
   return useMutation({
-    mutationFn: (id: string) => apiPost<ImpersonateResult>(`/platform/tenants/${id}/impersonate`),
+    mutationFn: ({ id, ...body }: { id: string } & ImpersonateTenantRequest) =>
+      apiPost<ImpersonateResult>(`/platform/tenants/${id}/impersonate`, body),
   });
 }
 

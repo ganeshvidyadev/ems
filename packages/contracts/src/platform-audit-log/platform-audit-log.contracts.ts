@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { listQuerySchema } from '../common/pagination.js';
+import { publicIdSchema } from '../common/primitives.js';
 
 export const AUDIT_ACTOR_TYPES = ['USER', 'CUSTOMER', 'SYSTEM', 'PLATFORM_ADMIN', 'API_KEY'] as const;
 export type AuditActorType = (typeof AUDIT_ACTOR_TYPES)[number];
@@ -11,6 +12,8 @@ export const platformAuditLogListQuerySchema = listQuerySchema.extend({
   severity: z.enum(AUDIT_SEVERITIES).optional(),
   actorType: z.enum(AUDIT_ACTOR_TYPES).optional(),
   entityType: z.string().optional(),
+  /** Narrows the cross-tenant trail to one tenant (Tenant 360). */
+  tenantId: publicIdSchema.optional(),
   /** `YYYY-MM-DD` — the partitioned table's own natural filter granularity. */
   dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   dateTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),

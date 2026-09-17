@@ -109,6 +109,9 @@ export const PERMISSION_SPECS: readonly PermissionSpec[] = [
   // Phase 11: the queue admin — depth/failure visibility and replaying a
   // stuck job, distinct from `platform.log`'s read-only log browsing.
   { resource: 'platform.queue', actions: ['read', 'retry'], scope: 'PLATFORM', description: 'Background queue administration' },
+  // Phase 1 hardening: infra + integration + recent-failure signals in one place,
+  // distinct from `platform.log`'s raw browse and `platform.queue`'s per-queue detail.
+  { resource: 'platform.health', actions: ['read'], scope: 'PLATFORM', description: 'Platform health overview' },
 ];
 
 export interface PermissionRow {

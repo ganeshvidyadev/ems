@@ -53,23 +53,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       <MantisAdminShell
         user={user}
         pathname={pathname}
-        items={[
-          { href: '/analytics', label: 'Analytics' },
-          { href: '/tenants', label: 'Tenants' },
-          { href: '/platform-staff', label: 'Platform staff' },
-          { href: '/themes', label: 'Company themes' },
-          { href: '/theme-templates', label: 'Theme templates' },
-          { href: '/plans', label: 'Plans' },
-          { href: '/settlements', label: 'Settlements' },
-          { href: '/billing', label: 'Billing' },
-          { href: '/support', label: 'Support tickets' },
-          { href: '/tenant-export', label: 'Tenant data export' },
-          { href: '/audit-log', label: 'Audit log' },
-          { href: '/logs', label: 'Log explorer' },
-          { href: '/queues', label: 'Queues' },
-          { href: '/platform-settings', label: 'Platform settings' },
-          ...NAV_ITEMS,
-        ]}
+        items={SUPER_ADMIN_NAV}
+        homeHref="/analytics"
         logout={logout}
       >
         {children}
@@ -153,6 +138,73 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
+/**
+ * Platform-only navigation, grouped to match the SaaS control-plane information
+ * architecture. A super admin has no store of their own, so this must never include
+ * tenant-side items (`NAV_ITEMS` below) — that was a real bug (every item after
+ * "Platform settings" 403'd/404'd, since a platform admin has no `tenantId`).
+ *
+ * The one place tenant navigation legitimately belongs is impersonation — and it
+ * already gets there for free: `enterImpersonation` swaps `user` to the impersonated
+ * tenant user, which flips `user.userType` away from `'PLATFORM'`, so this branch's
+ * `if` above stops matching and the tenant branch (with its own `NAV_ITEMS`) renders
+ * instead. No separate "nav mode" flag was needed — identity IS the mode.
+ *
+ * Only groups/items with a real, working page are listed — an entry here that leads
+ * nowhere is worse than no entry.
+ */
+const SUPER_ADMIN_NAV = [
+  {
+    label: 'Overview',
+    items: [
+      { href: '/analytics', label: 'Analytics' },
+      { href: '/platform-health', label: 'Platform health' },
+    ],
+  },
+  {
+    label: 'Customers',
+    items: [{ href: '/tenants', label: 'Tenants' }],
+  },
+  {
+    label: 'Revenue',
+    items: [
+      { href: '/plans', label: 'Plans' },
+      { href: '/billing', label: 'Billing' },
+      { href: '/settlements', label: 'Settlements' },
+    ],
+  },
+  {
+    label: 'Operations',
+    items: [
+      { href: '/support', label: 'Support tickets' },
+      { href: '/queues', label: 'Jobs & queues' },
+      { href: '/tenant-export', label: 'Tenant data export' },
+    ],
+  },
+  {
+    label: 'Experience',
+    items: [
+      { href: '/themes', label: 'Company themes' },
+      { href: '/theme-templates', label: 'Theme templates' },
+    ],
+  },
+  {
+    label: 'Security',
+    items: [
+      { href: '/platform-staff', label: 'Platform staff' },
+      { href: '/audit-log', label: 'Audit log' },
+    ],
+  },
+  {
+    label: 'Diagnostics',
+    items: [{ href: '/logs', label: 'Log explorer' }],
+  },
+  {
+    label: 'Platform',
+    items: [{ href: '/platform-settings', label: 'Platform settings' }],
+  },
+] as const;
 
 /**
  * Nav order is deliberate: the dashboard first, then the things a merchant touches every

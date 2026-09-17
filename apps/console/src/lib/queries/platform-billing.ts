@@ -13,6 +13,7 @@ export interface InvoiceFilters {
   page: number;
   limit: number;
   status?: InvoiceStatus;
+  tenantId?: string;
 }
 
 export function usePlatformInvoices(filters: InvoiceFilters) {
@@ -20,7 +21,12 @@ export function usePlatformInvoices(filters: InvoiceFilters) {
     queryKey: [INVOICES_KEY, filters],
     queryFn: () =>
       apiGetPaginated<PlatformInvoiceResponse>('/platform/billing/invoices', {
-        params: { page: filters.page, limit: filters.limit, status: filters.status || undefined },
+        params: {
+          page: filters.page,
+          limit: filters.limit,
+          status: filters.status || undefined,
+          tenantId: filters.tenantId || undefined,
+        },
       }),
     placeholderData: (previous) => previous,
   });

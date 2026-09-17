@@ -26,7 +26,7 @@ import {
 } from '@ems/contracts';
 import type { Request, Response } from 'express';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
-import { CurrentUser, Public, type AuthenticatedUser } from '../../common/decorators';
+import { BlockedDuringImpersonation, CurrentUser, Public, type AuthenticatedUser } from '../../common/decorators';
 import { AuthTokenMissingError } from '../../common/errors/api.errors';
 import { AuthService } from './services/auth.service';
 import { MfaService } from './services/mfa.service';
@@ -238,6 +238,7 @@ export class AuthController {
 
   @Post('change-password')
   @HttpCode(HttpStatus.OK)
+  @BlockedDuringImpersonation()
   @ApiOperation({ summary: 'Change your password (revokes all sessions)' })
   async changePassword(
     @CurrentUser() user: AuthenticatedUser,
@@ -309,6 +310,7 @@ export class AuthController {
 
   @Post('mfa/enrol')
   @HttpCode(HttpStatus.OK)
+  @BlockedDuringImpersonation()
   @ApiOperation({ summary: 'Begin TOTP enrolment (returns a QR code)' })
   async enrolMfa(@CurrentUser() user: AuthenticatedUser) {
     return this.mfa.beginEnrolment(user.id);
@@ -316,6 +318,7 @@ export class AuthController {
 
   @Post('mfa/confirm')
   @HttpCode(HttpStatus.OK)
+  @BlockedDuringImpersonation()
   @ApiOperation({ summary: 'Confirm TOTP enrolment and receive recovery codes' })
   async confirmMfa(
     @CurrentUser() user: AuthenticatedUser,
@@ -365,6 +368,7 @@ export class AuthController {
 
   @Post('mfa/disable')
   @HttpCode(HttpStatus.OK)
+  @BlockedDuringImpersonation()
   @ApiOperation({ summary: 'Disable TOTP (requires password and a current code)' })
   async disableMfa(
     @CurrentUser() user: AuthenticatedUser,

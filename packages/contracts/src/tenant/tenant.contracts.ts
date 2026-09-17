@@ -83,6 +83,29 @@ export const tenantResponseSchema = z.object({
 });
 export type TenantResponse = z.infer<typeof tenantResponseSchema>;
 
+/**
+ * The Tenant 360 operational snapshot. Every field here is a real, currently
+ * computable aggregation (see `PlatformTenantService.overview`) — no invented
+ * metrics. `ownerName`/`ownerEmail` are null when the tenant has no owner
+ * account (matches `impersonate()`'s own check for the same condition).
+ */
+export const tenantOverviewResponseSchema = z.object({
+  tenant: tenantResponseSchema,
+  ownerName: z.string().nullable(),
+  ownerEmail: z.string().nullable(),
+  planCode: z.string().nullable(),
+  planName: z.string().nullable(),
+  subscriptionStatus: z.string().nullable(),
+  billingCycle: z.string().nullable(),
+  storesCount: z.number(),
+  usersCount: z.number(),
+  ordersLast30Days: z.number(),
+  openSupportTickets: z.number(),
+  failedPaymentsLast30Days: z.number(),
+  lastOrderAt: z.string().nullable(),
+});
+export type TenantOverviewResponse = z.infer<typeof tenantOverviewResponseSchema>;
+
 export const tenantListQuerySchema = listQuerySchema.extend({
   status: z.enum(TENANT_STATUSES).optional(),
   status__in: z.string().optional(),
@@ -101,6 +124,19 @@ export const suspendTenantRequestSchema = z.object({
   notifyOwner: z.boolean().default(true),
 });
 export type SuspendTenantRequest = z.infer<typeof suspendTenantRequestSchema>;
+
+/**
+ * A reason is required, not optional: `platform_super_admin`'s own permission
+ * catalogue entry documents impersonation as "time-boxed" investigative access, and
+ * an unattributed reason defeats the point of an audit trail that exists specifically
+ * to answer "why was this admin looking at this merchant's account".
+ */
+export const impersonateTenantRequestSchema = z.object({
+  reason: z.string().trim().min(5).max(255),
+  /** Free-form — a support ticket id, an internal ref, whatever the admin has. */
+  referenceId: z.string().trim().max(64).optional(),
+});
+export type ImpersonateTenantRequest = z.infer<typeof impersonateTenantRequestSchema>;
 
 // ---------------------------------------------------------------------------
 // Domains

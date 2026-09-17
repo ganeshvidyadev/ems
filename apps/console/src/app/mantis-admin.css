@@ -127,6 +127,9 @@
   font-weight: 500;
   color: #6c757d;
 }
+.mantis-nav-group:not(:first-child) {
+  margin-top: 12px;
+}
 .mantis-nav-link {
   display: flex;
   align-items: center;

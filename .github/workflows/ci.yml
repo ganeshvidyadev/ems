@@ -19,6 +19,18 @@ on:
   pull_request:
     branches: [main]
 
+# `integration`/`isolation`/`e2e` all boot a full Nest application (`test/setup/e2e-app.ts`),
+# which validates `env.schema.ts` on startup — including JWT signing keys and the field
+# encryption key, none of which are DB/cache/queue config a service container can provide.
+# `integration`'s own suite happens not to exercise a path that needs them, which is why it
+# has passed without this block; `isolation` and `e2e` do, and fail at boot without it.
+#
+# Generate once locally with `pnpm run keys:generate` (see `scripts/generate-keys.mjs`),
+# then add as repository secrets (Settings → Secrets and variables → Actions):
+#   CI_JWT_PRIVATE_KEY_BASE64, CI_JWT_PUBLIC_KEY_BASE64, CI_ENCRYPTION_KEY_BASE64
+# These are throwaway keys for ephemeral CI containers, not the staging/production keys —
+# never reuse a real environment's key material here.
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -101,6 +113,9 @@ jobs:
       REDIS_QUEUE_HOST: 127.0.0.1
       REDIS_QUEUE_PORT: 6380
       MONGO_URI: mongodb://127.0.0.1:27017/ems_logs_test
+      JWT_PRIVATE_KEY_BASE64: ${{ secrets.CI_JWT_PRIVATE_KEY_BASE64 }}
+      JWT_PUBLIC_KEY_BASE64: ${{ secrets.CI_JWT_PUBLIC_KEY_BASE64 }}
+      ENCRYPTION_KEY_BASE64: ${{ secrets.CI_ENCRYPTION_KEY_BASE64 }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node-pnpm
@@ -152,6 +167,9 @@ jobs:
       REDIS_QUEUE_HOST: 127.0.0.1
       REDIS_QUEUE_PORT: 6380
       MONGO_URI: mongodb://127.0.0.1:27017/ems_logs_test
+      JWT_PRIVATE_KEY_BASE64: ${{ secrets.CI_JWT_PRIVATE_KEY_BASE64 }}
+      JWT_PUBLIC_KEY_BASE64: ${{ secrets.CI_JWT_PUBLIC_KEY_BASE64 }}
+      ENCRYPTION_KEY_BASE64: ${{ secrets.CI_ENCRYPTION_KEY_BASE64 }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node-pnpm
@@ -252,6 +270,9 @@ jobs:
       REDIS_QUEUE_HOST: 127.0.0.1
       REDIS_QUEUE_PORT: 6380
       MONGO_URI: mongodb://127.0.0.1:27017/ems_logs_test
+      JWT_PRIVATE_KEY_BASE64: ${{ secrets.CI_JWT_PRIVATE_KEY_BASE64 }}
+      JWT_PUBLIC_KEY_BASE64: ${{ secrets.CI_JWT_PUBLIC_KEY_BASE64 }}
+      ENCRYPTION_KEY_BASE64: ${{ secrets.CI_ENCRYPTION_KEY_BASE64 }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node-pnpm

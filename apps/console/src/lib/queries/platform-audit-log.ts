@@ -8,6 +8,7 @@ export interface AuditLogFilters {
   severity?: AuditSeverity;
   actorType?: AuditActorType;
   q?: string;
+  tenantId?: string;
 }
 
 export function usePlatformAuditLogs(filters: AuditLogFilters) {
@@ -21,6 +22,7 @@ export function usePlatformAuditLogs(filters: AuditLogFilters) {
           severity: filters.severity || undefined,
           actorType: filters.actorType || undefined,
           q: filters.q || undefined,
+          tenantId: filters.tenantId || undefined,
         },
       }),
     placeholderData: (previous) => previous,

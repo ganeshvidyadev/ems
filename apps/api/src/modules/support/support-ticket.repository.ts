@@ -30,10 +30,10 @@ export class SupportTicketRepository extends TenantScopedRepository<SupportTicke
     return `TKT-${Date.now().toString(36).toUpperCase()}`;
   }
 
-  /** Platform view — every tenant's tickets, optionally filtered by status. */
-  async listAllAcrossTenants(status?: SupportTicketStatus): Promise<SupportTicketEntity[]> {
+  /** Platform view — every tenant's tickets, optionally filtered by status and/or one tenant. */
+  async listAllAcrossTenants(status?: SupportTicketStatus, tenantId?: string): Promise<SupportTicketEntity[]> {
     return this.repository.find({
-      where: status ? { status } : {},
+      where: { ...(status ? { status } : {}), ...(tenantId ? { tenantId } : {}) },
       order: { createdAt: 'DESC' },
       take: 200,
     });

@@ -8,7 +8,7 @@ import type {
   SupportTicketPriority,
 } from '@ems/contracts';
 import { RequestContextService } from '../../common/services/request-context.service';
-import { UserEntity, type SupportTicketEntity, type SupportTicketStatus } from '../../database/entities';
+import { TenantEntity, UserEntity, type SupportTicketEntity, type SupportTicketStatus } from '../../database/entities';
 import { PlatformSettingsService } from '../platform-settings/platform-settings.service';
 import { SupportTicketRepository } from './support-ticket.repository';
 import { SupportTicketMessageRepository } from './support-ticket-message.repository';
@@ -81,9 +81,24 @@ export class SupportTicketService {
     return this.messages.listForTicket(ticket.id, includeInternal);
   }
 
-  async list(status: SupportTicketStatus | undefined, mineOnly: boolean): Promise<SupportTicketEntity[]> {
+  async list(
+    status: SupportTicketStatus | undefined,
+    mineOnly: boolean,
+    tenantPublicId?: string,
+  ): Promise<SupportTicketEntity[]> {
     if (this.context.isPlatformRequest) {
-      return this.tickets.listAllAcrossTenants(status);
+      // `support_tickets.tenant_id` is the internal bigint FK — the query param is
+      // the public id, same translation `platform-billing.service.ts` does for
+      // its own `tenantId` filter.
+      let tenantId: string | undefined;
+      if (tenantPublicId) {
+        const tenant = await this.dataSource
+          .getRepository(TenantEntity)
+          .findOne({ where: { publicId: tenantPublicId } });
+        if (!tenant) return [];
+        tenantId = tenant.id;
+      }
+      return this.tickets.listAllAcrossTenants(status, tenantId);
     }
     // A tenant caller is ALWAYS scoped to their own tenant, regardless of
     // `mineOnly` — the flag only narrows further, to just the caller's own

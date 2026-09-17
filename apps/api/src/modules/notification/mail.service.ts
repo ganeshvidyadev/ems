@@ -45,6 +45,26 @@ export class MailService implements OnModuleInit {
     });
   }
 
+  /** SMTP is configured when a host is set — the stub/dev default is empty. */
+  isConfigured(): boolean {
+    return Boolean(this.mail.host);
+  }
+
+  /**
+   * A real connectivity check (SMTP handshake via nodemailer's own `verify()`) — not
+   * "healthy because nothing errored", an actual round-trip to the mail server. Sends
+   * no mail, so it is cheap enough to call from a health-overview endpoint.
+   */
+  async verifyConnection(): Promise<{ ok: boolean; error?: string }> {
+    if (!this.isConfigured()) return { ok: false, error: 'not configured' };
+    try {
+      await this.transporter.verify();
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : 'unknown' };
+    }
+  }
+
   async send(message: MailMessage): Promise<boolean> {
     try {
       await this.transporter.sendMail({
