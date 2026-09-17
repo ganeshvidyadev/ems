@@ -31,13 +31,20 @@ export function TenantScoped(options: TenantScopedOptions = {}): ClassDecorator 
   };
 }
 
-export function getTenantScopedOptions(target: Function): Required<TenantScopedOptions> | undefined {
+// `any[]` rest params, not `unknown[]`, is TypeScript's own idiom for "matches every
+// constructor regardless of its parameter types" (see lib.es5.d.ts's `NewableFunction`) —
+// `unknown[]` would reject any real constructor whose params aren't themselves `unknown`.
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export function getTenantScopedOptions(
+  target: abstract new (...args: any[]) => unknown,
+): Required<TenantScopedOptions> | undefined {
   return Reflect.getMetadata(TENANT_SCOPED_KEY, target);
 }
 
-export function isTenantScoped(target: Function): boolean {
+export function isTenantScoped(target: abstract new (...args: any[]) => unknown): boolean {
   return Reflect.hasMetadata(TENANT_SCOPED_KEY, target);
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
  * Entities that legitimately have no tenant column.
@@ -96,4 +103,8 @@ export const PLATFORM_GLOBAL_ENTITIES = [
   // own, isolation is transitive through `ticket_id` (`support_tickets`,
   // which is itself tenant-scoped and checked before any message is reached).
   'SupportTicketMessageEntity',
+
+  // A single row per key (maintenance mode, support SLA hours) — platform-wide
+  // configuration with no tenant to scope to, same reasoning as `PlanEntity`.
+  'PlatformSettingEntity',
 ] as const;

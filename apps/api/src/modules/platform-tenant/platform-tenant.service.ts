@@ -7,10 +7,9 @@ import type {
   TenantListQuery,
   TenantResponse,
 } from '@ems/contracts';
-import { buildPaginationMeta } from '@ems/contracts';
 import { AuthService } from '../auth/services/auth.service';
 import { PermissionResolverService } from '../auth/services/permission-resolver.service';
-import { TokenService, type SignedToken } from '../auth/services/token.service';
+import { TokenService } from '../auth/services/token.service';
 import { SubscriptionService } from '../subscription/services/subscription.service';
 import { CacheService } from '../../common/services/cache.service';
 import { TenantEntity, TenantDomainEntity, UserEntity } from '../../database/entities';

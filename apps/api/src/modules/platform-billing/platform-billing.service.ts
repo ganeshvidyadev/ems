@@ -7,7 +7,6 @@ import type {
   PlatformInvoiceListQuery,
   PlatformInvoiceResponse,
 } from '@ems/contracts';
-import { buildPaginationMeta } from '@ems/contracts';
 import {
   SubscriptionInvoiceEntity,
   SubscriptionPaymentEntity,

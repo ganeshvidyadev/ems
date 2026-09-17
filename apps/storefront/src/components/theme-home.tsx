@@ -193,6 +193,8 @@ export function ThemeHome({ theme, name, featured, latest, failed }: Props) {
         <div className="organic-category-grid">
           {['Breads', 'Fruits', 'Vegetables', 'Drinks', 'Meat', 'Snacks'].map((label, index) => (
             <Link href={`/products?q=${encodeURIComponent(label)}`} key={label}>
+              {/* eslint-disable-next-line @next/next/no-img-element -- plain <img>, not
+                  next/image, matches this theme's other logo/thumbnail usages. */}
               <img
                 src={`/themes/organic/images/category-thumb-${index + 1}.jpg`}
                 alt=""

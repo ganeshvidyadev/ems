@@ -1,5 +1,5 @@
 import { Column, Entity, VersionColumn } from 'typeorm';
-import { BaseEntity, DATETIME3, NumericIdEntity } from './base.entity';
+import { BaseEntity, DATETIME3 } from './base.entity';
 import { TenantScoped } from '../../common/decorators/tenant-scoped.decorator';
 
 export const PAYMENT_GATEWAYS = [

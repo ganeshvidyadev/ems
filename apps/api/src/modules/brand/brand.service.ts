@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { BrandResponse, CreateBrandRequest, UpdateBrandRequest } from '@ems/contracts';
-import { newPublicId, slugify, uniqueSlug } from '@ems/kernel';
+import { newPublicId, uniqueSlug } from '@ems/kernel';
 import type { PaginatedResult } from '../../database/repositories/tenant-scoped.repository';
 import { CacheService } from '../../common/services/cache.service';
 import { BrandRepository } from './brand.repository';

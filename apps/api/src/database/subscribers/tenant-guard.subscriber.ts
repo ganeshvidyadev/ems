@@ -197,7 +197,14 @@ export class TenantGuardSubscriber implements EntitySubscriberInterface {
  * TypeORM's `EntityMetadata.target` is `Function | string` — a string when the
  * entity was declared as a schema rather than a decorated class. Only the class
  * form can carry `@TenantScoped()` metadata, so anything else is skipped.
+ *
+ * `any[]` rest params, not `unknown[]`, is TypeScript's own idiom for "matches every
+ * constructor" — see tenant-scoped.decorator.ts.
  */
-function classTargetOf(metadata: EntityMetadata): Function | undefined {
-  return typeof metadata.target === 'function' ? metadata.target : undefined;
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function classTargetOf(metadata: EntityMetadata): (abstract new (...args: any[]) => unknown) | undefined {
+  return typeof metadata.target === 'function'
+    ? (metadata.target as abstract new (...args: any[]) => unknown)
+    : undefined;
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */

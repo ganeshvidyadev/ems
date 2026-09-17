@@ -3,7 +3,6 @@ import {
   derBitString,
   derContext0,
   derContextPrimitive,
-  derIa5String,
   derInteger,
   derNull,
   derOctetString,

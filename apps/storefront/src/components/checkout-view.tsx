@@ -437,7 +437,7 @@ function useLivePricing(cartId: string | null, values: CheckoutFormValues) {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [cartId, addressKey]);
+  }, [cartId, addressKey, values.paymentGateway]);
 
   return state;
 }

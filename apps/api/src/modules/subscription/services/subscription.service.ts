@@ -12,7 +12,6 @@ import { DataSource, type EntityManager } from 'typeorm';
 import {
   PlanEntity,
   SubscriptionEntity,
-  TenantEntity,
   type BillingCycle,
   type InvoiceLineItem,
 } from '../../../database/entities';

@@ -14,7 +14,7 @@ import { RequestContextService } from '../../common/services/request-context.ser
 import { runAsTenant } from '../../common/utils/run-as-tenant.util';
 import { allocationRange } from '../order/stock-allocations';
 import { OutboxService } from '../../common/services/outbox.service';
-import { CartEmptyError, OrderEmptyError } from '../../common/errors/api.errors';
+import { CartEmptyError } from '../../common/errors/api.errors';
 import type { OrderAddressSnapshot } from '../../database/entities';
 import { CartProductLookupRepository } from '../cart/cart-product-lookup.repository';
 import { CartService, type StoredCart } from '../cart/cart.service';

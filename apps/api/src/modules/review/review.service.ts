@@ -3,7 +3,6 @@ import type { CreateReviewRequest, ReviewResponse, ReviewStatus as ReviewStatusC
 import { BusinessRuleError } from '@ems/kernel';
 import { RequestContextService } from '../../common/services/request-context.service';
 import type { ReviewEntity, ReviewStatus } from '../../database/entities';
-import type { PaginatedResult } from '../../database/repositories/tenant-scoped.repository';
 import { CustomerRepository } from '../customer/customer.repository';
 import { ProductRepository } from '../product/product.repository';
 import { ReviewRepository } from './review.repository';

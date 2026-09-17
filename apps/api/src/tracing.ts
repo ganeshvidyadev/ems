@@ -16,15 +16,15 @@
  * cost for this file existing.
  */
 if (process.env.OTEL_ENABLED === 'true' || process.env.OTEL_ENABLED === '1') {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { NodeSDK } = require('@opentelemetry/sdk-node');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { resourceFromAttributes } = require('@opentelemetry/resources');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } = require('@opentelemetry/semantic-conventions');
 
   const sdk = new NodeSDK({

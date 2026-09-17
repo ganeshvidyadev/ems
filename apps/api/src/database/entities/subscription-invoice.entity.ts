@@ -1,5 +1,5 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
-import { BaseEntity, DATETIME3, NumericIdEntity } from './base.entity';
+import { BaseEntity, DATETIME3 } from './base.entity';
 import { SubscriptionEntity } from './subscription.entity';
 import { TenantScoped } from '../../common/decorators/tenant-scoped.decorator';
 
