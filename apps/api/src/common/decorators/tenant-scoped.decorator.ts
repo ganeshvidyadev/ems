@@ -103,4 +103,8 @@ export const PLATFORM_GLOBAL_ENTITIES = [
   // own, isolation is transitive through `ticket_id` (`support_tickets`,
   // which is itself tenant-scoped and checked before any message is reached).
   'SupportTicketMessageEntity',
+
+  // A single row per key (maintenance mode, support SLA hours) — platform-wide
+  // configuration with no tenant to scope to, same reasoning as `PlanEntity`.
+  'PlatformSettingEntity',
 ] as const;
