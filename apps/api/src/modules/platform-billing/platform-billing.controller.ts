@@ -23,6 +23,13 @@ function actorFrom(user: AuthenticatedUser, request: Request) {
 export class PlatformBillingController {
   constructor(private readonly billing: PlatformBillingService) {}
 
+  @Get('dunning')
+  @Permissions('platform.billing:read')
+  @ApiOperation({ summary: 'Dunning and past-due subscription recovery visibility' })
+  dunning() {
+    return this.billing.dunningOverview();
+  }
+
   @Get('invoices')
   @Permissions('platform.billing:read')
   @ApiOperation({ summary: 'Every tenant\'s subscription invoices' })

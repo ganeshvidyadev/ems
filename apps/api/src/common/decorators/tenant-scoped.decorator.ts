@@ -107,4 +107,10 @@ export const PLATFORM_GLOBAL_ENTITIES = [
   // A single row per key (maintenance mode, support SLA hours) — platform-wide
   // configuration with no tenant to scope to, same reasoning as `PlanEntity`.
   'PlatformSettingEntity',
+
+  // A platform admin's own operational record about a tenant (or about the
+  // platform itself, for tenant-less alert types), not the tenant's own data —
+  // same "entity_type/entity_id, not tenant_id" reasoning as `AuditLogEntity`'s
+  // `tenant_id`, which is why this one is nullable with no FK rather than scoped.
+  'PlatformAlertEntity',
 ] as const;

@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm';
 import { BusinessRuleError, Money, NotFoundError, type CurrencyCode } from '@ems/kernel';
 import type {
   AdjustInvoiceRequest,
+  PlatformDunningResponse,
   PlatformInvoiceListQuery,
   PlatformInvoiceResponse,
 } from '@ems/contracts';
@@ -210,5 +211,88 @@ export class PlatformBillingService {
         options.severity,
       ],
     );
+  }
+
+  async dunningOverview(): Promise<PlatformDunningResponse> {
+    const rows = (await this.dataSource.query(
+      `SELECT s.public_id AS id,
+              t.public_id AS tenantId,
+              t.business_name AS tenantName,
+              p.code AS planCode,
+              p.name AS planName,
+              s.status AS status,
+              s.dunning_attempts AS dunningAttempts,
+              s.grace_period_ends_at AS gracePeriodEndsAt,
+              s.current_period_end AS currentPeriodEnd,
+              inv.public_id AS overdueInvoiceId,
+              inv.invoice_number AS overdueInvoiceNumber,
+              inv.amount_due_minor AS amountDueMinor,
+              inv.currency AS currency,
+              (SELECT MAX(pay.failed_at)
+                 FROM subscription_payments pay
+                WHERE pay.invoice_id = inv.id AND pay.status = 'FAILED') AS lastPaymentFailedAt
+         FROM subscriptions s
+         JOIN tenants t ON t.id = s.tenant_id
+         JOIN plans p ON p.id = s.plan_id
+         LEFT JOIN subscription_invoices inv
+           ON inv.subscription_id = s.id AND inv.status IN ('OPEN', 'PARTIALLY_PAID')
+        WHERE (s.status = 'PAST_DUE' OR s.dunning_attempts > 0 OR (inv.id IS NOT NULL AND inv.status != 'PAID'))
+          AND t.deleted_at IS NULL
+        ORDER BY s.status = 'PAST_DUE' DESC, s.grace_period_ends_at ASC, s.dunning_attempts DESC`,
+    )) as {
+      id: string;
+      tenantId: string;
+      tenantName: string;
+      planCode: string;
+      planName: string;
+      status: string;
+      dunningAttempts: number;
+      gracePeriodEndsAt: Date | null;
+      currentPeriodEnd: Date | null;
+      overdueInvoiceId: string | null;
+      overdueInvoiceNumber: string | null;
+      amountDueMinor: string | null;
+      currency: string | null;
+      lastPaymentFailedAt: Date | null;
+    }[];
+
+    const now = Date.now();
+    const fortyEightHoursMs = 48 * 60 * 60 * 1000;
+
+    let expiringGracePeriodSoon = 0;
+    let totalPastDue = 0;
+
+    const items = rows.map((r) => {
+      if (r.status === 'PAST_DUE') totalPastDue += 1;
+      if (r.gracePeriodEndsAt) {
+        const remaining = new Date(r.gracePeriodEndsAt).getTime() - now;
+        if (remaining > 0 && remaining <= fortyEightHoursMs) {
+          expiringGracePeriodSoon += 1;
+        }
+      }
+      return {
+        id: r.id,
+        tenantId: r.tenantId,
+        tenantName: r.tenantName,
+        planCode: r.planCode,
+        planName: r.planName,
+        status: r.status,
+        dunningAttempts: Number(r.dunningAttempts ?? 0),
+        gracePeriodEndsAt: r.gracePeriodEndsAt ? new Date(r.gracePeriodEndsAt).toISOString() : null,
+        currentPeriodEnd: r.currentPeriodEnd ? new Date(r.currentPeriodEnd).toISOString() : null,
+        overdueInvoiceId: r.overdueInvoiceId,
+        overdueInvoiceNumber: r.overdueInvoiceNumber,
+        amountDueMinor: r.amountDueMinor,
+        currency: r.currency,
+        lastPaymentFailedAt: r.lastPaymentFailedAt ? new Date(r.lastPaymentFailedAt).toISOString() : null,
+      };
+    });
+
+    return {
+      items,
+      total: items.length,
+      totalAtRiskCount: totalPastDue,
+      expiringGracePeriodSoon,
+    };
   }
 }

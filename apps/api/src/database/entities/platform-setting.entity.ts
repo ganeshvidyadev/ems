@@ -4,7 +4,13 @@ import { DATETIME3 } from './base.entity';
 /** Well-known keys this codebase actually reads — an unrecognized key can still
  * be stored (the column is a generic VARCHAR), but only these are wired to
  * behavior. See `PlatformSettingsService` for each key's shape and consumers. */
-export const PLATFORM_SETTING_KEYS = ['maintenance_mode', 'support_sla_hours'] as const;
+export const PLATFORM_SETTING_KEYS = [
+  'maintenance_mode',
+  'support_sla_hours',
+  'feature_flags',
+  'security_policy',
+  'data_retention',
+] as const;
 export type PlatformSettingKey = (typeof PLATFORM_SETTING_KEYS)[number];
 
 @Entity('platform_settings')

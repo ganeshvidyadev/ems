@@ -88,3 +88,29 @@ export const refundPaymentRequestSchema = z.object({
   reason: z.string().trim().min(5).max(255),
 });
 export type RefundPaymentRequest = z.infer<typeof refundPaymentRequestSchema>;
+
+export const platformDunningItemSchema = z.object({
+  id: z.string(),
+  tenantId: z.string(),
+  tenantName: z.string(),
+  planCode: z.string(),
+  planName: z.string(),
+  status: z.string(),
+  dunningAttempts: z.number(),
+  gracePeriodEndsAt: z.string().nullable(),
+  currentPeriodEnd: z.string().nullable(),
+  overdueInvoiceId: z.string().nullable(),
+  overdueInvoiceNumber: z.string().nullable(),
+  amountDueMinor: z.string().nullable(),
+  currency: z.string().nullable(),
+  lastPaymentFailedAt: z.string().nullable(),
+});
+export type PlatformDunningItem = z.infer<typeof platformDunningItemSchema>;
+
+export const platformDunningResponseSchema = z.object({
+  items: z.array(platformDunningItemSchema),
+  total: z.number(),
+  totalAtRiskCount: z.number(),
+  expiringGracePeriodSoon: z.number(),
+});
+export type PlatformDunningResponse = z.infer<typeof platformDunningResponseSchema>;

@@ -20,12 +20,13 @@ export interface LogBrowseResult {
   documents: Record<string, unknown>[];
 }
 
-export function useLogCollection(collection: LogCollection, tenantId: string, limit: number) {
+export function useLogCollection(collection: LogCollection, tenantId: string, limit: number, q?: string) {
   return useQuery({
-    queryKey: ['platform-logs', collection, tenantId, limit],
+    queryKey: ['platform-logs', collection, tenantId, limit, q],
     queryFn: () =>
       apiGet<LogBrowseResult>(`/platform/logs/${collection}`, {
-        params: { tenantId: tenantId || undefined, limit },
+        params: { tenantId: tenantId || undefined, limit, q: q || undefined },
       }),
   });
 }
+

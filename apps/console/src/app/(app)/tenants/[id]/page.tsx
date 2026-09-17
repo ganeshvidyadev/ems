@@ -2,7 +2,8 @@
 
 import type { TenantStatus } from '@ems/contracts';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
 import {
   Alert,
   Badge,
@@ -12,6 +13,8 @@ import {
   CardHeader,
   Dialog,
   Field,
+  Input,
+  Select,
   Skeleton,
   Table,
   TableBody,
@@ -25,16 +28,24 @@ import {
 import { useAuth, usePermission } from '@/hooks/use-auth';
 import { formatDate, formatMoney } from '@/lib/utils';
 import {
+  useCancelTenantSubscription,
+  useChangeTenantPlan,
+  useExtendTenantTrial,
   useImpersonateTenant,
+  usePlans,
   usePlatformTenant,
   usePlatformTenantOverview,
   useReactivateTenant,
+  useResumeTenantSubscription,
   useSuspendTenant,
+  useTenantFeatureFlags,
+  useUpdateTenantFeatureFlags,
 } from '@/lib/queries/platform-tenants';
 import { useExportTenantData } from '@/lib/queries/tenant-export';
 import { usePlatformInvoices } from '@/lib/queries/platform-billing';
 import { useSupportTickets } from '@/lib/queries/support-tickets';
 import { usePlatformAuditLogs } from '@/lib/queries/platform-audit-log';
+
 
 const STATUS_BADGE: Record<TenantStatus, 'default' | 'success' | 'warning' | 'destructive' | 'info'> = {
   PENDING: 'default',
@@ -47,14 +58,16 @@ const STATUS_BADGE: Record<TenantStatus, 'default' | 'success' | 'warning' | 'de
   DELETED: 'default',
 };
 
-const TABS = ['overview', 'billing', 'support', 'audit'] as const;
+const TABS = ['overview', 'billing', 'support', 'audit', 'features'] as const;
 type Tab = (typeof TABS)[number];
 const TAB_LABEL: Record<Tab, string> = {
   overview: 'Overview',
   billing: 'Billing',
   support: 'Support',
   audit: 'Audit',
+  features: 'Features & Overrides',
 };
+
 
 /**
  * Tenant 360 — the operational view a Super Admin actually needs, not just a
@@ -207,6 +220,8 @@ export default function TenantDetailPage() {
       {tab === 'billing' && <BillingTab tenantId={t.id} />}
       {tab === 'support' && <SupportTab tenantId={t.id} />}
       {tab === 'audit' && <AuditTab tenantId={t.id} />}
+      {tab === 'features' && <FeaturesTab tenantId={t.id} />}
+
 
       <Dialog
         open={suspendOpen}
@@ -314,8 +329,34 @@ function Metric({
 
 function OverviewTab({ tenantId }: { tenantId: string }) {
   const overview = usePlatformTenantOverview(tenantId);
+  const plans = usePlans();
+  const changePlan = useChangeTenantPlan();
+  const extendTrial = useExtendTenantTrial();
+  const cancelSub = useCancelTenantSubscription();
+  const resumeSub = useResumeTenantSubscription();
+
+  const canAssignPlan = usePermission('platform.plan:assign');
+  const canUpdateTenant = usePermission('platform.tenant:update');
+  const canSuspendTenant = usePermission('platform.tenant:suspend');
+  const canReactivateTenant = usePermission('platform.tenant:reactivate');
+
+  const [changePlanOpen, setChangePlanOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('');
+  const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
+
+  const [extendTrialOpen, setExtendTrialOpen] = useState(false);
+  const [additionalDays, setAdditionalDays] = useState(14);
+  const [extendReason, setExtendReason] = useState('');
+
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelImmediately, setCancelImmediately] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+
   if (overview.isError) return <Alert variant="error">Could not load the operational snapshot.</Alert>;
   if (!overview.data) return <Skeleton className="h-40 w-full" />;
+
+  const isTrial = overview.data.subscriptionStatus === 'TRIALING' || overview.data.tenant.status === 'TRIAL';
+  const isCancelled = overview.data.subscriptionStatus === 'CANCELLED' || overview.data.tenant.status === 'CANCELLED';
 
   const rows: [string, string][] = [
     ['Plan', overview.data.planName ? `${overview.data.planName} (${overview.data.planCode})` : '—'],
@@ -325,21 +366,220 @@ function OverviewTab({ tenantId }: { tenantId: string }) {
   ];
 
   return (
-    <Card>
-      <CardHeader title="Subscription" />
-      <CardBody className="p-0">
-        <Table>
-          <TableBody>
-            {rows.map(([label, value]) => (
-              <TableRow key={label}>
-                <TableCell className="w-48 text-muted-foreground">{label}</TableCell>
-                <TableCell>{value}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardBody>
-    </Card>
+    <div className="space-y-4">
+      {changePlan.isSuccess && <Alert variant="success">Plan changed successfully. Prorated invoice issued if applicable.</Alert>}
+      {changePlan.isError && <Alert variant="error">Could not change the tenant plan.</Alert>}
+      {extendTrial.isSuccess && <Alert variant="success">Trial period extended successfully.</Alert>}
+      {extendTrial.isError && <Alert variant="error">Could not extend the trial.</Alert>}
+      {cancelSub.isSuccess && <Alert variant="success">Subscription cancellation processed.</Alert>}
+      {cancelSub.isError && <Alert variant="error">Could not cancel the subscription.</Alert>}
+      {resumeSub.isSuccess && <Alert variant="success">Subscription resumed successfully.</Alert>}
+      {resumeSub.isError && <Alert variant="error">Could not resume the subscription.</Alert>}
+
+      <Card>
+        <CardHeader
+          title="Subscription"
+          action={
+            <div className="flex flex-wrap gap-2">
+              {canAssignPlan && !isCancelled && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedPlan(overview.data?.planCode ?? '');
+                    setBillingCycle((overview.data?.billingCycle as 'MONTHLY' | 'YEARLY') ?? 'MONTHLY');
+                    setChangePlanOpen(true);
+                  }}
+                >
+                  Change plan
+                </Button>
+              )}
+              {canUpdateTenant && isTrial && (
+                <Button size="sm" variant="outline" onClick={() => setExtendTrialOpen(true)}>
+                  Extend trial
+                </Button>
+              )}
+              {canSuspendTenant && !isCancelled && (
+                <Button size="sm" variant="outline" onClick={() => setCancelOpen(true)}>
+                  Cancel subscription
+                </Button>
+              )}
+              {canReactivateTenant && overview.data.tenant.status === 'ACTIVE' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  loading={resumeSub.isPending}
+                  onClick={() => resumeSub.mutate(tenantId)}
+                >
+                  Resume
+                </Button>
+              )}
+            </div>
+          }
+        />
+        <CardBody className="p-0">
+          <Table>
+            <TableBody>
+              {rows.map(([label, value]) => (
+                <TableRow key={label}>
+                  <TableCell className="w-48 text-muted-foreground">{label}</TableCell>
+                  <TableCell>{value}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardBody>
+      </Card>
+
+      {/* Change Plan Dialog */}
+      <Dialog
+        open={changePlanOpen}
+        onOpenChange={setChangePlanOpen}
+        title="Change subscription plan"
+        description="Upgrade or downgrade this tenant's plan. A prorated invoice or credit will be generated automatically."
+      >
+        <div className="space-y-4">
+          <Field label="Plan" htmlFor="changePlanSelect">
+            <Select
+              id="changePlanSelect"
+              value={selectedPlan}
+              onChange={(e) => setSelectedPlan(e.target.value)}
+              className="w-full"
+            >
+              <option value="">Select a plan</option>
+              {plans.data?.map((p) => (
+                <option key={p.code} value={p.code}>
+                  {p.name} ({p.code})
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Billing cycle" htmlFor="changeBillingCycleSelect">
+            <Select
+              id="changeBillingCycleSelect"
+              value={billingCycle}
+              onChange={(e) => setBillingCycle(e.target.value as 'MONTHLY' | 'YEARLY')}
+              className="w-full"
+            >
+              <option value="MONTHLY">Monthly</option>
+              <option value="YEARLY">Yearly</option>
+            </Select>
+          </Field>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setChangePlanOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              loading={changePlan.isPending}
+              disabled={!selectedPlan}
+              onClick={() => {
+                changePlan.mutate(
+                  { id: tenantId, planCode: selectedPlan, billingCycle },
+                  { onSuccess: () => setChangePlanOpen(false) },
+                );
+              }}
+            >
+              Confirm plan change
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+
+      {/* Extend Trial Dialog */}
+      <Dialog
+        open={extendTrialOpen}
+        onOpenChange={setExtendTrialOpen}
+        title="Extend merchant trial"
+        description="Grant additional trial days so the merchant has more time to evaluate the platform before billing starts."
+      >
+        <div className="space-y-4">
+          <Field label="Additional days" htmlFor="extendAdditionalDays">
+            <Select
+              id="extendAdditionalDays"
+              value={additionalDays}
+              onChange={(e) => setAdditionalDays(Number(e.target.value))}
+              className="w-full"
+            >
+              <option value={7}>+7 days</option>
+              <option value={14}>+14 days</option>
+              <option value={30}>+30 days</option>
+              <option value={60}>+60 days</option>
+              <option value={90}>+90 days</option>
+            </Select>
+          </Field>
+          <Field label="Reason (optional)" htmlFor="extendTrialReason">
+            <Input
+              id="extendTrialReason"
+              placeholder="e.g. Requested via support ticket #1234"
+              value={extendReason}
+              onChange={(e) => setExtendReason(e.target.value)}
+            />
+          </Field>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setExtendTrialOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              loading={extendTrial.isPending}
+              onClick={() => {
+                extendTrial.mutate(
+                  { id: tenantId, additionalDays, reason: extendReason || undefined },
+                  { onSuccess: () => setExtendTrialOpen(false) },
+                );
+              }}
+            >
+              Extend trial
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+
+      {/* Cancel Subscription Dialog */}
+      <Dialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        title="Cancel tenant subscription?"
+        description="Cancel the subscription either at the end of the current billing period or immediately."
+      >
+        <div className="space-y-4">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="size-4"
+              checked={cancelImmediately}
+              onChange={(e) => setCancelImmediately(e.target.checked)}
+            />
+            Cancel immediately (abuse/takedown; removes store access immediately)
+          </label>
+          <Field label="Reason" htmlFor="cancelSubReason">
+            <Textarea
+              id="cancelSubReason"
+              placeholder="Required: why is this subscription being cancelled?"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              rows={3}
+            />
+          </Field>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setCancelOpen(false)}>
+              Back
+            </Button>
+            <Button
+              variant="destructive"
+              loading={cancelSub.isPending}
+              onClick={() => {
+                cancelSub.mutate(
+                  { id: tenantId, immediately: cancelImmediately, reason: cancelReason || undefined },
+                  { onSuccess: () => setCancelOpen(false) },
+                );
+              }}
+            >
+              Cancel subscription
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+    </div>
   );
 }
 
@@ -456,3 +696,160 @@ function AuditTab({ tenantId }: { tenantId: string }) {
     </Card>
   );
 }
+
+function FeaturesTab({ tenantId }: { tenantId: string }) {
+  const flags = useTenantFeatureFlags(tenantId);
+  const update = useUpdateTenantFeatureFlags(tenantId);
+  const canUpdate = usePermission('platform.tenant:update');
+
+  const [state, setState] = useState({
+    enableMarketplace: null as boolean | null,
+    enableCustomDomains: null as boolean | null,
+    enableAdvancedAnalytics: null as boolean | null,
+    betaStorefrontThemes: null as boolean | null,
+    aiCopilotAssistant: null as boolean | null,
+  });
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    if (!flags.data || hydrated) return;
+    setState({
+      enableMarketplace: flags.data.enableMarketplace,
+      enableCustomDomains: flags.data.enableCustomDomains,
+      enableAdvancedAnalytics: flags.data.enableAdvancedAnalytics,
+      betaStorefrontThemes: flags.data.betaStorefrontThemes,
+      aiCopilotAssistant: flags.data.aiCopilotAssistant,
+    });
+    setHydrated(true);
+  }, [flags.data, hydrated]);
+
+  if (flags.isError) return <Alert variant="error">Could not load feature flags for this tenant.</Alert>;
+  if (!flags.data || !hydrated) return <div className="text-sm text-muted-foreground">Loading features…</div>;
+
+  const renderOverrideSelect = (
+    value: boolean | null,
+    onChange: (val: boolean | null) => void,
+  ) => (
+    <select
+      className="rounded border border-border bg-background px-2.5 py-1 text-xs"
+      value={value === null ? 'DEFAULT' : value ? 'ENABLED' : 'DISABLED'}
+      onChange={(e) => {
+        const v = e.target.value;
+        onChange(v === 'DEFAULT' ? null : v === 'ENABLED');
+      }}
+      disabled={!canUpdate || update.isPending}
+    >
+      <option value="DEFAULT">Global default</option>
+      <option value="ENABLED">Force enabled</option>
+      <option value="DISABLED">Force disabled</option>
+    </select>
+  );
+
+  return (
+    <div className="space-y-6">
+      {update.isError && <Alert variant="error">Could not save feature flag overrides.</Alert>}
+      {update.isSuccess && <Alert variant="success">Feature flag overrides updated successfully.</Alert>}
+
+      <Card>
+        <CardHeader
+          title="Tenant feature entitlement overrides"
+          description="Override platform-level feature defaults specifically for this tenant (e.g. VIP beta testing or specific contract carve-outs)."
+        />
+        <CardBody className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Feature</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Entitlement Override</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-medium">Marketplace & Multi-Vendor</TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  Supplier and reseller product sharing and commission splits.
+                </TableCell>
+                <TableCell>
+                  {renderOverrideSelect(state.enableMarketplace, (v) =>
+                    setState((prev) => ({ ...prev, enableMarketplace: v })),
+                  )}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Custom Domains & SSL</TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  Custom apex and subdomains routing with automated Let&apos;s Encrypt SSL.
+                </TableCell>
+                <TableCell>
+                  {renderOverrideSelect(state.enableCustomDomains, (v) =>
+                    setState((prev) => ({ ...prev, enableCustomDomains: v })),
+                  )}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Advanced Analytics</TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  Cohort analysis, funnel tracking, and lifetime value analytics.
+                </TableCell>
+                <TableCell>
+                  {renderOverrideSelect(state.enableAdvancedAnalytics, (v) =>
+                    setState((prev) => ({ ...prev, enableAdvancedAnalytics: v })),
+                  )}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    <span>Beta Storefront Themes</span>
+                    <Badge variant="warning">Beta</Badge>
+                  </div>
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  Early access to next-generation unreleased storefront themes.
+                </TableCell>
+                <TableCell>
+                  {renderOverrideSelect(state.betaStorefrontThemes, (v) =>
+                    setState((prev) => ({ ...prev, betaStorefrontThemes: v })),
+                  )}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    <span>AI Copilot Merchant Assistant</span>
+                    <Badge variant="info">Labs</Badge>
+                  </div>
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  AI product copy generator and predictive demand insights.
+                </TableCell>
+                <TableCell>
+                  {renderOverrideSelect(state.aiCopilotAssistant, (v) =>
+                    setState((prev) => ({ ...prev, aiCopilotAssistant: v })),
+                  )}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+
+          {canUpdate && (
+            <div className="flex justify-end p-4 border-t">
+              <Button
+                loading={update.isPending}
+                onClick={() =>
+                  update.mutate({
+                    featureFlags: state,
+                  })
+                }
+              >
+                Save overrides
+              </Button>
+            </div>
+          )}
+        </CardBody>
+      </Card>
+    </div>
+  );
+}
+

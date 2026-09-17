@@ -10,6 +10,11 @@ export const mrrByCurrencySchema = z.object({
   mrrMinor: z.string(),
 });
 
+export const arrByCurrencySchema = z.object({
+  currency: z.string(),
+  arrMinor: z.string(),
+});
+
 export const planDistributionEntrySchema = z.object({
   planCode: z.string(),
   planName: z.string(),
@@ -22,6 +27,9 @@ export const platformAnalyticsResponseSchema = z.object({
   newTenantsLast30Days: z.number(),
   activeSubscriptions: z.number(),
   mrr: z.array(mrrByCurrencySchema),
+  arr: z.array(arrByCurrencySchema),
+  churnRatePercentage: z.number(),
+  trialConversionRatePercentage: z.number(),
   planDistribution: z.array(planDistributionEntrySchema),
   openSupportTickets: z.number(),
   pendingSettlements: z.number(),

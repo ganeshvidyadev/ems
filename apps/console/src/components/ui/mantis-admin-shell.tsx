@@ -6,15 +6,19 @@ import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import {
   Activity,
   Boxes,
+  Cable,
   ChevronDown,
   ChevronRight,
   CircleUserRound,
   DatabaseBackup,
+  Gauge,
+  Bell,
   Building2,
   Landmark,
   Receipt,
   HeartPulse,
   History,
+  Hourglass,
   BarChart3,
   Settings,
   UserCog,
@@ -39,6 +43,7 @@ import {
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
 import { AdminThemeContext } from './admin-theme';
+import { GlobalSearchPalette } from './global-search-palette';
 
 type NavigationItem = { href: string; label: string };
 /** A labeled section of the sidebar — see `SUPER_ADMIN_NAV` in layout.tsx. */
@@ -47,14 +52,18 @@ const icons: Record<string, LucideIcon> = {
   '/': LayoutDashboard,
   '/analytics': BarChart3,
   '/platform-health': HeartPulse,
+  '/alerts': Bell,
   '/tenants': Building2,
   '/platform-staff': UserCog,
   '/themes': Palette,
   '/theme-templates': Paintbrush,
   '/plans': LayoutList,
   '/settlements': Landmark,
+  '/quota': Gauge,
   '/billing': Receipt,
+  '/dunning': Hourglass,
   '/support': LifeBuoy,
+  '/integrations': Cable,
   '/tenant-export': DatabaseBackup,
   '/audit-log': History,
   '/logs': ScrollText,
@@ -150,6 +159,7 @@ export function MantisAdminShell({
             </Dialog.Portal>
           </Dialog.Root>
           <span className="mantis-topbar-title">EMS Console</span>
+          <GlobalSearchPalette />
           <div className="mantis-account">
             <Dropdown.Root>
               <Dropdown.Trigger asChild>

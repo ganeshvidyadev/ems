@@ -22,8 +22,10 @@ import {
   useDeletePlatformUser,
   usePlatformUsers,
   useReactivatePlatformUser,
+  useRevokePlatformUserSessions,
   useSuspendPlatformUser,
 } from '@/lib/queries/platform-users';
+
 
 const STATUS_BADGE: Record<string, 'default' | 'success' | 'warning' | 'destructive'> = {
   PENDING_VERIFICATION: 'default',
@@ -48,8 +50,10 @@ export default function PlatformStaffPage() {
   const users = usePlatformUsers();
   const suspend = useSuspendPlatformUser();
   const reactivate = useReactivatePlatformUser();
+  const revokeSessions = useRevokePlatformUserSessions();
   const remove = useDeletePlatformUser();
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [revokedMessage, setRevokedMessage] = useState<string | null>(null);
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-6">
@@ -68,7 +72,10 @@ export default function PlatformStaffPage() {
       {users.isError && <Alert variant="error">Could not load staff accounts. Try refreshing the page.</Alert>}
       {suspend.isError && <Alert variant="error">Could not suspend that account.</Alert>}
       {reactivate.isError && <Alert variant="error">Could not reactivate that account.</Alert>}
+      {revokeSessions.isError && <Alert variant="error">Could not revoke sessions for that account.</Alert>}
       {remove.isError && <Alert variant="error">Could not delete that account.</Alert>}
+      {revokedMessage && <Alert variant="success">{revokedMessage}</Alert>}
+
 
       {users.data && users.data.length === 0 && (
         <EmptyState title="No staff accounts" description="Add the first one to share access to this panel." />
@@ -132,6 +139,23 @@ export default function PlatformStaffPage() {
                           Reactivate
                         </Button>
                       )}
+                      {canUpdate && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          loading={revokeSessions.isPending}
+                          onClick={() =>
+                            revokeSessions.mutate(u.id, {
+                              onSuccess: (res) => {
+                                setRevokedMessage(`Successfully revoked ${res.revokedCount} active session(s) for ${u.firstName}.`);
+                                setTimeout(() => setRevokedMessage(null), 5000);
+                              },
+                            })
+                          }
+                        >
+                          Revoke sessions
+                        </Button>
+                      )}
                       {canDelete && (
                         <Button size="sm" variant="destructive" onClick={() => setDeleteTarget(u.id)}>
                           Delete
@@ -139,6 +163,7 @@ export default function PlatformStaffPage() {
                       )}
                     </div>
                   )}
+
                 </TableCell>
               </TableRow>
             ))}

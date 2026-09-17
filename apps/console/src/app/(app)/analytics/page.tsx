@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import {
   Alert,
+  Badge,
   Card,
   CardBody,
   CardHeader,
@@ -14,8 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/primitives';
-import { formatMoney } from '@/lib/utils';
+import { formatDate, formatMoney } from '@/lib/utils';
 import { usePlatformAnalytics } from '@/lib/queries/platform-analytics';
+import { usePlatformAlerts } from '@/lib/queries/platform-alerts';
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: 'Pending',
@@ -27,8 +29,19 @@ const STATUS_LABEL: Record<string, string> = {
   CANCELLED: 'Cancelled',
 };
 
+const SEVERITY_BADGE: Record<string, 'destructive' | 'warning' | 'info' | 'default'> = {
+  CRITICAL: 'destructive',
+  HIGH: 'destructive',
+  MEDIUM: 'warning',
+  LOW: 'info',
+};
+
 export default function PlatformAnalyticsPage() {
   const analytics = usePlatformAnalytics();
+  const openAlerts = usePlatformAlerts({ page: 1, limit: 5, status: 'OPEN' });
+
+  const alertItems = openAlerts.data?.data ?? [];
+  const alertCount = openAlerts.data?.meta.pagination.total ?? 0;
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-6">
@@ -63,6 +76,30 @@ export default function PlatformAnalyticsPage() {
         ) : (
           <StatCard label="MRR" value={analytics.isLoading ? '—' : '₹0.00'} loading={analytics.isLoading} />
         )}
+        {analytics.data?.arr.length ? (
+          analytics.data.arr.map((a) => (
+            <StatCard
+              key={a.currency}
+              label={`ARR (${a.currency})`}
+              value={formatMoney({ amountMinor: a.arrMinor, currency: a.currency })}
+              hint="Annualized run rate (MRR × 12)"
+            />
+          ))
+        ) : (
+          <StatCard label="ARR" value={analytics.isLoading ? '—' : '₹0.00'} loading={analytics.isLoading} hint="Annualized run rate" />
+        )}
+        <StatCard
+          label="Churn rate (30d)"
+          value={analytics.isLoading ? '—' : `${analytics.data?.churnRatePercentage ?? 0}%`}
+          loading={analytics.isLoading}
+          hint="Cancelled vs active base (30d)"
+        />
+        <StatCard
+          label="Trial conversion"
+          value={analytics.isLoading ? '—' : `${analytics.data?.trialConversionRatePercentage ?? 0}%`}
+          loading={analytics.isLoading}
+          hint="Trials converted to paid"
+        />
         <StatCard
           label="Open support tickets"
           value={analytics.data?.openSupportTickets ?? '—'}
@@ -75,7 +112,67 @@ export default function PlatformAnalyticsPage() {
           loading={analytics.isLoading}
           hint={analytics.data && analytics.data.pendingSettlements > 0 ? 'Awaiting approval' : undefined}
         />
+        <StatCard
+          label="Active alerts"
+          value={openAlerts.isLoading ? '—' : alertCount}
+          loading={openAlerts.isLoading}
+          hint={alertCount > 0 ? 'Action required' : 'All systems normal'}
+        />
       </div>
+
+      {/* Needs attention section — directly reflects real-time Alert Center signals */}
+      {alertItems.length > 0 && (
+        <Card className="border-warning/50">
+          <CardHeader
+            title={`Needs attention (${alertCount})`}
+            description="Open platform alerts requiring operational review."
+            action={
+              <Link href="/alerts" className="text-xs font-medium text-primary hover:underline">
+                View all in Alert center &rarr;
+              </Link>
+            }
+          />
+          <CardBody className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Alert</TableHead>
+                  <TableHead>Tenant</TableHead>
+                  <TableHead>Severity</TableHead>
+                  <TableHead>Last seen</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {alertItems.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="max-w-xs">
+                      <p className="font-medium text-sm">{item.title}</p>
+                      {item.description && <p className="text-xs text-muted-foreground truncate">{item.description}</p>}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {item.tenantName ?? 'Platform'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={SEVERITY_BADGE[item.severity] ?? 'default'}>
+                        {item.severity}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {formatDate(item.lastSeenAt)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Link href="/alerts" className="text-xs text-primary hover:underline font-medium">
+                        Investigate
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardBody>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

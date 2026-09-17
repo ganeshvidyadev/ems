@@ -55,6 +55,14 @@ export function useReactivatePlatformUser() {
   });
 }
 
+export function useRevokePlatformUserSessions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiPost<{ revokedCount: number }>(`/platform/users/${id}/revoke-sessions`),
+    onSuccess: () => invalidate(queryClient),
+  });
+}
+
 export function useDeletePlatformUser() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -62,3 +70,4 @@ export function useDeletePlatformUser() {
     onSuccess: () => invalidate(queryClient),
   });
 }
+

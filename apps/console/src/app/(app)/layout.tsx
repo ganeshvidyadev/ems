@@ -159,6 +159,7 @@ const SUPER_ADMIN_NAV = [
     label: 'Overview',
     items: [
       { href: '/analytics', label: 'Analytics' },
+      { href: '/alerts', label: 'Alert center' },
       { href: '/platform-health', label: 'Platform health' },
     ],
   },
@@ -171,7 +172,9 @@ const SUPER_ADMIN_NAV = [
     items: [
       { href: '/plans', label: 'Plans' },
       { href: '/billing', label: 'Billing' },
+      { href: '/dunning', label: 'Dunning & collections' },
       { href: '/settlements', label: 'Settlements' },
+      { href: '/quota', label: 'Usage & quotas' },
     ],
   },
   {
@@ -179,6 +182,7 @@ const SUPER_ADMIN_NAV = [
     items: [
       { href: '/support', label: 'Support tickets' },
       { href: '/queues', label: 'Jobs & queues' },
+      { href: '/integrations', label: 'Integrations' },
       { href: '/tenant-export', label: 'Tenant data export' },
     ],
   },

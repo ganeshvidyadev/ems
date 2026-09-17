@@ -16,6 +16,8 @@ export class PlatformAnalyticsService {
       planDistribution,
       [{ total: openSupportTickets }],
       [{ total: pendingSettlements }],
+      [{ total: cancelledLast30Days }],
+      [trialRows],
     ] = await Promise.all([
       this.dataSource.query(
         `SELECT status, COUNT(*) AS count FROM tenants WHERE deleted_at IS NULL GROUP BY status`,
@@ -48,14 +50,37 @@ export class PlatformAnalyticsService {
       this.dataSource.query(
         `SELECT COUNT(*) AS total FROM settlements WHERE status = 'PENDING_APPROVAL'`,
       ) as Promise<{ total: number }[]>,
+      this.dataSource.query(
+        `SELECT COUNT(*) AS total
+           FROM subscriptions
+          WHERE status IN ('CANCELLED', 'EXPIRED')
+            AND (cancelled_at >= NOW() - INTERVAL 30 DAY OR ended_at >= NOW() - INTERVAL 30 DAY)`,
+      ) as Promise<{ total: number }[]>,
+      this.dataSource.query(
+        `SELECT COUNT(CASE WHEN status IN ('ACTIVE', 'PAST_DUE') AND trial_start IS NOT NULL THEN 1 END) AS convertedTrials,
+                COUNT(CASE WHEN trial_start IS NOT NULL AND (trial_end <= NOW() OR status != 'TRIALING') THEN 1 END) AS completedTrials
+           FROM subscriptions`,
+      ) as Promise<{ convertedTrials: number; completedTrials: number }[]>,
     ]);
+
+    const activeSubCount = Number(activeSubscriptions);
+    const cancelledCount = Number(cancelledLast30Days);
+    const churnBase = activeSubCount + cancelledCount;
+    const churnRatePercentage = churnBase > 0 ? Math.round((cancelledCount / churnBase) * 1000) / 10 : 0;
+
+    const completed = Number(trialRows?.completedTrials ?? 0);
+    const converted = Number(trialRows?.convertedTrials ?? 0);
+    const trialConversionRatePercentage = completed > 0 ? Math.round((converted / completed) * 1000) / 10 : 0;
 
     return {
       totalTenants: tenantsByStatus.reduce((sum, r) => sum + Number(r.count), 0),
       tenantsByStatus: tenantsByStatus.map((r) => ({ status: r.status, count: Number(r.count) })),
       newTenantsLast30Days: Number(newTenantsLast30Days),
-      activeSubscriptions: Number(activeSubscriptions),
+      activeSubscriptions: activeSubCount,
       mrr: mrrRows.map((r) => ({ currency: r.currency, mrrMinor: String(Math.trunc(Number(r.mrrMinor))) })),
+      arr: mrrRows.map((r) => ({ currency: r.currency, arrMinor: String(Math.trunc(Number(r.mrrMinor) * 12)) })),
+      churnRatePercentage,
+      trialConversionRatePercentage,
       planDistribution: planDistribution.map((r) => ({
         planCode: r.planCode,
         planName: r.planName,

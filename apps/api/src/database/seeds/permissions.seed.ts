@@ -112,6 +112,9 @@ export const PERMISSION_SPECS: readonly PermissionSpec[] = [
   // Phase 1 hardening: infra + integration + recent-failure signals in one place,
   // distinct from `platform.log`'s raw browse and `platform.queue`'s per-queue detail.
   { resource: 'platform.health', actions: ['read'], scope: 'PLATFORM', description: 'Platform health overview' },
+  { resource: 'platform.quota', actions: ['read'], scope: 'PLATFORM', description: 'Cross-tenant quota usage' },
+  { resource: 'platform.alert', actions: ['read', 'update'], scope: 'PLATFORM', description: 'Platform alert center' },
+  { resource: 'platform.integration', actions: ['read'], scope: 'PLATFORM', description: 'Cross-tenant integration connections' },
 ];
 
 export interface PermissionRow {

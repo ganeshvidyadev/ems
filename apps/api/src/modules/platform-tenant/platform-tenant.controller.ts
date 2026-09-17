@@ -1,15 +1,24 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
+  cancelTenantSubscriptionRequestSchema,
+  changeTenantPlanRequestSchema,
   createTenantRequestSchema,
+  extendTenantTrialRequestSchema,
   impersonateTenantRequestSchema,
   suspendTenantRequestSchema,
   tenantListQuerySchema,
+  updateTenantFeatureFlagsRequestSchema,
+  type CancelTenantSubscriptionRequest,
+  type ChangeTenantPlanRequest,
   type CreateTenantRequest,
+  type ExtendTenantTrialRequest,
   type ImpersonateTenantRequest,
   type SuspendTenantRequest,
+  type UpdateTenantFeatureFlagsRequest,
 } from '@ems/contracts';
+
 import { buildPaginationMeta } from '@ems/contracts';
 import { CurrentUser, Permissions, Validate, type AuthenticatedUser } from '../../common/decorators';
 import { Paginated } from '../../common/interceptors/response-envelope.interceptor';
@@ -111,6 +120,77 @@ export class PlatformTenantController {
   ) {
     return this.tenants.impersonate(id, body.reason, body.referenceId, actorFrom(user, request));
   }
+
+  @Post(':id/subscription/change-plan')
+  @Permissions('platform.plan:assign')
+  @Validate(changeTenantPlanRequestSchema)
+  @ApiOperation({ summary: 'Change a tenant plan and cycle on their behalf' })
+  async changePlan(
+    @Param('id') id: string,
+    @Body() body: ChangeTenantPlanRequest,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() request: Request,
+  ) {
+    return this.tenants.changePlan(id, body, actorFrom(user, request));
+  }
+
+  @Post(':id/subscription/extend-trial')
+  @Permissions('platform.tenant:update')
+  @Validate(extendTenantTrialRequestSchema)
+  @ApiOperation({ summary: 'Extend a tenant trial by a specified number of days' })
+  async extendTrial(
+    @Param('id') id: string,
+    @Body() body: ExtendTenantTrialRequest,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() request: Request,
+  ) {
+    return this.tenants.extendTrial(id, body, actorFrom(user, request));
+  }
+
+  @Post(':id/subscription/cancel')
+  @Permissions('platform.tenant:suspend')
+  @Validate(cancelTenantSubscriptionRequestSchema)
+  @ApiOperation({ summary: 'Cancel a tenant subscription immediately or at period end' })
+  async cancelSubscription(
+    @Param('id') id: string,
+    @Body() body: CancelTenantSubscriptionRequest,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() request: Request,
+  ) {
+    return this.tenants.cancelSubscription(id, body, actorFrom(user, request));
+  }
+
+  @Post(':id/subscription/resume')
+  @Permissions('platform.tenant:reactivate')
+  @ApiOperation({ summary: 'Resume a scheduled cancellation for a tenant' })
+  async resumeSubscription(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() request: Request,
+  ) {
+    return this.tenants.resumeSubscription(id, actorFrom(user, request));
+  }
+
+  @Get(':id/features')
+  @Permissions('platform.tenant:read')
+  @ApiOperation({ summary: 'Get tenant feature flag overrides' })
+  async getFeatureFlags(@Param('id') id: string) {
+    return this.tenants.getFeatureFlags(id);
+  }
+
+  @Put(':id/features')
+  @Permissions('platform.tenant:update')
+  @Validate(updateTenantFeatureFlagsRequestSchema)
+  @ApiOperation({ summary: 'Update tenant feature flag overrides' })
+  async updateFeatureFlags(
+    @Param('id') id: string,
+    @Body() body: UpdateTenantFeatureFlagsRequest,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() request: Request,
+  ) {
+    return this.tenants.updateFeatureFlags(id, body, actorFrom(user, request));
+  }
+
 
   /**
    * Called by the impersonated caller's own session when they exit — not the
