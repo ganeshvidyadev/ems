@@ -7,7 +7,8 @@ import type {
   TenantStatus,
 } from '@ems/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiDelete, apiGet, apiGetPaginated, apiPost } from '@/lib/api-client';
+import { apiDelete, apiGet, apiGetPaginated, apiPost, apiPut } from '@/lib/api-client';
+
 
 const TENANTS_KEY = 'platform-tenants';
 
@@ -152,4 +153,25 @@ export function useResumeTenantSubscription() {
     onSuccess: () => invalidate(queryClient),
   });
 }
+
+export function useTenantFeatureFlags(id: string | undefined) {
+  return useQuery({
+    queryKey: [TENANTS_KEY, id, 'features'],
+    queryFn: () => apiGet<import('@ems/contracts').TenantFeatureFlags>(`/platform/tenants/${id}/features`),
+    enabled: Boolean(id),
+  });
+}
+
+export function useUpdateTenantFeatureFlags(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: import('@ems/contracts').UpdateTenantFeatureFlagsRequest) =>
+      apiPut<import('@ems/contracts').TenantFeatureFlags>(`/platform/tenants/${id}/features`, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [TENANTS_KEY, id, 'features'] });
+      invalidate(queryClient);
+    },
+  });
+}
+
 

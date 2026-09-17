@@ -51,12 +51,20 @@ export class PlatformUserController {
     return this.users.suspend(id, actorId);
   }
 
+  @Post(':id/revoke-sessions')
+  @Permissions('platform.user:update')
+  @ApiOperation({ summary: 'Revoke all active sessions and refresh tokens for a platform staff account' })
+  revokeSessions(@Param('id') id: string, @CurrentUser('id') actorId: string) {
+    return this.users.revokeAllSessions(id, actorId);
+  }
+
   @Post(':id/reactivate')
   @Permissions('platform.user:update')
   @ApiOperation({ summary: 'Reactivate a suspended platform staff account' })
   reactivate(@Param('id') id: string, @CurrentUser('id') actorId: string) {
     return this.users.reactivate(id, actorId);
   }
+
 
   @Delete(':id')
   @Permissions('platform.user:delete')

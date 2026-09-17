@@ -2,7 +2,8 @@
 
 import type { TenantStatus } from '@ems/contracts';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
 import {
   Alert,
   Badge,
@@ -37,11 +38,14 @@ import {
   useReactivateTenant,
   useResumeTenantSubscription,
   useSuspendTenant,
+  useTenantFeatureFlags,
+  useUpdateTenantFeatureFlags,
 } from '@/lib/queries/platform-tenants';
 import { useExportTenantData } from '@/lib/queries/tenant-export';
 import { usePlatformInvoices } from '@/lib/queries/platform-billing';
 import { useSupportTickets } from '@/lib/queries/support-tickets';
 import { usePlatformAuditLogs } from '@/lib/queries/platform-audit-log';
+
 
 const STATUS_BADGE: Record<TenantStatus, 'default' | 'success' | 'warning' | 'destructive' | 'info'> = {
   PENDING: 'default',
@@ -54,14 +58,16 @@ const STATUS_BADGE: Record<TenantStatus, 'default' | 'success' | 'warning' | 'de
   DELETED: 'default',
 };
 
-const TABS = ['overview', 'billing', 'support', 'audit'] as const;
+const TABS = ['overview', 'billing', 'support', 'audit', 'features'] as const;
 type Tab = (typeof TABS)[number];
 const TAB_LABEL: Record<Tab, string> = {
   overview: 'Overview',
   billing: 'Billing',
   support: 'Support',
   audit: 'Audit',
+  features: 'Features & Overrides',
 };
+
 
 /**
  * Tenant 360 — the operational view a Super Admin actually needs, not just a
@@ -214,6 +220,8 @@ export default function TenantDetailPage() {
       {tab === 'billing' && <BillingTab tenantId={t.id} />}
       {tab === 'support' && <SupportTab tenantId={t.id} />}
       {tab === 'audit' && <AuditTab tenantId={t.id} />}
+      {tab === 'features' && <FeaturesTab tenantId={t.id} />}
+
 
       <Dialog
         open={suspendOpen}
@@ -688,3 +696,160 @@ function AuditTab({ tenantId }: { tenantId: string }) {
     </Card>
   );
 }
+
+function FeaturesTab({ tenantId }: { tenantId: string }) {
+  const flags = useTenantFeatureFlags(tenantId);
+  const update = useUpdateTenantFeatureFlags(tenantId);
+  const canUpdate = usePermission('platform.tenant:update');
+
+  const [state, setState] = useState({
+    enableMarketplace: null as boolean | null,
+    enableCustomDomains: null as boolean | null,
+    enableAdvancedAnalytics: null as boolean | null,
+    betaStorefrontThemes: null as boolean | null,
+    aiCopilotAssistant: null as boolean | null,
+  });
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    if (!flags.data || hydrated) return;
+    setState({
+      enableMarketplace: flags.data.enableMarketplace,
+      enableCustomDomains: flags.data.enableCustomDomains,
+      enableAdvancedAnalytics: flags.data.enableAdvancedAnalytics,
+      betaStorefrontThemes: flags.data.betaStorefrontThemes,
+      aiCopilotAssistant: flags.data.aiCopilotAssistant,
+    });
+    setHydrated(true);
+  }, [flags.data, hydrated]);
+
+  if (flags.isError) return <Alert variant="error">Could not load feature flags for this tenant.</Alert>;
+  if (!flags.data || !hydrated) return <div className="text-sm text-muted-foreground">Loading features…</div>;
+
+  const renderOverrideSelect = (
+    value: boolean | null,
+    onChange: (val: boolean | null) => void,
+  ) => (
+    <select
+      className="rounded border border-border bg-background px-2.5 py-1 text-xs"
+      value={value === null ? 'DEFAULT' : value ? 'ENABLED' : 'DISABLED'}
+      onChange={(e) => {
+        const v = e.target.value;
+        onChange(v === 'DEFAULT' ? null : v === 'ENABLED');
+      }}
+      disabled={!canUpdate || update.isPending}
+    >
+      <option value="DEFAULT">Global default</option>
+      <option value="ENABLED">Force enabled</option>
+      <option value="DISABLED">Force disabled</option>
+    </select>
+  );
+
+  return (
+    <div className="space-y-6">
+      {update.isError && <Alert variant="error">Could not save feature flag overrides.</Alert>}
+      {update.isSuccess && <Alert variant="success">Feature flag overrides updated successfully.</Alert>}
+
+      <Card>
+        <CardHeader
+          title="Tenant feature entitlement overrides"
+          description="Override platform-level feature defaults specifically for this tenant (e.g. VIP beta testing or specific contract carve-outs)."
+        />
+        <CardBody className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Feature</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Entitlement Override</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-medium">Marketplace & Multi-Vendor</TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  Supplier and reseller product sharing and commission splits.
+                </TableCell>
+                <TableCell>
+                  {renderOverrideSelect(state.enableMarketplace, (v) =>
+                    setState((prev) => ({ ...prev, enableMarketplace: v })),
+                  )}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Custom Domains & SSL</TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  Custom apex and subdomains routing with automated Let&apos;s Encrypt SSL.
+                </TableCell>
+                <TableCell>
+                  {renderOverrideSelect(state.enableCustomDomains, (v) =>
+                    setState((prev) => ({ ...prev, enableCustomDomains: v })),
+                  )}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Advanced Analytics</TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  Cohort analysis, funnel tracking, and lifetime value analytics.
+                </TableCell>
+                <TableCell>
+                  {renderOverrideSelect(state.enableAdvancedAnalytics, (v) =>
+                    setState((prev) => ({ ...prev, enableAdvancedAnalytics: v })),
+                  )}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    <span>Beta Storefront Themes</span>
+                    <Badge variant="warning">Beta</Badge>
+                  </div>
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  Early access to next-generation unreleased storefront themes.
+                </TableCell>
+                <TableCell>
+                  {renderOverrideSelect(state.betaStorefrontThemes, (v) =>
+                    setState((prev) => ({ ...prev, betaStorefrontThemes: v })),
+                  )}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    <span>AI Copilot Merchant Assistant</span>
+                    <Badge variant="info">Labs</Badge>
+                  </div>
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  AI product copy generator and predictive demand insights.
+                </TableCell>
+                <TableCell>
+                  {renderOverrideSelect(state.aiCopilotAssistant, (v) =>
+                    setState((prev) => ({ ...prev, aiCopilotAssistant: v })),
+                  )}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+
+          {canUpdate && (
+            <div className="flex justify-end p-4 border-t">
+              <Button
+                loading={update.isPending}
+                onClick={() =>
+                  update.mutate({
+                    featureFlags: state,
+                  })
+                }
+              >
+                Save overrides
+              </Button>
+            </div>
+          )}
+        </CardBody>
+      </Card>
+    </div>
+  );
+}
+

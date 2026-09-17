@@ -10,12 +10,14 @@ import type {
 } from '@ems/contracts';
 import { HashService } from '../../common/services/hash.service';
 import { RoleEntity, UserEntity, UserRoleEntity } from '../../database/entities';
+import { RefreshTokenService } from '../auth/services/refresh-token.service';
 
 @Injectable()
 export class PlatformUserService {
   constructor(
     @InjectDataSource() private readonly dataSource: DataSource,
     private readonly hasher: HashService,
+    private readonly refreshTokens: RefreshTokenService,
   ) {}
 
   async list(actorId: string): Promise<PlatformUserResponse[]> {
@@ -85,7 +87,14 @@ export class PlatformUserService {
 
     user.status = 'SUSPENDED';
     await this.dataSource.getRepository(UserEntity).save(user);
+    await this.refreshTokens.revokeAllForUser(user.id, 'ADMIN_REVOKED');
     return this.toResponse(user, actorId);
+  }
+
+  async revokeAllSessions(publicId: string, actorId: string): Promise<{ revokedCount: number }> {
+    const user = await this.findOrFail(publicId);
+    const count = await this.refreshTokens.revokeAllForUser(user.id, 'ADMIN_REVOKED');
+    return { revokedCount: count };
   }
 
   /** No dedicated `platform.user:reactivate` permission exists — this is gated
@@ -107,7 +116,9 @@ export class PlatformUserService {
     user.deletedAt = new Date();
     user.status = 'DEACTIVATED';
     await this.dataSource.getRepository(UserEntity).save(user);
+    await this.refreshTokens.revokeAllForUser(user.id, 'ADMIN_REVOKED');
   }
+
 
   private async findOrFail(publicId: string): Promise<UserEntity> {
     const user = await this.dataSource

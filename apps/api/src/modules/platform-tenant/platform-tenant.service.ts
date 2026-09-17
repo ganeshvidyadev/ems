@@ -7,10 +7,13 @@ import type {
   ChangeTenantPlanRequest,
   CreateTenantRequest,
   ExtendTenantTrialRequest,
+  TenantFeatureFlags,
   TenantListQuery,
   TenantOverviewResponse,
   TenantResponse,
+  UpdateTenantFeatureFlagsRequest,
 } from '@ems/contracts';
+
 import { AuthService } from '../auth/services/auth.service';
 import { PermissionResolverService } from '../auth/services/permission-resolver.service';
 import { TokenService } from '../auth/services/token.service';
@@ -431,6 +434,43 @@ export class PlatformTenantService {
     });
     return this.overview(publicId);
   }
+
+  async getFeatureFlags(publicId: string): Promise<TenantFeatureFlags> {
+    const tenant = await this.get(publicId);
+    const raw = (tenant.onboardingState?.['featureFlags'] as TenantFeatureFlags | undefined) ?? {
+      enableMarketplace: null,
+      enableCustomDomains: null,
+      enableAdvancedAnalytics: null,
+      betaStorefrontThemes: null,
+      aiCopilotAssistant: null,
+    };
+    return raw;
+  }
+
+  async updateFeatureFlags(
+    publicId: string,
+    input: UpdateTenantFeatureFlagsRequest,
+    actor: AuditActor,
+  ): Promise<TenantFeatureFlags> {
+    const tenant = await this.get(publicId);
+    const current = await this.getFeatureFlags(publicId);
+    const merged: TenantFeatureFlags = { ...current, ...input.featureFlags };
+
+    tenant.onboardingState = {
+      ...(tenant.onboardingState ?? {}),
+      featureFlags: merged,
+    };
+    await this.dataSource.getRepository(TenantEntity).save(tenant);
+    await this.cache.del(`tenant:features:${tenant.id}`);
+
+    await this.audit(actor, 'tenant.features_updated', tenant.id, {
+      severity: 'INFO',
+      after: { featureFlags: merged },
+    });
+
+    return merged;
+  }
+
 
   private async allocateSlug(manager: DataSource['manager'], businessName: string): Promise<string> {
     const base = slugify(businessName, 50) || 'store';
