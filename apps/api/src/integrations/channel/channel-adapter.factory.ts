@@ -56,4 +56,11 @@ export class ChannelAdapterFactory {
   isSupported(type: ChannelType): boolean {
     return this.adapters.has(type) && !PENDING_EXTERNAL_APPROVAL.has(type);
   }
+
+  /** Adapters with credentials actually present — for platform health, not resolution. */
+  configuredTypes(): ChannelType[] {
+    return [...this.adapters.entries()]
+      .filter(([, adapter]) => adapter.isConfigured())
+      .map(([type]) => type);
+  }
 }

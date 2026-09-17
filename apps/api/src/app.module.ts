@@ -62,6 +62,7 @@ import { PlatformBillingModule } from './modules/platform-billing/platform-billi
 import { PlatformAuditLogModule } from './modules/platform-audit-log/platform-audit-log.module';
 import { PlatformAnalyticsModule } from './modules/platform-analytics/platform-analytics.module';
 import { PlatformSettingsModule } from './modules/platform-settings/platform-settings.module';
+import { PlatformHealthModule } from './modules/platform-health/platform-health.module';
 import { QueueModule } from './queues/queue.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -177,6 +178,7 @@ import { RequestContextService } from './common/services/request-context.service
     PlatformAuditLogModule,
     PlatformAnalyticsModule,
     PlatformSettingsModule,
+    PlatformHealthModule,
     HealthModule,
   ],
   providers: [

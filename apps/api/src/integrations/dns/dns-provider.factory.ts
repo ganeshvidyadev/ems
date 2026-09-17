@@ -40,4 +40,11 @@ export class DnsProviderFactory {
     }
     return adapter;
   }
+
+  /** Providers with credentials actually present — for platform health, not resolution. */
+  configuredProviders(): ('cloudflare' | 'stub')[] {
+    return [...this.adapters.entries()]
+      .filter(([, adapter]) => adapter.isConfigured())
+      .map(([name]) => name);
+  }
 }

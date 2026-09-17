@@ -13,6 +13,7 @@ import {
   Building2,
   Landmark,
   Receipt,
+  HeartPulse,
   History,
   BarChart3,
   Settings,
@@ -40,9 +41,12 @@ import { useState, type ReactNode } from 'react';
 import { AdminThemeContext } from './admin-theme';
 
 type NavigationItem = { href: string; label: string };
+/** A labeled section of the sidebar — see `SUPER_ADMIN_NAV` in layout.tsx. */
+type NavigationGroup = { label: string; items: readonly NavigationItem[] };
 const icons: Record<string, LucideIcon> = {
   '/': LayoutDashboard,
   '/analytics': BarChart3,
+  '/platform-health': HeartPulse,
   '/tenants': Building2,
   '/platform-staff': UserCog,
   '/themes': Palette,
@@ -70,18 +74,26 @@ export function MantisAdminShell({
   user,
   pathname,
   items,
+  homeHref = '/',
   logout,
   children,
 }: {
   user: UserSummary;
   pathname: string;
-  items: readonly NavigationItem[];
+  items: readonly NavigationGroup[];
+  /**
+   * Where the brand mark and breadcrumb "Dashboard" crumb link to. Platform
+   * super admins have no store of their own, so `/` (the tenant dashboard)
+   * 403s for them — callers in that mode pass their own landing page instead.
+   */
+  homeHref?: string;
   logout: () => Promise<void>;
   children: ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const current = items.find((item) =>
+  const flatItems = items.flatMap((group) => group.items);
+  const current = flatItems.find((item) =>
     item.href === '/' ? pathname === '/' : pathname.startsWith(item.href),
   );
   return (
@@ -91,7 +103,7 @@ export function MantisAdminShell({
           Skip to content
         </a>
         <aside className="mantis-sidebar" aria-label="Admin sidebar" id="admin-sidebar">
-          <Brand />
+          <Brand homeHref={homeHref} />
           <Sidebar items={items} pathname={pathname} />
           <div className="mantis-sidebar-footer">
             EMS Console<span>Super Admin</span>
@@ -122,7 +134,7 @@ export function MantisAdminShell({
               <Dialog.Overlay className="mantis-admin mantis-drawer-overlay" />
               <Dialog.Content className="mantis-admin mantis-drawer" aria-describedby={undefined}>
                 <Dialog.Title className="sr-only">Admin navigation</Dialog.Title>
-                <Brand />
+                <Brand homeHref={homeHref} />
                 <Dialog.Close
                   className="mantis-icon-button mantis-drawer-close"
                   aria-label="Close navigation"
@@ -170,8 +182,8 @@ export function MantisAdminShell({
         </header>
         <div className="mantis-content" id="main" tabIndex={-1}>
           <nav className="mantis-breadcrumb" aria-label="Breadcrumb">
-            <Link href="/">Dashboard</Link>
-            {current && current.href !== '/' && (
+            <Link href={homeHref}>Dashboard</Link>
+            {current && current.href !== homeHref && (
               <>
                 <ChevronRight aria-hidden="true" />
                 {pathname === current.href ? (
@@ -193,9 +205,9 @@ export function MantisAdminShell({
   );
 }
 
-function Brand() {
+function Brand({ homeHref }: { homeHref: string }) {
   return (
-    <Link href="/" className="mantis-brand" aria-label="EMS Console dashboard">
+    <Link href={homeHref} className="mantis-brand" aria-label="EMS Console dashboard">
       <span className="mantis-brand-mark">
         <Boxes aria-hidden="true" />
       </span>
@@ -211,33 +223,38 @@ function Sidebar({
   pathname,
   onNavigate,
 }: {
-  items: readonly NavigationItem[];
+  items: readonly NavigationGroup[];
   pathname: string;
   onNavigate?: () => void;
 }) {
   return (
     <nav className="mantis-navigation" aria-label="Main">
-      <p className="mantis-nav-caption">Navigation</p>
-      <ul>
-        {items.map((item) => {
-          const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
-          const Icon = icons[item.href] ?? LayoutDashboard;
-          return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                aria-current={active ? 'page' : undefined}
-                onClick={onNavigate}
-                className="mantis-nav-link"
-                title={item.label}
-              >
-                <Icon aria-hidden="true" />
-                <span>{item.label}</span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+      {items.map((group) => (
+        <div key={group.label} className="mantis-nav-group">
+          <p className="mantis-nav-caption">{group.label}</p>
+          <ul>
+            {group.items.map((item) => {
+              const active =
+                item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+              const Icon = icons[item.href] ?? LayoutDashboard;
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    aria-current={active ? 'page' : undefined}
+                    onClick={onNavigate}
+                    className="mantis-nav-link"
+                    title={item.label}
+                  >
+                    <Icon aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
     </nav>
   );
 }
