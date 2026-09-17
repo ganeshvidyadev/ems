@@ -25,15 +25,16 @@ const COLLECTION_LABEL: Record<LogCollection, string> = {
 export default function LogExplorerPage() {
   const [collection, setCollection] = useState<LogCollection>('error_logs');
   const [tenantId, setTenantId] = useState('');
+  const [q, setQ] = useState('');
   const [limit, setLimit] = useState(50);
-  const logs = useLogCollection(collection, tenantId, limit);
+  const logs = useLogCollection(collection, tenantId, limit, q);
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-6">
+    <main className="mx-auto max-w-5xl space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Log explorer</h1>
         <p className="text-sm text-muted-foreground">
-          Every tenant&apos;s logs, newest first — for debugging and support investigations.
+          Platform and tenant event streams, error logs, and activity telemetry — for diagnostics and audits.
         </p>
       </div>
 
@@ -52,14 +53,22 @@ export default function LogExplorerPage() {
               ))}
             </Select>
           </Field>
-          <Field label="Tenant id" htmlFor="tenantId" hint="Internal id — optional">
+          <Field label="Tenant ID or Slug" htmlFor="tenantId" hint="Public ID, slug or internal ID">
             <Input
               id="tenantId"
-              inputMode="numeric"
               placeholder="All tenants"
               value={tenantId}
               onChange={(e) => setTenantId(e.target.value)}
-              className="w-32"
+              className="w-44"
+            />
+          </Field>
+          <Field label="Search" htmlFor="searchQuery" hint="Path, error message, ip, etc.">
+            <Input
+              id="searchQuery"
+              placeholder="Filter logs…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="w-48"
             />
           </Field>
           <Field label="Limit" htmlFor="limit">
@@ -76,23 +85,54 @@ export default function LogExplorerPage() {
       {logs.isError && <Alert variant="error">Could not load that collection. Try refreshing the page.</Alert>}
 
       {logs.data && logs.data.documents.length === 0 && (
-        <EmptyState title="No documents" description="Nothing matches this collection and filter yet." />
+        <EmptyState title="No documents found" description="Nothing matches this collection, tenant, and search filter." />
       )}
 
       {logs.data && logs.data.documents.length > 0 && (
         <>
-          <p className="text-xs text-muted-foreground">{logs.data.count} most recent</p>
-          <div className="space-y-2">
-            {logs.data.documents.map((doc, index) => (
-              <Card key={index}>
-                <CardBody className="p-0">
-                  <pre className="max-h-64 overflow-auto p-4 text-xs">{JSON.stringify(doc, null, 2)}</pre>
-                </CardBody>
-              </Card>
-            ))}
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Showing {logs.data.count} recent documents</span>
+            <span>Collection: {COLLECTION_LABEL[collection]}</span>
+          </div>
+          <div className="space-y-3">
+            {logs.data.documents.map((doc, index) => {
+              const timestamp = (doc['timestamp'] || doc['createdAt'] || doc['time']) as string | undefined;
+              const status = doc['status'] || doc['statusCode'] || doc['event'] || doc['level'];
+              const pathOrAction = doc['path'] || doc['action'] || doc['method'] || doc['error'] || doc['name'];
+
+              return (
+                <Card key={index}>
+                  <CardBody className="space-y-2 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2 text-xs font-mono">
+                      <div className="flex items-center gap-2">
+                        {Boolean(status) && (
+                          <span className="rounded bg-muted px-1.5 py-0.5 font-medium text-foreground">
+                            {String(status)}
+                          </span>
+                        )}
+                        {Boolean(pathOrAction) && (
+                          <span className="font-semibold text-foreground">{String(pathOrAction)}</span>
+                        )}
+                        {Boolean(doc['tenantId']) && (
+                          <span className="text-muted-foreground">Tenant #{String(doc['tenantId'])}</span>
+                        )}
+                      </div>
+                      {Boolean(timestamp) && (
+                        <span className="text-muted-foreground">{new Date(String(timestamp)).toLocaleString()}</span>
+                      )}
+
+                    </div>
+                    <pre className="max-h-64 overflow-auto p-2 text-xs text-muted-foreground font-mono">
+                      {JSON.stringify(doc, null, 2)}
+                    </pre>
+                  </CardBody>
+                </Card>
+              );
+            })}
           </div>
         </>
       )}
     </main>
   );
 }
+
