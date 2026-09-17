@@ -46,6 +46,13 @@ export class PlatformTenantController {
     return this.tenants.toResponse(tenant, domains.get(tenant.id) ?? null);
   }
 
+  @Get(':id/overview')
+  @Permissions('platform.tenant:read')
+  @ApiOperation({ summary: 'Tenant 360 operational snapshot' })
+  async overview(@Param('id') id: string) {
+    return this.tenants.overview(id);
+  }
+
   @Post()
   @Permissions('platform.tenant:create')
   @Validate(createTenantRequestSchema)

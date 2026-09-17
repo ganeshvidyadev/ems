@@ -1,6 +1,7 @@
 import type {
   CreateTenantRequest,
   SuspendTenantRequest,
+  TenantOverviewResponse,
   TenantResponse,
   TenantStatus,
 } from '@ems/contracts';
@@ -31,6 +32,14 @@ export function usePlatformTenant(id: string | undefined) {
   return useQuery({
     queryKey: [TENANTS_KEY, id],
     queryFn: () => apiGet<TenantResponse>(`/platform/tenants/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
+export function usePlatformTenantOverview(id: string | undefined) {
+  return useQuery({
+    queryKey: [TENANTS_KEY, id, 'overview'],
+    queryFn: () => apiGet<TenantOverviewResponse>(`/platform/tenants/${id}/overview`),
     enabled: Boolean(id),
   });
 }

@@ -83,6 +83,29 @@ export const tenantResponseSchema = z.object({
 });
 export type TenantResponse = z.infer<typeof tenantResponseSchema>;
 
+/**
+ * The Tenant 360 operational snapshot. Every field here is a real, currently
+ * computable aggregation (see `PlatformTenantService.overview`) — no invented
+ * metrics. `ownerName`/`ownerEmail` are null when the tenant has no owner
+ * account (matches `impersonate()`'s own check for the same condition).
+ */
+export const tenantOverviewResponseSchema = z.object({
+  tenant: tenantResponseSchema,
+  ownerName: z.string().nullable(),
+  ownerEmail: z.string().nullable(),
+  planCode: z.string().nullable(),
+  planName: z.string().nullable(),
+  subscriptionStatus: z.string().nullable(),
+  billingCycle: z.string().nullable(),
+  storesCount: z.number(),
+  usersCount: z.number(),
+  ordersLast30Days: z.number(),
+  openSupportTickets: z.number(),
+  failedPaymentsLast30Days: z.number(),
+  lastOrderAt: z.string().nullable(),
+});
+export type TenantOverviewResponse = z.infer<typeof tenantOverviewResponseSchema>;
+
 export const tenantListQuerySchema = listQuerySchema.extend({
   status: z.enum(TENANT_STATUSES).optional(),
   status__in: z.string().optional(),

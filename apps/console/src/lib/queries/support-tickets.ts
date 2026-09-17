@@ -9,12 +9,12 @@ import { apiGet, apiPost } from '@/lib/api-client';
 
 const TICKETS_KEY = 'support-tickets';
 
-export function useSupportTickets(status?: SupportTicketStatus) {
+export function useSupportTickets(status?: SupportTicketStatus, tenantId?: string) {
   return useQuery({
-    queryKey: [TICKETS_KEY, status ?? 'all'],
+    queryKey: [TICKETS_KEY, status ?? 'all', tenantId ?? 'all-tenants'],
     queryFn: () =>
       apiGet<SupportTicketResponse[]>('/console/support-tickets', {
-        params: { status, mineOnly: false },
+        params: { status, mineOnly: false, tenantId },
       }),
   });
 }

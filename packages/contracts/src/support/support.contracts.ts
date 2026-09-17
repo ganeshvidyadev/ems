@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { booleanQuerySchema, shortTextSchema } from '../common/primitives.js';
+import { booleanQuerySchema, publicIdSchema, shortTextSchema } from '../common/primitives.js';
 
 export const SUPPORT_TICKET_STATUSES = [
   'OPEN',
@@ -73,5 +73,7 @@ export type SupportTicketResponse = z.infer<typeof supportTicketResponseSchema>;
 export const listSupportTicketsQuerySchema = z.object({
   status: z.enum(SUPPORT_TICKET_STATUSES).optional(),
   mineOnly: booleanQuerySchema.default(false),
+  /** Platform staff only — narrows the cross-tenant view to one tenant (Tenant 360). */
+  tenantId: publicIdSchema.optional(),
 });
 export type ListSupportTicketsQuery = z.infer<typeof listSupportTicketsQuerySchema>;

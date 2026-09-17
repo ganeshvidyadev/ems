@@ -5,6 +5,7 @@ import { newPublicId, slugify, BusinessRuleError, NotFoundError } from '@ems/ker
 import type {
   CreateTenantRequest,
   TenantListQuery,
+  TenantOverviewResponse,
   TenantResponse,
 } from '@ems/contracts';
 import { AuthService } from '../auth/services/auth.service';
@@ -82,6 +83,75 @@ export class PlatformTenantService {
       .findOne({ where: { publicId } });
     if (!tenant || tenant.deletedAt) throw new NotFoundError('Tenant', publicId);
     return tenant;
+  }
+
+  /**
+   * The Tenant 360 operational snapshot — every number here is a real,
+   * currently-computable aggregation. Deliberately NOT included: per-tenant API
+   * usage (nothing meters it anywhere in this codebase) and failed-job counts
+   * (queues aren't reliably attributable to one tenant) — see this session's own
+   * audit for why those are omitted rather than faked.
+   */
+  async overview(publicId: string): Promise<TenantOverviewResponse> {
+    const tenant = await this.get(publicId);
+
+    const [owner, subscription, counts] = await Promise.all([
+      tenant.ownerUserId
+        ? this.dataSource.query(
+            `SELECT first_name, last_name, email FROM users WHERE id = ? LIMIT 1`,
+            [tenant.ownerUserId],
+          )
+        : Promise.resolve([]),
+      this.dataSource.query(
+        `SELECT s.status AS status, s.billing_cycle AS billingCycle, p.code AS planCode, p.name AS planName
+           FROM subscriptions s
+           JOIN plans p ON p.id = s.plan_id
+          WHERE s.tenant_id = ? AND s.active_guard = 1
+          LIMIT 1`,
+        [tenant.id],
+      ),
+      this.dataSource.query(
+        `SELECT
+           (SELECT COUNT(*) FROM stores WHERE tenant_id = ?) AS storesCount,
+           (SELECT COUNT(*) FROM users WHERE tenant_id = ? AND deleted_at IS NULL) AS usersCount,
+           (SELECT COUNT(*) FROM orders WHERE tenant_id = ? AND created_at >= NOW() - INTERVAL 30 DAY) AS ordersLast30Days,
+           (SELECT COUNT(*) FROM support_tickets WHERE tenant_id = ? AND status NOT IN ('RESOLVED', 'CLOSED')) AS openSupportTickets,
+           (SELECT COUNT(*) FROM subscription_payments WHERE tenant_id = ? AND status = 'FAILED' AND created_at >= NOW() - INTERVAL 30 DAY) AS failedPaymentsLast30Days,
+           (SELECT MAX(created_at) FROM orders WHERE tenant_id = ?) AS lastOrderAt`,
+        [tenant.id, tenant.id, tenant.id, tenant.id, tenant.id, tenant.id],
+      ),
+    ]) as [
+      { first_name: string; last_name: string | null; email: string }[],
+      { status: string; billingCycle: string; planCode: string; planName: string }[],
+      {
+        storesCount: string;
+        usersCount: string;
+        ordersLast30Days: string;
+        openSupportTickets: string;
+        failedPaymentsLast30Days: string;
+        lastOrderAt: Date | null;
+      }[],
+    ];
+
+    const ownerRow = owner[0];
+    const sub = subscription[0];
+    const row = counts[0];
+
+    return {
+      tenant: this.toResponse(tenant),
+      ownerName: ownerRow ? [ownerRow.first_name, ownerRow.last_name].filter(Boolean).join(' ') : null,
+      ownerEmail: ownerRow?.email ?? null,
+      planCode: sub?.planCode ?? null,
+      planName: sub?.planName ?? null,
+      subscriptionStatus: sub?.status ?? null,
+      billingCycle: sub?.billingCycle ?? null,
+      storesCount: Number(row.storesCount),
+      usersCount: Number(row.usersCount),
+      ordersLast30Days: Number(row.ordersLast30Days),
+      openSupportTickets: Number(row.openSupportTickets),
+      failedPaymentsLast30Days: Number(row.failedPaymentsLast30Days),
+      lastOrderAt: row.lastOrderAt ? new Date(row.lastOrderAt).toISOString() : null,
+    };
   }
 
   async primaryDomains(tenantIds: string[]): Promise<Map<string, string>> {

@@ -148,7 +148,11 @@ function TenantsPageContent() {
           <TableBody>
             {tenants.data.data.map((tenant) => (
               <TableRow key={tenant.id}>
-                <TableCell className="font-medium">{tenant.businessName}</TableCell>
+                <TableCell className="font-medium">
+                  <Link href={`/tenants/${tenant.id}`} className="hover:underline">
+                    {tenant.businessName}
+                  </Link>
+                </TableCell>
                 <TableCell className="font-mono text-xs">{tenant.slug}</TableCell>
                 <TableCell>
                   <Badge variant={STATUS_BADGE[tenant.status]}>{tenant.status.replace('_', ' ')}</Badge>

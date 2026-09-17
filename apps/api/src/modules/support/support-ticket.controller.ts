@@ -43,7 +43,7 @@ export class SupportTicketController {
   async list(
     @Query(new ZodValidationPipe(listSupportTicketsQuerySchema)) query: ReturnType<typeof listSupportTicketsQuerySchema.parse>,
   ): Promise<SupportTicketResponse[]> {
-    const tickets = await this.tickets.list(query.status, query.mineOnly);
+    const tickets = await this.tickets.list(query.status, query.mineOnly, query.tenantId);
     return tickets.map(toResponse);
   }
 
