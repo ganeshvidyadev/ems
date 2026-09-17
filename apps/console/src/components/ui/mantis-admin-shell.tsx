@@ -5,38 +5,51 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import {
   Activity,
+  Award,
+  BarChart3,
+  Bell,
   Boxes,
+  Building2,
   Cable,
   ChevronDown,
   ChevronRight,
   CircleUserRound,
   DatabaseBackup,
+  FileText,
   Gauge,
-  Bell,
-  Building2,
-  Landmark,
-  Receipt,
+  Globe,
   HeartPulse,
   History,
   Hourglass,
-  BarChart3,
-  Settings,
-  UserCog,
+  Image as ImageIcon,
+  Landmark,
   LayoutDashboard,
   LayoutList,
-  Paintbrush,
   LifeBuoy,
+  ListTodo,
   LogOut,
   Menu,
   Monitor,
+  Navigation,
   Package,
+  Paintbrush,
   Palette,
   PanelLeftClose,
+  Percent,
+  Receipt,
+  RotateCcw,
   ScrollText,
+  Settings,
   ShoppingBag,
-  ListTodo,
+  Sparkles,
+  Star,
+  Store,
   Tag,
+  Truck,
+  UserCheck,
+  UserCog,
   Users,
+  Warehouse,
   X,
   type LucideIcon,
 } from 'lucide-react';
@@ -76,6 +89,23 @@ const icons: Record<string, LucideIcon> = {
   '/coupons': Tag,
   '/sessions': Monitor,
   '/system': Activity,
+  '/settings': Settings,
+  '/domains': Globe,
+  '/taxes': Percent,
+  '/team': UserCheck,
+  '/subscription': Sparkles,
+  '/support-tickets': LifeBuoy,
+  '/shipments': Truck,
+  '/returns': RotateCcw,
+  '/warehouses': Warehouse,
+  '/theme-editor': Paintbrush,
+  '/cms': FileText,
+  '/banners': ImageIcon,
+  '/menus': Navigation,
+  '/reviews': Star,
+  '/channels': Cable,
+  '/marketplace': Store,
+  '/loyalty': Award,
 };
 
 /** All state here controls presentation. Navigation and account actions are supplied by the app. */
@@ -84,6 +114,9 @@ export function MantisAdminShell({
   pathname,
   items,
   homeHref = '/',
+  badge,
+  impersonating,
+  onExitImpersonation,
   logout,
   children,
 }: {
@@ -96,6 +129,9 @@ export function MantisAdminShell({
    * 403s for them — callers in that mode pass their own landing page instead.
    */
   homeHref?: string;
+  badge?: string;
+  impersonating?: boolean;
+  onExitImpersonation?: () => void | Promise<unknown>;
   logout: () => Promise<void>;
   children: ReactNode;
 }) {
@@ -107,6 +143,22 @@ export function MantisAdminShell({
   );
   return (
     <AdminThemeContext.Provider value>
+      {impersonating && (
+        <div className="mantis-impersonation-banner flex flex-wrap items-center justify-between gap-2 bg-amber-400 px-6 py-2 text-sm font-semibold text-slate-950 sticky top-0 z-50 shadow-sm">
+          <span>
+            Viewing as {user.firstName} · {user.tenant?.businessName ?? 'this tenant'} (impersonating)
+          </span>
+          {onExitImpersonation && (
+            <button
+              type="button"
+              className="rounded border border-black/30 bg-black/10 px-3 py-1 text-xs font-bold text-slate-950 hover:bg-black/20 transition-colors"
+              onClick={() => void onExitImpersonation()}
+            >
+              Exit impersonation
+            </button>
+          )}
+        </div>
+      )}
       <div className="mantis-admin mantis-shell" data-collapsed={collapsed}>
         <a className="mantis-skip" href="#main">
           Skip to content
@@ -115,7 +167,7 @@ export function MantisAdminShell({
           <Brand homeHref={homeHref} />
           <Sidebar items={items} pathname={pathname} />
           <div className="mantis-sidebar-footer">
-            EMS Console<span>Super Admin</span>
+            EMS Console<span>{badge ?? (user.userType === 'PLATFORM' ? 'Super Admin' : (user.tenant?.businessName ?? 'Merchant'))}</span>
           </div>
         </aside>
         <header className="mantis-topbar">
@@ -158,7 +210,9 @@ export function MantisAdminShell({
               </Dialog.Content>
             </Dialog.Portal>
           </Dialog.Root>
-          <span className="mantis-topbar-title">EMS Console</span>
+          <span className="mantis-topbar-title">
+            {user.userType === 'PLATFORM' ? 'EMS Platform' : (user.tenant?.businessName ?? 'EMS Console')}
+          </span>
           <GlobalSearchPalette />
           <div className="mantis-account">
             <Dropdown.Root>
