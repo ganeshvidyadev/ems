@@ -158,7 +158,7 @@ export type CreateProductRequest = z.infer<typeof createProductRequestSchema>;
 
 const updatableProductFields = createProductRequestSchema.innerType().innerType();
 export const updateProductRequestSchema = updatableProductFields
-  .omit({ storeId: true, type: true, variants: true })
+  .omit({ storeId: true, type: true })
   .partial();
 export type UpdateProductRequest = z.infer<typeof updateProductRequestSchema>;
 

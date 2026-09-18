@@ -251,6 +251,10 @@ export class ProductService {
       await this.attributes.setValuesForProduct(product.id, input.attributeValues);
     }
 
+    if (product.type === 'VARIABLE' && input.variants !== undefined) {
+      await this.variants.replaceForProduct(product.id, input.variants);
+    }
+
     await this.invalidate();
     return this.hydrateLinks(product);
   }

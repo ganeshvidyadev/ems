@@ -3,9 +3,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createProductRequestSchema, PRODUCT_STATUSES, PRODUCT_VISIBILITIES } from '@ems/contracts';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Alert, Button, Card, CardBody, CardHeader, Field, Input, Select, Textarea } from '@/components/ui/primitives';
+import { Alert, Badge, Button, Card, CardBody, CardHeader, Field, Input, Select, Textarea } from '@/components/ui/primitives';
+import { VariantMatrixGenerator, type FormVariant } from '@/components/products/variant-matrix-generator';
 import { usePermission } from '@/hooks/use-auth';
 import { ApiError, isForbidden } from '@/lib/api-client';
 import { useBrands, useCategories } from '@/lib/queries/catalog-refs';
@@ -81,16 +83,8 @@ const formSchema = createProductRequestSchema
       .optional()
       .refine((v) => !v || /^\d+(\.\d{1,2})?$/.test(v), 'Enter a valid price'),
     categoryId: z.string().optional(),
-    // The wire schema only requires this cross-field (sku unless VARIABLE), a
-    // refine the form's `.innerType().innerType()` strips — so it's restated
-    // directly here to catch a blank SKU before a server round-trip (BUG-FE-022).
-    sku: z.string().trim().min(1, 'SKU is required'),
-    // Relaxed to a plain optional string, not `publicIdSchema` (exactly 26
-    // characters) — a native <select>'s unselected "None" option submits an
-    // empty string, not `undefined`, which `publicIdSchema.optional()` (only
-    // ever satisfied by an *absent* key) rejects outright. Found live: the
-    // button did nothing and nothing on screen explained why, because
-    // brandId has no rendered error — the failure was invisible.
+    // Required for SIMPLE products, optional prefix for VARIABLE products
+    sku: z.string().trim().optional(),
     brandId: z.string().optional(),
   });
 type FormValues = z.input<typeof formSchema>;
@@ -102,6 +96,10 @@ export default function NewProductPage() {
   const { data: brands } = useBrands();
   const { data: categories } = useCategories();
   const createProduct = useCreateProduct();
+
+  const [productType, setProductType] = useState<'SIMPLE' | 'VARIABLE'>('SIMPLE');
+  const [variants, setVariants] = useState<FormVariant[]>([]);
+  const [variantError, setVariantError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -135,11 +133,50 @@ export default function NewProductPage() {
       return;
     }
 
+    if (productType === 'SIMPLE' && (!values.sku || !values.sku.trim())) {
+      form.setError('sku', { message: 'SKU is required for simple products' });
+      return;
+    }
+
+    if (productType === 'VARIABLE') {
+      if (variants.length === 0) {
+        setVariantError('A variable product requires at least one generated variant.');
+        return;
+      }
+      for (const v of variants) {
+        if (!v.sku || !v.sku.trim()) {
+          setVariantError(`Every variant must have a valid SKU. Check variant "${v.title || 'Untitled'}".`);
+          return;
+        }
+        if (!v.price || isNaN(Number(v.price)) || Number(v.price) < 0) {
+          setVariantError(`Every variant must have a valid non-negative price.`);
+          return;
+        }
+      }
+    }
+
+    setVariantError(null);
+
+    const variantsPayload =
+      productType === 'VARIABLE'
+        ? variants.map((v, idx) => ({
+            sku: v.sku.trim(),
+            title: v.title || Object.values(v.optionValues).join(' / '),
+            barcode: v.barcode?.trim() || undefined,
+            optionValues: v.optionValues,
+            priceMinor: rupeesToMinorString(v.price),
+            comparePriceMinor: v.comparePrice?.trim() ? rupeesToMinorString(v.comparePrice) : undefined,
+            position: idx,
+            isActive: v.isActive,
+          }))
+        : undefined;
+
     try {
       const product = await createProduct.mutateAsync({
         ...values,
         storeId: store.id,
-        type: 'SIMPLE',
+        type: productType,
+        sku: values.sku?.trim() || (productType === 'VARIABLE' ? variants[0]?.sku : undefined),
         status: values.status ?? 'DRAFT',
         visibility: values.visibility ?? 'VISIBLE',
         brandId: values.brandId || undefined,
@@ -149,10 +186,7 @@ export default function NewProductPage() {
         requiresShipping: values.requiresShipping ?? true,
         isFeatured: values.isFeatured ?? false,
         isShareable: values.isShareable ?? false,
-        // SIMPLE products (the only type this form creates) never carry a
-        // variant matrix — see this file's own doc comment on why that's a
-        // separate editor, not a field here.
-        variants: undefined,
+        variants: variantsPayload,
         priceMinor: rupeesToMinorString(values.price),
         comparePriceMinor: values.comparePrice ? rupeesToMinorString(values.comparePrice) : undefined,
         categoryIds: values.categoryId ? [values.categoryId] : undefined,
@@ -184,7 +218,7 @@ export default function NewProductPage() {
 
   if (!canCreate) {
     return (
-      <div className="mx-auto max-w-2xl px-6 py-8">
+      <div className="mx-auto max-w-4xl px-6 py-8">
         <Card>
           <CardHeader
             title="New product"
@@ -196,27 +230,77 @@ export default function NewProductPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-8">
+    <div className="mx-auto max-w-4xl px-6 py-8">
       <Card>
         <CardHeader title="New product" description="Add a product to your catalog." />
         <CardBody>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
             {form.formState.errors.root && <Alert variant="error">{form.formState.errors.root.message}</Alert>}
+
+            {/* Product Type Selector */}
+            <div className="p-4 rounded-lg bg-muted/30 border border-border/70 space-y-2">
+              <label className="text-sm font-semibold text-foreground">Product Type</label>
+              <div className="flex flex-wrap gap-6 pt-1">
+                <label className="flex items-center gap-2.5 text-sm cursor-pointer font-medium">
+                  <input
+                    type="radio"
+                    name="productType"
+                    value="SIMPLE"
+                    checked={productType === 'SIMPLE'}
+                    onChange={() => setProductType('SIMPLE')}
+                    className="size-4 text-primary"
+                  />
+                  <span>Simple Product</span>
+                  <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground">
+                    Single SKU
+                  </Badge>
+                </label>
+                <label className="flex items-center gap-2.5 text-sm cursor-pointer font-medium">
+                  <input
+                    type="radio"
+                    name="productType"
+                    value="VARIABLE"
+                    checked={productType === 'VARIABLE'}
+                    onChange={() => setProductType('VARIABLE')}
+                    className="size-4 text-primary"
+                  />
+                  <span>Variable Product</span>
+                  <Badge variant="outline" className="text-[10px] font-normal text-primary">
+                    Matrix Variants
+                  </Badge>
+                </label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {productType === 'SIMPLE'
+                  ? 'A standalone product with a single price, SKU, and inventory pool.'
+                  : 'A product with multiple options like Size, Color, or Material, each having its own SKU, price, and stock.'}
+              </p>
+            </div>
 
             <Field label="Name" htmlFor="name" error={form.formState.errors.name?.message}>
               <Input id="name" autoFocus {...form.register('name')} />
             </Field>
 
-            <Field label="SKU" htmlFor="sku" error={form.formState.errors.sku?.message}>
-              <Input id="sku" {...form.register('sku')} />
+            <Field
+              label={productType === 'VARIABLE' ? 'Base SKU (Prefix)' : 'SKU'}
+              htmlFor="sku"
+              hint={productType === 'VARIABLE' ? 'Prefix used to generate variant SKUs (e.g. TSHIRT)' : undefined}
+              error={form.formState.errors.sku?.message}
+            >
+              <Input id="sku" placeholder={productType === 'VARIABLE' ? 'TSHIRT' : 'SKU-001'} {...form.register('sku')} />
             </Field>
 
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Price (₹)" htmlFor="price" error={form.formState.errors.price?.message}>
+              <Field
+                label={productType === 'VARIABLE' ? 'Default Base Price (₹)' : 'Price (₹)'}
+                htmlFor="price"
+                hint={productType === 'VARIABLE' ? 'Default price applied when generating variants' : undefined}
+                error={form.formState.errors.price?.message}
+              >
                 <Input id="price" inputMode="decimal" placeholder="199.99" {...form.register('price')} />
               </Field>
               <Field
-                label="Compare-at price (₹)"
+                label={productType === 'VARIABLE' ? 'Default Compare-at Price (₹)' : 'Compare-at price (₹)'}
                 htmlFor="comparePrice"
                 hint="Optional — shown struck through"
                 error={form.formState.errors.comparePrice?.message}
@@ -297,6 +381,26 @@ export default function NewProductPage() {
               <input type="checkbox" className="size-4" {...form.register('trackInventory')} />
               Track inventory for this product
             </label>
+
+            {productType === 'VARIABLE' && (
+              <div className="pt-4 border-t border-border/80">
+                {variantError && (
+                  <Alert variant="error" className="mb-4">
+                    {variantError}
+                  </Alert>
+                )}
+                <VariantMatrixGenerator
+                  baseSku={form.watch('sku')}
+                  basePrice={form.watch('price')}
+                  baseComparePrice={form.watch('comparePrice')}
+                  initialVariants={variants}
+                  onChange={(v) => {
+                    setVariants(v);
+                    setVariantError(null);
+                  }}
+                />
+              </div>
+            )}
 
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => router.push('/products')}>

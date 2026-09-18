@@ -198,9 +198,16 @@ function ProductsPageContent() {
             products.map((product) => (
               <TableRow key={product.id}>
                 <TableCell>
-                  <Link href={`/products/${product.id}`} className="font-medium hover:underline">
-                    {product.name}
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link href={`/products/${product.id}`} className="font-medium hover:underline">
+                      {product.name}
+                    </Link>
+                    {product.type === 'VARIABLE' && (
+                      <Badge variant="outline" className="text-[10px] py-0 font-normal">
+                        Variable {product.variants?.length ? `(${product.variants.length})` : ''}
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">{product.sku ?? '—'}</p>
                 </TableCell>
                 <TableCell>
