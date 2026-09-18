@@ -46,6 +46,8 @@ export class ProductService {
         brandId: brandId ?? undefined,
         categoryId: categoryId ?? undefined,
         isFeatured: query.isFeatured,
+        minPriceMinor: query.minPriceMinor,
+        maxPriceMinor: query.maxPriceMinor,
         q: query.q,
       },
       query.sort,

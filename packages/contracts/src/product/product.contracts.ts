@@ -211,6 +211,8 @@ export const productListQuerySchema = listQuerySchema.extend({
   categoryId: publicIdSchema.optional(),
   storeId: publicIdSchema.optional(),
   isFeatured: booleanQuerySchema.optional(),
+  minPriceMinor: minorAmountSchema.optional(),
+  maxPriceMinor: minorAmountSchema.optional(),
   sort: sortQuerySchema(
     ['publishedAt', 'name', 'priceMinor', 'createdAt', 'totalSold'] as const,
     [{ field: 'publishedAt', direction: 'DESC' }],

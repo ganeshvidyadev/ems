@@ -1,6 +1,7 @@
-import type { ProductResponse } from '@ems/contracts';
+﻿import type { BrandResponse, CategoryResponse, ProductResponse } from '@ems/contracts';
 import { PackageOpen, SearchX } from 'lucide-react';
 import type { Metadata } from 'next';
+import { ActiveFilterChips, CatalogueFilters } from '@/components/catalogue-filters';
 import { CatalogueResults } from '@/components/catalogue-results';
 import { Pagination } from '@/components/pagination';
 import { ProductGrid } from '@/components/product-card';
@@ -9,7 +10,15 @@ import { storefrontFetchPage, type StorefrontPage } from '@/lib/tenant';
 
 const PAGE_SIZE = 12;
 
-type SearchParams = { q?: string; sort?: string; page?: string };
+type SearchParams = {
+  q?: string;
+  sort?: string;
+  page?: string;
+  category?: string;
+  brand?: string;
+  minPrice?: string;
+  maxPrice?: string;
+};
 
 export async function generateMetadata({
   searchParams,
@@ -21,13 +30,10 @@ export async function generateMetadata({
 }
 
 /**
- * Catalogue browsing and search.
+ * Catalogue browsing and faceted search.
  *
  * A server component reading its state out of the URL, so every result set is
- * server-rendered, shareable and indexable. `page`/`q`/`sort` are normalised here
- * rather than trusted: they arrive from a query string a shopper can edit, and the
- * API rejects an out-of-range `limit` or an unknown `sort` field with a 400 that
- * would blank the page.
+ * server-rendered, shareable and indexable.
  */
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
@@ -35,22 +41,42 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   const q = (params.q ?? '').trim();
   const sort = normaliseSort(params.sort);
   const page = normalisePage(params.page);
+  const category = (params.category ?? '').trim() || undefined;
+  const brand = (params.brand ?? '').trim() || undefined;
+  const minPrice = (params.minPrice ?? '').trim() || undefined;
+  const maxPrice = (params.maxPrice ?? '').trim() || undefined;
 
   const query = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
   if (q) query.set('q', q);
-  // Omitted entirely when empty: sending `sort=` is a validation error, not a
-  // request for the default ordering.
   if (sort) query.set('sort', sort);
+  if (category) query.set('categoryId', category);
+  if (brand) query.set('brandId', brand);
 
-  let result: StorefrontPage<ProductResponse> | null = null;
-  try {
-    result = await storefrontFetchPage<ProductResponse>(`/products?${query.toString()}`, {
+  if (minPrice && !isNaN(Number(minPrice)) && Number(minPrice) >= 0) {
+    query.set('minPriceMinor', String(Math.round(Number(minPrice) * 100)));
+  }
+  if (maxPrice && !isNaN(Number(maxPrice)) && Number(maxPrice) > 0) {
+    query.set('maxPriceMinor', String(Math.round(Number(maxPrice) * 100)));
+  }
+
+  // Fetch products, categories, and brands concurrently
+  const [productResult, categoryResult, brandResult] = await Promise.all([
+    storefrontFetchPage<ProductResponse>(`/products?${query.toString()}`, {
       tags: ['products'],
       revalidate: 60,
-    });
-  } catch {
-    result = null;
-  }
+    }).catch(() => null),
+    storefrontFetchPage<CategoryResponse>('/categories?limit=50', {
+      tags: ['categories'],
+      revalidate: 300,
+    }).catch(() => null),
+    storefrontFetchPage<BrandResponse>('/brands?limit=50', {
+      tags: ['brands'],
+      revalidate: 300,
+    }).catch(() => null),
+  ]);
+
+  const categories = categoryResult?.items ?? [];
+  const brands = brandResult?.items ?? [];
 
   return (
     <div className="space-y-6">
@@ -58,51 +84,88 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         <h1 className="font-heading text-2xl font-semibold tracking-tight text-ink">
           {q ? `Results for “${q}”` : 'All products'}
         </h1>
-        {result && (
+        {productResult && (
           <p className="text-sm text-ink-muted">
-            {result.pagination.total === 0
+            {productResult.pagination.total === 0
               ? 'No products'
-              : `${result.pagination.total} ${result.pagination.total === 1 ? 'product' : 'products'}`}
+              : `${productResult.pagination.total} ${productResult.pagination.total === 1 ? 'product' : 'products'}`}
           </p>
         )}
       </header>
 
-      <CatalogueResults q={q} sort={sort}>
-
-      {!result && <Alert>We could not load the catalogue just now. Please refresh in a moment.</Alert>}
-
-      {result && result.items.length === 0 && (
-        <EmptyState
-          icon={q ? <SearchX className="h-8 w-8" /> : <PackageOpen className="h-8 w-8" />}
-          title={q ? 'No products match that search' : 'Nothing here yet'}
-          description={
-            q
-              ? 'Try a shorter search, or a different word — searching for a brand or a category name often works better than a full product title.'
-              : 'This shop has not published any products yet. Do check back soon.'
-          }
+      {/* Main layout with responsive faceted sidebar */}
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
+        <CatalogueFilters
+          categories={categories}
+          brands={brands}
+          filters={{ q, sort, category, brand, minPrice, maxPrice }}
         />
-      )}
 
-      {result && result.items.length > 0 && (
-        <>
-          <ProductGrid products={result.items} />
-          <Pagination
-            pagination={result.pagination}
-            buildHref={(nextPage) => buildHref({ q, sort, page: nextPage })}
-            className="pt-2"
+        <div className="flex-1 min-w-0 w-full space-y-4">
+          <ActiveFilterChips
+            categories={categories}
+            brands={brands}
+            filters={{ q, sort, category, brand, minPrice, maxPrice }}
           />
-        </>
-      )}
-      </CatalogueResults>
+
+          <CatalogueResults q={q} sort={sort}>
+            {!productResult && <Alert>We could not load the catalogue just now. Please refresh in a moment.</Alert>}
+
+            {productResult && productResult.items.length === 0 && (
+              <EmptyState
+                icon={q ? <SearchX className="h-8 w-8" /> : <PackageOpen className="h-8 w-8" />}
+                title={q ? 'No products match that search' : 'No products found'}
+                description={
+                  q
+                    ? 'Try a shorter search, or a different word — searching for a brand or category name often works better.'
+                    : 'Try clearing some of your filters to see more products.'
+                }
+              />
+            )}
+
+            {productResult && productResult.items.length > 0 && (
+              <>
+                <ProductGrid products={productResult.items} />
+                <Pagination
+                  pagination={productResult.pagination}
+                  buildHref={(nextPage) =>
+                    buildHref({ q, sort, page: nextPage, category, brand, minPrice, maxPrice })
+                  }
+                  className="pt-2"
+                />
+              </>
+            )}
+          </CatalogueResults>
+        </div>
+      </div>
     </div>
   );
 }
 
-function buildHref({ q, sort, page }: { q: string; sort: string; page: number }): string {
+function buildHref({
+  q,
+  sort,
+  page,
+  category,
+  brand,
+  minPrice,
+  maxPrice,
+}: {
+  q: string;
+  sort: string;
+  page: number;
+  category?: string;
+  brand?: string;
+  minPrice?: string;
+  maxPrice?: string;
+}): string {
   const params = new URLSearchParams();
   if (q) params.set('q', q);
   if (sort) params.set('sort', sort);
-  // Page 1 is the default, so leaving it out keeps the canonical URL clean.
+  if (category) params.set('category', category);
+  if (brand) params.set('brand', brand);
+  if (minPrice) params.set('minPrice', minPrice);
+  if (maxPrice) params.set('maxPrice', maxPrice);
   if (page > 1) params.set('page', String(page));
 
   const qs = params.toString();
@@ -110,8 +173,7 @@ function buildHref({ q, sort, page }: { q: string; sort: string; page: number })
 }
 
 /**
- * Only the fields the API's sort allowlist accepts. Anything else becomes the
- * default ordering rather than a 400 — a hand-edited URL should degrade, not break.
+ * Only the fields the API's sort allowlist accepts.
  */
 const ALLOWED_SORTS = new Set([
   'publishedAt',
@@ -134,7 +196,5 @@ function normaliseSort(raw: string | undefined): string {
 function normalisePage(raw: string | undefined): number {
   const parsed = Number(raw);
   if (!Number.isInteger(parsed) || parsed < 1) return 1;
-  // The API caps `limit` at 100 but not `page`; a wild page number is harmless
-  // here, it just returns an empty set.
   return parsed;
 }

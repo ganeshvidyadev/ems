@@ -14,6 +14,8 @@ export interface ProductListFilter {
   brandId?: string;
   categoryId?: string;
   isFeatured?: boolean;
+  minPriceMinor?: string;
+  maxPriceMinor?: string;
   /**
    * Plain name/SKU substring match — the console's own "Search by name or
    * SKU" affordance, not the fulltext relevance search the storefront uses
@@ -102,6 +104,12 @@ export class ProductRepository extends TenantScopedRepository<ProductEntity> {
     }
     if (filter.q) {
       qb.andWhere('(p.name LIKE :q OR p.sku LIKE :q)', { q: `%${filter.q}%` });
+    }
+    if (filter.minPriceMinor !== undefined) {
+      qb.andWhere('CAST(p.priceMinor AS UNSIGNED) >= :minPriceMinor', { minPriceMinor: filter.minPriceMinor });
+    }
+    if (filter.maxPriceMinor !== undefined) {
+      qb.andWhere('CAST(p.priceMinor AS UNSIGNED) <= :maxPriceMinor', { maxPriceMinor: filter.maxPriceMinor });
     }
 
     for (const clause of sort) {

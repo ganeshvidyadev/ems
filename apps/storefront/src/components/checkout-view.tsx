@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { CouponBox } from '@/components/coupon-box';
 import { OrderSummary } from '@/components/order-summary';
 import { ProductThumb } from '@/components/product-thumb';
 import { Alert, Button, Card, EmptyState, Field, Input, Spinner, Textarea } from '@/components/ui';
@@ -80,7 +81,7 @@ export function CheckoutView() {
   if (!idempotencyKey.current) idempotencyKey.current = newIdempotencyKey();
 
   const values = useWatch({ control: form.control });
-  const pricing = useLivePricing(cart?.id ?? null, values as CheckoutFormValues);
+  const pricing = useLivePricing(cart?.id ?? null, values as CheckoutFormValues, cart?.couponCode);
 
   const placeOrder = useMutation<PlaceOrderResponse, Error, CheckoutFormValues>({
     mutationFn: (formValues) =>
@@ -362,6 +363,10 @@ export function CheckoutView() {
         </ul>
 
         <div className="border-t border-line pt-4">
+          <CouponBox cart={cart} />
+        </div>
+
+        <div className="border-t border-line pt-4">
           <OrderSummary figures={figures} couponCode={cart.couponCode} pending={pricing.isFetching} />
         </div>
 
@@ -409,7 +414,7 @@ export function CheckoutView() {
  * from the address: the address is a nine-field object, so a query key would
  * change identity on every keystroke and defeat the debounce it was meant to feed.
  */
-function useLivePricing(cartId: string | null, values: CheckoutFormValues) {
+function useLivePricing(cartId: string | null, values: CheckoutFormValues, couponCode?: string | null) {
   const [state, setState] = useState<{
     data: CheckoutPricingResponse | null;
     isFetching: boolean;
@@ -460,7 +465,7 @@ function useLivePricing(cartId: string | null, values: CheckoutFormValues) {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [cartId, addressKey, values.paymentGateway]);
+  }, [cartId, addressKey, values.paymentGateway, couponCode]);
 
   return state;
 }
