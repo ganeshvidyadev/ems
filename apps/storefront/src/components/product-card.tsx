@@ -4,13 +4,10 @@ import { ProductThumb } from '@/components/product-thumb';
 import { StarRating } from '@/components/star-rating';
 import { Badge } from '@/components/ui';
 import { discountPercent, formatMinor } from '@/lib/money';
+import { WishlistButton } from '@/components/wishlist-button';
 
 /**
  * One product in a grid.
- *
- * A server component: a card has no interactivity of its own — add-to-cart lives
- * on the detail page, where variant and quantity are actually decidable — so
- * shipping this to the browser would buy nothing.
  */
 export function ProductCard({ product }: { product: ProductResponse }) {
   const saving = discountPercent(product.priceMinor, product.comparePriceMinor);
@@ -19,7 +16,7 @@ export function ProductCard({ product }: { product: ProductResponse }) {
   return (
     <Link
       href={`/products/${product.slug}`}
-      className="store-product-card group flex flex-col gap-3 rounded-theme border border-line bg-surface p-3 transition hover:border-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      className="store-product-card group flex flex-col gap-3 rounded-theme border border-line bg-surface p-3 transition hover:border-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand relative"
     >
       <div className="relative">
         <ProductThumb name={product.name} className="aspect-square w-full" textClassName="text-4xl" />
@@ -28,6 +25,7 @@ export function ProductCard({ product }: { product: ProductResponse }) {
             {saving}% off
           </Badge>
         )}
+        <WishlistButton productId={product.id} className="absolute right-2 top-2 z-10" />
       </div>
 
       <div className="flex flex-1 flex-col gap-2">

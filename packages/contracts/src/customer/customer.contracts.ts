@@ -173,3 +173,28 @@ export const customerSessionResponseSchema = z.object({
   customer: customerResponseSchema,
 });
 export type CustomerSessionResponse = z.infer<typeof customerSessionResponseSchema>;
+
+export const customerUpdateProfileRequestSchema = z.object({
+  firstName: shortTextSchema(100).optional(),
+  lastName: shortTextSchema(100).optional(),
+  phone: phoneSchema.optional(),
+  acceptsMarketing: z.boolean().optional(),
+});
+export type CustomerUpdateProfileRequest = z.infer<typeof customerUpdateProfileRequestSchema>;
+
+export const customerChangePasswordRequestSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8).max(128),
+});
+export type CustomerChangePasswordRequest = z.infer<typeof customerChangePasswordRequestSchema>;
+
+export const customerForgotPasswordRequestSchema = z.object({
+  email: emailSchema,
+});
+export type CustomerForgotPasswordRequest = z.infer<typeof customerForgotPasswordRequestSchema>;
+
+export const customerResetPasswordRequestSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(8).max(128),
+});
+export type CustomerResetPasswordRequest = z.infer<typeof customerResetPasswordRequestSchema>;

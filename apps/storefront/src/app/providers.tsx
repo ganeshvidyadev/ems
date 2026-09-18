@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { ApiError } from '@/lib/api-client';
 import { StoreProvider, type StoreContextValue } from '@/lib/store-context';
+import { CustomerProvider } from '@/lib/customer-context';
 
 /**
  * The retry policy mirrors the console's, for the same reason it has one: a
@@ -51,7 +52,9 @@ export function Providers({ children, store }: { children: ReactNode; store: Sto
 
   return (
     <QueryClientProvider client={queryClient}>
-      <StoreProvider value={store}>{children}</StoreProvider>
+      <StoreProvider value={store}>
+        <CustomerProvider>{children}</CustomerProvider>
+      </StoreProvider>
     </QueryClientProvider>
   );
 }

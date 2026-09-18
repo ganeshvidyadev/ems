@@ -69,7 +69,10 @@ export class ProductStorefrontController {
       `slug:${slug}`,
       async () => {
         const product = await this.productRepo.findOne({
-          where: { slug, status: 'ACTIVE', visibility: 'VISIBLE' },
+          where: [
+            { slug, status: 'ACTIVE', visibility: 'VISIBLE' },
+            { publicId: slug, status: 'ACTIVE', visibility: 'VISIBLE' },
+          ],
         });
         if (!product) throw new NotFoundError('Product', slug);
         const hydrated = await this.products.getByPublicId(product.publicId);

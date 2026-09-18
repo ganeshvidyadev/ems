@@ -3,15 +3,18 @@ import {
   createParamDecorator,
   applyDecorators,
   UsePipes,
+  UseGuards,
   type ExecutionContext,
 } from '@nestjs/common';
 import type { ZodTypeAny } from 'zod';
 import { ZodValidationPipe } from '../pipes/zod-validation.pipe';
 import type { RequestContext } from '../services/request-context.service';
+import { CustomerAuthGuard } from '../guards/customer-auth.guard';
 
 export * from './tenant-scoped.decorator';
 
 export const IS_PUBLIC_KEY = 'ems:is-public';
+export const CUSTOMER_AUTH_KEY = 'ems:customer-auth';
 export const PERMISSIONS_KEY = 'ems:permissions';
 export const PLATFORM_ONLY_KEY = 'ems:platform-only';
 export const IDEMPOTENT_KEY = 'ems:idempotent';
@@ -19,6 +22,11 @@ export const READ_ONLY_KEY = 'ems:read-only';
 export const PLAN_QUOTA_KEY = 'ems:plan-quota';
 export const ALLOW_ONBOARDING_KEY = 'ems:allow-onboarding';
 export const BLOCKED_DURING_IMPERSONATION_KEY = 'ems:blocked-during-impersonation';
+
+/**
+ * Protects an endpoint so only an authenticated storefront customer can access it.
+ */
+export const CustomerAuth = () => applyDecorators(UseGuards(CustomerAuthGuard));
 
 /**
  * Opts a route out of authentication.
@@ -136,4 +144,10 @@ export const IdempotencyKey = createParamDecorator((_data: unknown, ctx: Executi
   const request = ctx.switchToHttp().getRequest<{ headers: Record<string, unknown> }>();
   const value = request.headers['idempotency-key'];
   return typeof value === 'string' ? value : null;
+});
+
+/** Injects the authenticated storefront customer, or undefined if guest. */
+export const CurrentCustomer = createParamDecorator((_data: unknown, ctx: ExecutionContext) => {
+  const request = ctx.switchToHttp().getRequest<{ user?: AuthenticatedUser }>();
+  return request.user?.tokenType === 'storefront' ? request.user : undefined;
 });

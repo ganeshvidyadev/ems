@@ -9,11 +9,12 @@ import { ShipmentController } from './shipment.controller';
 import { ShipmentEventRepository, ShipmentItemRepository, ShipmentRepository } from './shipment.repository';
 import { ShipmentTrackingService } from './shipment-tracking.service';
 import { ShipmentWebhookController } from './shipment-webhook.controller';
+import { OrderStorefrontController } from './order-storefront.controller';
 
 /** `@Global()`: checkout creates orders from outside this module's own request graph. */
 @Global()
 @Module({
-  controllers: [OrderController, ReturnController, ShipmentController, ShipmentWebhookController],
+  controllers: [OrderController, OrderStorefrontController, ReturnController, ShipmentController, ShipmentWebhookController],
   providers: [
     OrderRepository,
     OrderItemRepository,

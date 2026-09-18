@@ -9,6 +9,7 @@ import { ApiError } from '@/lib/api-client';
 import { formatMinor } from '@/lib/money';
 import { useStore } from '@/lib/store-context';
 import { useAddToCart } from '@/lib/use-cart';
+import { WishlistButton } from '@/components/wishlist-button';
 import { cn } from '@/lib/utils';
 
 /**
@@ -81,6 +82,12 @@ export function AddToCart({ product }: { product: ProductResponse }) {
           {added ? <Check className="h-4 w-4" aria-hidden /> : <ShoppingBag className="h-4 w-4" aria-hidden />}
           {added ? 'Added to cart' : `Add to cart · ${formatMinor(price, product.currency)}`}
         </Button>
+
+        <WishlistButton
+          productId={product.id}
+          variantId={variantId}
+          className="h-12 w-12 rounded-theme border border-line hover:border-brand"
+        />
       </div>
 
       {added && (

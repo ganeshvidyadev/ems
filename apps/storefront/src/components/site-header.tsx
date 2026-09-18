@@ -1,49 +1,53 @@
 'use client';
 
-import { Search, ShoppingBag } from 'lucide-react';
+import { Search, ShoppingBag, Heart, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { useHydrateCartId } from '@/lib/cart-id';
 import { useStore } from '@/lib/store-context';
 import { useCart } from '@/lib/use-cart';
+import { useCustomer } from '@/lib/customer-context';
+import { useWishlist } from '@/lib/use-wishlist';
 import type { StorefrontTheme } from '@/lib/theme';
 
 /**
- * The persistent shop chrome: store name, search, cart.
- *
- * A client component because all three of those need browser state — the item
- * count comes from the cart query, and search has to survive typing without a
- * round-trip per keystroke. The store *name* is passed down from the server
- * layout rather than fetched here, so the header renders complete in the first
- * HTML instead of flashing a placeholder.
+ * The persistent shop chrome: store name, search, cart, wishlist, customer account.
  */
 export function SiteHeader({ theme = 'default' }: { theme?: StorefrontTheme }) {
   const { name, tenantSlug } = useStore();
+  const { customer, isAuthenticated } = useCustomer();
+  const { wishlistItems } = useWishlist();
 
-  // Mounted on every page, so this is where the stored cart id gets loaded — one
-  // place, rather than each page remembering to hydrate it.
+  // Mounted on every page, so this is where the stored cart id gets loaded
   useHydrateCartId(tenantSlug);
 
   if (theme !== 'default') return (
     <header className={`theme-header ${theme}-header`}>
       <div className="theme-container theme-header-inner">
         <Link href="/" className="theme-logo" aria-label={`${name} home`}>
-          {/* eslint-disable-next-line @next/next/no-img-element -- plain <img>, not next/image,
-              matches this file's other theme-logo usages (see theme-footer.tsx). */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={theme === 'organic' ? '/themes/organic/images/logo.svg' : '/themes/famms/images/logo.png'} alt={theme === 'organic' ? 'Organic' : 'Famms'} width={220} height={60} />
           <span>{name}</span>
         </Link>
         <nav aria-label="Main navigation"><Link href="/">Home</Link><Link href="/products">Products</Link></nav>
         <div className="theme-header-search"><HeaderSearch /></div>
-        <CartLink />
+        <div className="flex items-center gap-2">
+          <Link href="/account/wishlist" className="p-2 text-ink hover:text-brand" title="Wishlist">
+            <Heart className="h-5 w-5" />
+          </Link>
+          <CartLink />
+          <Link href={isAuthenticated ? '/account' : '/account/login'} className="p-2 text-ink hover:text-brand" title="Account">
+            <User className="h-5 w-5" />
+          </Link>
+        </div>
       </div>
     </header>
   );
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-content flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+      <div className="mx-auto flex max-w-content flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3">
         <Link
           href="/"
           className="font-heading text-lg font-semibold tracking-tight text-ink hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
@@ -61,7 +65,33 @@ export function SiteHeader({ theme = 'default' }: { theme?: StorefrontTheme }) {
           <HeaderSearch />
         </div>
 
-        <CartLink />
+        <div className="flex items-center gap-2">
+          <Link
+            href="/account/wishlist"
+            className="relative inline-flex h-10 items-center justify-center rounded-theme border border-line px-2.5 text-ink hover:border-brand hover:text-brand"
+            aria-label="Wishlist"
+            title="Wishlist"
+          >
+            <Heart className="h-4 w-4" />
+            {wishlistItems.length > 0 && (
+              <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-semibold text-brand-foreground">
+                {wishlistItems.length}
+              </span>
+            )}
+          </Link>
+
+          <CartLink />
+
+          <Link
+            href={isAuthenticated ? '/account' : '/account/login'}
+            className="inline-flex h-10 items-center gap-1.5 rounded-theme border border-line px-3 text-sm font-medium text-ink hover:border-brand hover:text-brand"
+          >
+            <User className="h-4 w-4" />
+            <span className="hidden sm:inline">
+              {isAuthenticated ? customer?.firstName || 'Account' : 'Sign In'}
+            </span>
+          </Link>
+        </div>
       </div>
     </header>
   );
