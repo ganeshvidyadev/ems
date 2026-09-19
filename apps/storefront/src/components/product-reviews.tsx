@@ -2,8 +2,8 @@
 
 import type { ReviewResponse } from '@ems/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { BadgeCheck, MessageSquare, Star, ThumbsUp } from 'lucide-react';
-import { useState } from 'react';
+import { BadgeCheck, MessageSquare, Star, ThumbsUp, Filter, ArrowUpDown } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { StarRating } from '@/components/star-rating';
 import { Alert, Button, Card, Field, Input, Spinner, Textarea } from '@/components/ui';
 import { ApiError, api, type Page } from '@/lib/api-client';
@@ -22,12 +22,14 @@ import { cn } from '@/lib/utils';
  * list always agree.
  */
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 const reviewsKey = (productId: string, page: number) => ['reviews', productId, page] as const;
 
 export function ProductReviews({ productId }: { productId: string }) {
   const [page, setPage] = useState(1);
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState<'NEWEST' | 'HIGHEST' | 'LOWEST' | 'HELPFUL'>('NEWEST');
 
   const query = useQuery<Page<ReviewResponse>>({
     queryKey: reviewsKey(productId, page),
@@ -37,9 +39,148 @@ export function ProductReviews({ productId }: { productId: string }) {
       }),
   });
 
+  const rawItems = query.data?.items ?? [];
+
+  // Calculate rating statistics
+  const stats = useMemo(() => {
+    const total = rawItems.length;
+    if (total === 0) return { counts: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }, percentages: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } };
+
+    const counts: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    rawItems.forEach((r) => {
+      const clamped = Math.min(5, Math.max(1, Math.round(r.rating)));
+      counts[clamped] = (counts[clamped] || 0) + 1;
+    });
+
+    const percentages: Record<number, number> = {
+      5: Math.round(((counts[5] ?? 0) / total) * 100),
+      4: Math.round(((counts[4] ?? 0) / total) * 100),
+      3: Math.round(((counts[3] ?? 0) / total) * 100),
+      2: Math.round(((counts[2] ?? 0) / total) * 100),
+      1: Math.round(((counts[1] ?? 0) / total) * 100),
+    };
+
+    return { counts, percentages };
+  }, [rawItems]);
+
+  // Filter & sort reviews
+  const displayedReviews = useMemo(() => {
+    let list = [...rawItems];
+    if (selectedRating !== null) {
+      list = list.filter((r) => Math.round(r.rating) === selectedRating);
+    }
+
+    list.sort((a, b) => {
+      if (sortBy === 'NEWEST') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      if (sortBy === 'HIGHEST') return b.rating - a.rating;
+      if (sortBy === 'LOWEST') return a.rating - b.rating;
+      if (sortBy === 'HELPFUL') return (b.helpfulCount || 0) - (a.helpfulCount || 0);
+      return 0;
+    });
+
+    return list;
+  }, [rawItems, selectedRating, sortBy]);
+
   return (
     <section id="reviews" className="space-y-6 border-t border-line pt-10">
-      <h2 className="font-heading text-xl font-semibold tracking-tight text-ink">Reviews</h2>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="font-heading text-xl font-semibold tracking-tight text-ink">Customer Reviews</h2>
+          <p className="text-xs text-ink-muted mt-0.5">Verified feedback and ratings from customers</p>
+        </div>
+      </div>
+
+      {/* Ratings Breakdown Grid */}
+      {rawItems.length > 0 && (
+        <div className="rounded-theme border border-line bg-surface p-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-col justify-center space-y-1">
+            <span className="text-3xl font-extrabold text-ink">
+              {(rawItems.reduce((acc, r) => acc + r.rating, 0) / rawItems.length).toFixed(1)}
+              <span className="text-sm font-normal text-ink-muted"> / 5.0</span>
+            </span>
+            <StarRating rating={rawItems.reduce((acc, r) => acc + r.rating, 0) / rawItems.length} size="md" />
+            <p className="text-xs text-ink-muted pt-1">Based on {rawItems.length} verified ratings</p>
+          </div>
+
+          <div className="space-y-2 col-span-1 lg:col-span-2">
+            {[5, 4, 3, 2, 1].map((stars) => (
+              <button
+                key={stars}
+                type="button"
+                onClick={() => setSelectedRating(selectedRating === stars ? null : stars)}
+                className={cn(
+                  'flex w-full items-center gap-3 text-xs text-ink-muted hover:text-ink transition-colors group text-left',
+                  selectedRating === stars && 'font-bold text-brand',
+                )}
+              >
+                <span className="w-12 shrink-0">{stars} Stars</span>
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-line">
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all duration-300',
+                      selectedRating === stars ? 'bg-brand' : 'bg-[#f59e0b] group-hover:bg-brand',
+                    )}
+                    style={{ width: `${stats.percentages[stars]}%` }}
+                  />
+                </div>
+                <span className="w-8 shrink-0 text-right">{stats.percentages[stars]}%</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Filters & Sorting Bar */}
+      {rawItems.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-3 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-ink-muted font-medium flex items-center gap-1">
+              <Filter className="h-3 w-3" /> Filter:
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedRating(null)}
+              className={cn(
+                'rounded-theme border px-2.5 py-1 text-xs transition-colors',
+                selectedRating === null
+                  ? 'border-brand bg-brand text-brand-foreground font-semibold'
+                  : 'border-line text-ink-muted hover:border-brand hover:text-ink',
+              )}
+            >
+              All ({rawItems.length})
+            </button>
+            {[5, 4, 3, 2, 1].map((stars) => (
+              <button
+                key={stars}
+                type="button"
+                onClick={() => setSelectedRating(stars)}
+                className={cn(
+                  'rounded-theme border px-2 py-1 text-xs transition-colors',
+                  selectedRating === stars
+                    ? 'border-brand bg-brand text-brand-foreground font-semibold'
+                    : 'border-line text-ink-muted hover:border-brand hover:text-ink',
+                )}
+              >
+                {stars}★ ({stats.counts[stars]})
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="h-3 w-3 text-ink-muted" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="h-8 rounded-theme border border-line bg-surface px-2 text-xs text-ink focus:border-brand focus:outline-none"
+            >
+              <option value="NEWEST">Newest First</option>
+              <option value="HIGHEST">Highest Rating</option>
+              <option value="LOWEST">Lowest Rating</option>
+              <option value="HELPFUL">Most Helpful</option>
+            </select>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-10 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-4">
@@ -60,38 +201,18 @@ export function ProductReviews({ productId }: { productId: string }) {
             </p>
           )}
 
-          {query.data && query.data.items.length > 0 && (
-            <>
-              <ul className="space-y-4">
-                {query.data.items.map((review) => (
-                  <ReviewItem key={review.id} review={review} productId={productId} page={page} />
-                ))}
-              </ul>
+          {displayedReviews.length > 0 && (
+            <ul className="space-y-4">
+              {displayedReviews.map((review) => (
+                <ReviewItem key={review.id} review={review} productId={productId} page={page} />
+              ))}
+            </ul>
+          )}
 
-              {query.data.pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between gap-4 pt-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={!query.data.pagination.hasPrev}
-                    onClick={() => setPage((current) => Math.max(1, current - 1))}
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-sm text-ink-muted">
-                    Page {query.data.pagination.page} of {query.data.pagination.totalPages}
-                  </span>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={!query.data.pagination.hasNext}
-                    onClick={() => setPage((current) => current + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
-              )}
-            </>
+          {rawItems.length > 0 && displayedReviews.length === 0 && (
+            <p className="rounded-theme border border-dashed border-line p-6 text-center text-xs text-ink-muted">
+              No reviews found matching {selectedRating}★ filter.
+            </p>
           )}
         </div>
 

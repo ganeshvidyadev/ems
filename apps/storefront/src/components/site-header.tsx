@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, ShoppingBag, Heart, User, Loader2, ArrowRight, Package, X, Sparkles } from 'lucide-react';
+import { Search, ShoppingBag, Heart, User, Loader2, ArrowRight, Package, X, Sparkles, History, Flame } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -140,8 +140,38 @@ function HeaderSearch() {
   const [totalResults, setTotalResults] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const TRENDING_SEARCHES = ['Honey', 'Cotton T-Shirt', 'Water Bottle', 'Wireless Earbuds', 'Backpack'];
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('ems_recent_searches');
+      if (stored) {
+        setRecentSearches(JSON.parse(stored).slice(0, 5));
+      }
+    } catch {}
+  }, []);
+
+  const saveRecentSearch = (term: string) => {
+    const trimmed = term.trim();
+    if (!trimmed) return;
+    try {
+      const existing: string[] = JSON.parse(localStorage.getItem('ems_recent_searches') || '[]');
+      const updated = [trimmed, ...existing.filter((item) => item.toLowerCase() !== trimmed.toLowerCase())].slice(0, 5);
+      localStorage.setItem('ems_recent_searches', JSON.stringify(updated));
+      setRecentSearches(updated);
+    } catch {}
+  };
+
+  const clearRecentSearches = () => {
+    try {
+      localStorage.removeItem('ems_recent_searches');
+      setRecentSearches([]);
+    } catch {}
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -158,7 +188,6 @@ function HeaderSearch() {
     if (trimmed.length < 2) {
       setResults([]);
       setTotalResults(0);
-      setIsOpen(false);
       setIsLoading(false);
       return;
     }
@@ -191,11 +220,20 @@ function HeaderSearch() {
     event.preventDefault();
     setIsOpen(false);
     const trimmed = value.trim();
+    if (trimmed) saveRecentSearch(trimmed);
     router.push(trimmed ? `/products?q=${encodeURIComponent(trimmed)}` : '/products');
+  }
+
+  function onSelectKeyword(keyword: string) {
+    setValue(keyword);
+    saveRecentSearch(keyword);
+    setIsOpen(false);
+    router.push(`/products?q=${encodeURIComponent(keyword)}`);
   }
 
   function onSelectProduct(slug: string) {
     setIsOpen(false);
+    if (value.trim()) saveRecentSearch(value.trim());
     router.push(`/products/${slug}`);
   }
 
@@ -208,11 +246,7 @@ function HeaderSearch() {
           name="q"
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          onFocus={() => {
-            if (value.trim().length >= 2 && results.length > 0) {
-              setIsOpen(true);
-            }
-          }}
+          onFocus={() => setIsOpen(true)}
           onKeyDown={(e) => {
             if (e.key === 'Escape') setIsOpen(false);
           }}
@@ -229,7 +263,58 @@ function HeaderSearch() {
       {/* Floating Instant Search Dropdown */}
       {isOpen && (
         <div className="absolute left-0 right-0 top-full z-50 mt-1.5 overflow-hidden rounded-theme border border-line bg-surface shadow-lg">
-          {results.length > 0 ? (
+          {value.trim().length < 2 ? (
+            <div className="p-4 space-y-4">
+              {/* Recent Searches */}
+              {recentSearches.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-ink-muted">
+                    <span className="flex items-center gap-1 font-semibold uppercase tracking-wider text-[11px]">
+                      <History className="h-3 w-3 text-brand" /> Recent Searches
+                    </span>
+                    <button
+                      type="button"
+                      onClick={clearRecentSearches}
+                      className="hover:text-danger hover:underline text-[11px]"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {recentSearches.map((kw) => (
+                      <button
+                        key={kw}
+                        type="button"
+                        onClick={() => onSelectKeyword(kw)}
+                        className="rounded-theme border border-line bg-surface-alt px-2.5 py-1 text-xs text-ink hover:border-brand hover:text-brand transition-colors"
+                      >
+                        {kw}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Trending Searches */}
+              <div className="space-y-2">
+                <span className="flex items-center gap-1 font-semibold uppercase tracking-wider text-[11px] text-ink-muted">
+                  <Flame className="h-3 w-3 text-brand" /> Popular Searches
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {TRENDING_SEARCHES.map((kw) => (
+                    <button
+                      key={kw}
+                      type="button"
+                      onClick={() => onSelectKeyword(kw)}
+                      className="rounded-theme border border-line bg-surface-alt/70 px-2.5 py-1 text-xs text-ink hover:border-brand hover:text-brand transition-colors"
+                    >
+                      {kw}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : results.length > 0 ? (
             <div>
               <div className="border-b border-line bg-surface-alt px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
                 Products ({totalResults})
@@ -270,6 +355,7 @@ function HeaderSearch() {
                   type="button"
                   onClick={() => {
                     setIsOpen(false);
+                    if (value.trim()) saveRecentSearch(value.trim());
                     router.push(`/products?q=${encodeURIComponent(value.trim())}`);
                   }}
                   className="inline-flex items-center gap-1 text-xs font-medium text-brand hover:underline"
