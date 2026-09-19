@@ -45,6 +45,7 @@ import { useExportTenantData } from '@/lib/queries/tenant-export';
 import { usePlatformInvoices } from '@/lib/queries/platform-billing';
 import { useSupportTickets } from '@/lib/queries/support-tickets';
 import { usePlatformAuditLogs } from '@/lib/queries/platform-audit-log';
+import { TenantThemesTab } from './tenant-themes-tab';
 
 
 const STATUS_BADGE: Record<TenantStatus, 'default' | 'success' | 'warning' | 'destructive' | 'info'> = {
@@ -58,10 +59,11 @@ const STATUS_BADGE: Record<TenantStatus, 'default' | 'success' | 'warning' | 'de
   DELETED: 'default',
 };
 
-const TABS = ['overview', 'billing', 'support', 'audit', 'features'] as const;
+const TABS = ['overview', 'themes', 'billing', 'support', 'audit', 'features'] as const;
 type Tab = (typeof TABS)[number];
 const TAB_LABEL: Record<Tab, string> = {
   overview: 'Overview',
+  themes: 'Themes & Storefront',
   billing: 'Billing',
   support: 'Support',
   audit: 'Audit',
@@ -217,6 +219,7 @@ export default function TenantDetailPage() {
       </div>
 
       {tab === 'overview' && <OverviewTab tenantId={t.id} />}
+      {tab === 'themes' && <TenantThemesTab tenantId={t.id} />}
       {tab === 'billing' && <BillingTab tenantId={t.id} />}
       {tab === 'support' && <SupportTab tenantId={t.id} />}
       {tab === 'audit' && <AuditTab tenantId={t.id} />}

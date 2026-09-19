@@ -1,0 +1,391 @@
+'use client';
+
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Palette,
+  Check,
+  Download,
+  CheckCircle2,
+  Loader2,
+} from 'lucide-react';
+import { apiGet, apiPut } from '@/lib/api-client';
+import { Button, Badge, Alert } from '@/components/ui/primitives';
+import { downloadJsonFile } from '@/lib/csv-helper';
+
+interface Theme {
+  code: string;
+  name: string;
+  description: string;
+}
+
+interface CompanyThemeData {
+  id: string;
+  name: string;
+  slug: string;
+  selectedTheme: string;
+  allowedThemes: string[];
+}
+
+interface PlatformThemeSettings {
+  themes: Theme[];
+  companies: CompanyThemeData[];
+}
+
+interface ThemeMeta {
+  tag: string;
+  tagColor: string;
+  brandColor: string;
+  accentColor: string;
+  font: string;
+  previewFeatures: string[];
+}
+
+const DEFAULT_META: ThemeMeta = {
+  tag: 'General E-Commerce',
+  tagColor: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+  brandColor: '#2563eb',
+  accentColor: '#1d4ed8',
+  font: 'Inter / System',
+  previewFeatures: ['Utility product grids', 'Clean whitespace', 'Standard cart & checkout'],
+};
+
+const THEME_METADATA: Record<string, ThemeMeta> = {
+  default: DEFAULT_META,
+  organic: {
+    tag: 'Wellness & Botanicals',
+    tagColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
+    brandColor: '#6bb252',
+    accentColor: '#4d8a39',
+    font: 'Lora & Inter',
+    previewFeatures: ['Full-width nature hero', 'Category thumbnail circles', 'Farm-fresh badges'],
+  },
+  famms: {
+    tag: 'Fashion & Luxury',
+    tagColor: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300',
+    brandColor: '#f7444e',
+    accentColor: '#d63031',
+    font: 'Playfair Display & Montserrat',
+    previewFeatures: ['Editorial lookbook banners', 'Bold discount ribbons', 'Lifestyle photography'],
+  },
+  circuit: {
+    tag: 'Tech & Electronics',
+    tagColor: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300',
+    brandColor: '#2563eb',
+    accentColor: '#3b82f6',
+    font: 'Roboto & Space Grotesk',
+    previewFeatures: ['Dark accent tech hero', 'OEM warranty badges', 'Technical specification grids'],
+  },
+  harvest: {
+    tag: 'Grocery & Supermarket',
+    tagColor: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
+    brandColor: '#15803d',
+    accentColor: '#f59e0b',
+    font: 'Nunito & Open Sans',
+    previewFeatures: ['2-Hour fast delivery timer', 'Daily flash deals', 'Instant doorstep returns'],
+  },
+};
+
+function getThemeMeta(code: string): ThemeMeta {
+  return THEME_METADATA[code] ?? DEFAULT_META;
+}
+
+export function TenantThemesTab({ tenantId }: { tenantId: string }) {
+  const queryClient = useQueryClient();
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const { data: themeData, isLoading, isError } = useQuery<PlatformThemeSettings>({
+    queryKey: ['platform-themes'],
+    queryFn: () => apiGet<PlatformThemeSettings>('/platform/themes'),
+  });
+
+  const company = themeData?.companies.find(
+    (c) => c.id === tenantId || c.slug === tenantId,
+  );
+
+  const [selectedTheme, setSelectedTheme] = useState<string>('');
+  const [allowedThemes, setAllowedThemes] = useState<string[]>([]);
+
+  const currentTheme = company?.selectedTheme || 'default';
+  const effectiveSelected = selectedTheme || currentTheme;
+  const effectiveAllowed = allowedThemes.length > 0 ? allowedThemes : (company?.allowedThemes || ['default']);
+
+  const updateMutation = useMutation({
+    mutationFn: (payload: { selectedTheme: string; allowedThemes: string[] }) =>
+      apiPut<{ selectedTheme: string; allowedThemes: string[] }>(
+        `/platform/themes/${company?.id ?? tenantId}`,
+        payload,
+      ),
+    onSuccess: (result) => {
+      setSuccessMessage(`Theme successfully updated to "${result.selectedTheme}". Storefront reflects changes immediately.`);
+      setErrorMessage(null);
+      void queryClient.invalidateQueries({ queryKey: ['platform-themes'] });
+      setTimeout(() => setSuccessMessage(null), 4000);
+    },
+    onError: (err: any) => {
+      setErrorMessage(err?.message ?? 'Failed to update theme assignment.');
+    },
+  });
+
+  function handleActivate(themeCode: string) {
+    const updatedAllowed = Array.from(new Set([...effectiveAllowed, themeCode]));
+    setSelectedTheme(themeCode);
+    setAllowedThemes(updatedAllowed);
+    updateMutation.mutate({
+      selectedTheme: themeCode,
+      allowedThemes: updatedAllowed,
+    });
+  }
+
+  function toggleAllowed(themeCode: string) {
+    if (themeCode === 'default') return; // Default is always allowed
+    let next: string[];
+    if (effectiveAllowed.includes(themeCode)) {
+      next = effectiveAllowed.filter((c) => c !== themeCode);
+    } else {
+      next = [...effectiveAllowed, themeCode];
+    }
+    setAllowedThemes(next);
+    updateMutation.mutate({
+      selectedTheme: effectiveSelected === themeCode && !next.includes(themeCode) ? 'default' : effectiveSelected,
+      allowedThemes: next,
+    });
+  }
+
+  function handleExportThemeFolder() {
+    if (!company) return;
+    const meta = getThemeMeta(effectiveSelected);
+
+    const workspaceData = {
+      tenant: {
+        id: company.id,
+        businessName: company.name,
+        slug: company.slug,
+        exportedAt: new Date().toISOString(),
+      },
+      activeTheme: {
+        code: effectiveSelected,
+        meta,
+        folderPath: `storage/tenants/${company.slug}/themes/${effectiveSelected}/`,
+      },
+      fileStructure: {
+        'manifest.json': {
+          version: '1.0.0',
+          themeCode: effectiveSelected,
+          tenantSlug: company.slug,
+          allowedThemes: effectiveAllowed,
+        },
+        'config.json': {
+          colors: {
+            primary: meta.brandColor,
+            accent: meta.accentColor,
+          },
+          typography: {
+            headingFont: meta.font,
+          },
+          sections: meta.previewFeatures,
+        },
+        'theme.css': `:root { --brand: ${meta.brandColor}; --font-heading: '${meta.font}'; }`,
+      },
+      previousThemeBackups: effectiveAllowed
+        .filter((c) => c !== effectiveSelected)
+        .map((c) => ({
+          themeCode: c,
+          backupPath: `storage/tenants/${company.slug}/themes/${c}/`,
+        })),
+    };
+
+    downloadJsonFile(
+      `tenant-${company.slug}-theme-${effectiveSelected}-workspace.json`,
+      workspaceData,
+    );
+  }
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-xs text-muted-foreground">Loading theme settings…</div>;
+  }
+
+  if (isError || !themeData) {
+    return (
+      <Alert variant="error">
+        Could not load platform theme settings. Please refresh or verify permissions.
+      </Alert>
+    );
+  }
+
+  const themes = themeData.themes || [];
+
+  return (
+    <div className="space-y-6">
+      {/* Header & Status Summary */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight text-foreground flex items-center gap-2">
+            <Palette className="h-5 w-5 text-primary" /> Storefront Themes & Design System
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Manage active storefront engine, assign standard theme templates, and export workspace files for {company?.name ?? 'this tenant'}.
+          </p>
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExportThemeFolder}
+          className="gap-1.5 text-xs font-semibold"
+        >
+          <Download className="size-3.5" />
+          <span>Export Theme Workspace (JSON)</span>
+        </Button>
+      </div>
+
+      {successMessage && (
+        <div className="flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 p-3 text-xs font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+          <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />
+          <span>{successMessage}</span>
+        </div>
+      )}
+
+      {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
+
+      {/* Active Theme Highlight Card */}
+      <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 shadow-xs">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-primary">Currently Live On Storefront</span>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-bold text-foreground">
+                {themes.find((t) => t.code === currentTheme)?.name ?? currentTheme}
+              </h3>
+              <Badge variant="default" className="text-xs">Active Engine</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground max-w-xl">
+              {themes.find((t) => t.code === currentTheme)?.description}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="rounded-lg border bg-background px-3 py-2 text-center text-xs">
+              <span className="text-muted-foreground block text-[10px]">Folder Workspace</span>
+              <span className="font-mono font-semibold text-foreground">
+                /tenants/{company?.slug ?? 'tenant'}/themes/{currentTheme}/
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 5 Standard Themes Catalog */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-foreground">Available Standard Themes Catalog (5 Standard Engines)</h3>
+          <span className="text-xs text-muted-foreground">Select any theme to activate for this company</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {themes.map((theme) => {
+            const isLive = theme.code === currentTheme;
+            const isAllowed = effectiveAllowed.includes(theme.code);
+            const meta = getThemeMeta(theme.code);
+
+            return (
+              <div
+                key={theme.code}
+                className={`rounded-xl border p-5 flex flex-col justify-between transition-all ${
+                  isLive
+                    ? 'border-primary ring-2 ring-primary/20 bg-card shadow-md'
+                    : 'border-border bg-card/60 hover:border-muted-foreground/40'
+                }`}
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${meta.tagColor}`}>
+                      {meta.tag}
+                    </span>
+                    {isLive && (
+                      <Badge variant="default" className="gap-1 text-[10px] h-5">
+                        <Check className="size-3" /> Live
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div>
+                    <h4 className="font-bold text-base text-foreground">{theme.name}</h4>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{theme.description}</p>
+                  </div>
+
+                  {/* Color Palettes & Specs preview */}
+                  <div className="space-y-2 pt-2 border-t text-xs">
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>Typography:</span>
+                      <span className="font-medium text-foreground">{meta.font}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>Palette:</span>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="h-4 w-4 rounded-full border shadow-xs"
+                          style={{ backgroundColor: meta.brandColor }}
+                          title="Primary Brand"
+                        />
+                        <span
+                          className="h-4 w-4 rounded-full border shadow-xs"
+                          style={{ backgroundColor: meta.accentColor }}
+                          title="Accent"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-1">
+                      <span className="text-[10px] text-muted-foreground uppercase font-semibold">Included Features:</span>
+                      <ul className="mt-1 space-y-0.5 text-[11px] text-muted-foreground">
+                        {meta.previewFeatures.map((feat, idx) => (
+                          <li key={idx} className="flex items-center gap-1.5">
+                            <span className="h-1 w-1 rounded-full bg-primary" />
+                            <span>{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="pt-4 mt-4 border-t flex items-center justify-between gap-2">
+                  <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isAllowed}
+                      disabled={theme.code === 'default' || updateMutation.isPending}
+                      onChange={() => toggleAllowed(theme.code)}
+                      className="rounded border-input text-primary focus:ring-primary h-3.5 w-3.5"
+                    />
+                    <span>Allowed</span>
+                  </label>
+
+                  <Button
+                    size="sm"
+                    variant={isLive ? 'outline' : 'default'}
+                    disabled={isLive || updateMutation.isPending}
+                    onClick={() => handleActivate(theme.code)}
+                    className="h-8 text-xs font-semibold"
+                  >
+                    {updateMutation.isPending && selectedTheme === theme.code ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : isLive ? (
+                      'Currently Active'
+                    ) : (
+                      'Activate Theme'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}

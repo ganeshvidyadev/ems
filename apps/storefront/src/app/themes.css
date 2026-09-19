@@ -20,6 +20,26 @@ body[data-theme='famms'] {
   --font-heading: 'Playfair Display', Georgia, serif;
   --font-body: 'Montserrat', Arial, sans-serif;
 }
+body[data-theme='circuit'] {
+  --brand: #2563eb;
+  --ink: #0f172a;
+  --ink-muted: #64748b;
+  --line: #e2e8f0;
+  --radius: 6px;
+  --content-width: 1280px;
+  --font-heading: 'Roboto', -apple-system, sans-serif;
+  --font-body: 'Inter', -apple-system, sans-serif;
+}
+body[data-theme='harvest'] {
+  --brand: #15803d;
+  --ink: #1c1917;
+  --ink-muted: #78716c;
+  --line: #e7e5e4;
+  --radius: 12px;
+  --content-width: 1300px;
+  --font-heading: 'Nunito', -apple-system, sans-serif;
+  --font-body: 'Nunito', -apple-system, sans-serif;
+}
 .theme-container {
   width: calc(100% - 48px);
   max-width: var(--content-width);

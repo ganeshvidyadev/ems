@@ -12,18 +12,28 @@ import { TenantEntity } from '../../database/entities';
 export const STOREFRONT_THEMES = [
   {
     code: 'default',
-    name: 'Default',
+    name: 'Default Modern',
     description: 'Clean, general-purpose storefront. Always available.',
   },
   {
     code: 'organic',
-    name: 'Organic',
-    description: 'Green grocery design with large photographic banners.',
+    name: 'Organic Botanicals',
+    description: 'Green grocery & botanical design with photographic banners.',
   },
   {
     code: 'famms',
-    name: 'Famms',
-    description: 'Fashion design with red accents and editorial banners.',
+    name: 'Famms Luxury Fashion',
+    description: 'High-fashion design with red accents and editorial banners.',
+  },
+  {
+    code: 'circuit',
+    name: 'Circuit Electronics',
+    description: 'High-tech gadgets & electronics layout with dark accents and spec grids.',
+  },
+  {
+    code: 'harvest',
+    name: 'Harvest Supermarket',
+    description: 'Fast-scan grocery tiles and delivery-window messaging for daily essentials.',
   },
 ] as const;
 
