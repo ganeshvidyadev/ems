@@ -128,6 +128,7 @@ const SUPER_ADMIN_NAV = [
     items: [
       { href: '/themes', label: 'Company themes' },
       { href: '/theme-templates', label: 'Theme templates' },
+      { href: '/seo', label: 'SEO & Social Cards' },
     ],
   },
   {
@@ -178,6 +179,7 @@ export const COMPANY_ADMIN_NAV = [
       { href: '/cms', label: 'CMS Pages' },
       { href: '/banners', label: 'Banners' },
       { href: '/menus', label: 'Navigation Menus' },
+      { href: '/seo', label: 'SEO & Social Cards' },
     ],
   },
   {
