@@ -1,10 +1,11 @@
 import type { ProductResponse } from '@ems/contracts';
-import { ChevronRight, Package, Truck } from 'lucide-react';
+import { ChevronRight, Package, Truck, ShieldCheck, Lock, RotateCcw } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AddToCart } from '@/components/add-to-cart';
 import { ProductReviews } from '@/components/product-reviews';
+import { ProductShare } from '@/components/product-share';
 import { ProductThumb } from '@/components/product-thumb';
 import { StarRating } from '@/components/star-rating';
 import { Badge } from '@/components/ui';
@@ -146,6 +147,29 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
               </div>
             )}
           </dl>
+
+          {/* Trust & Guarantee Badges */}
+          <div className="grid grid-cols-2 gap-2.5 rounded-theme border border-line bg-surface-alt/40 p-3.5 text-xs text-ink">
+            <div className="flex items-center gap-2">
+              <Truck className="h-4 w-4 text-brand shrink-0" />
+              <span>Free Delivery ₹999+</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-brand shrink-0" />
+              <span>100% Genuine Item</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Lock className="h-4 w-4 text-brand shrink-0" />
+              <span>Secure SSL Checkout</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <RotateCcw className="h-4 w-4 text-brand shrink-0" />
+              <span>Easy Return Policy</span>
+            </div>
+          </div>
+
+          {/* Social Sharing */}
+          <ProductShare productName={product.name} />
         </div>
       </div>
 

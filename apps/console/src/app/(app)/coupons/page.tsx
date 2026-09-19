@@ -1,6 +1,7 @@
 'use client';
 
 import type { CouponListQuery, CouponResponse } from '@ems/contracts';
+import { Download, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
@@ -20,7 +21,8 @@ import {
   TableRow,
 } from '@/components/ui/primitives';
 import { usePermission } from '@/hooks/use-auth';
-import { isForbidden } from '@/lib/api-client';
+import { apiGetPaginated, isForbidden } from '@/lib/api-client';
+import { downloadCsvFile, generateCsvText } from '@/lib/csv-helper';
 import { useCoupons, useDeleteCoupon } from '@/lib/queries/coupons';
 import { formatDate, formatMoney } from '@/lib/utils';
 
@@ -72,9 +74,61 @@ function CouponsPageContent() {
   const coupons = couponsQuery.data?.data ?? [];
   const pagination = couponsQuery.data?.meta.pagination;
 
+  const [isExporting, setIsExporting] = useState(false);
+
+  async function exportCouponsCsv() {
+    setIsExporting(true);
+    try {
+      const res = await apiGetPaginated<CouponResponse>('/console/coupons', {
+        params: {
+          page: 1,
+          limit: 500,
+          status: status || undefined,
+        },
+      });
+
+      const exportList = res.data?.length ? res.data : coupons;
+      if (!exportList || exportList.length === 0) return;
+
+      const headers = [
+        'Coupon Code',
+        'Name',
+        'Discount Type',
+        'Discount Value',
+        'Min Order Minor',
+        'Usage Count',
+        'Usage Limit Total',
+        'Status',
+        'Starts At',
+        'Ends At',
+      ];
+
+      const rows = exportList.map((c) => [
+        c.code,
+        c.name ?? '',
+        c.discountType,
+        c.discountValue,
+        c.minOrderMinor ?? '—',
+        c.usageCount,
+        c.usageLimitTotal ?? 'Unlimited',
+        c.status,
+        c.startsAt ? formatDate(c.startsAt) : '—',
+        c.endsAt ? formatDate(c.endsAt) : 'Never',
+      ]);
+
+      const csvContent = generateCsvText(headers, rows);
+      const filename = `coupons-export-${new Date().toISOString().slice(0, 10)}.csv`;
+      downloadCsvFile(filename, csvContent);
+    } catch (err) {
+      console.error('Failed to export coupons CSV:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <PageShell>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Select
           value={status}
           onChange={(e) => { setStatus(e.target.value as CouponListQuery['status'] | ''); setPage(1); }}
@@ -84,11 +138,28 @@ function CouponsPageContent() {
           <option value="ACTIVE">Active</option>
           <option value="ARCHIVED">Archived</option>
         </Select>
-        {canCreate && (
-          <Link href="/coupons/new">
-            <Button>New coupon</Button>
-          </Link>
-        )}
+
+        <div className="flex items-center gap-2.5">
+          <Button
+            variant="outline"
+            disabled={coupons.length === 0 || isExporting}
+            onClick={() => void exportCouponsCsv()}
+            className="inline-flex items-center gap-1.5"
+          >
+            {isExporting ? (
+              <Loader2 className="size-3.5 animate-spin text-slate-600" />
+            ) : (
+              <Download className="size-3.5 text-slate-600" />
+            )}
+            {isExporting ? 'Exporting…' : 'Export Coupons CSV'}
+          </Button>
+
+          {canCreate && (
+            <Link href="/coupons/new">
+              <Button>New coupon</Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       {couponsQuery.isError && (
