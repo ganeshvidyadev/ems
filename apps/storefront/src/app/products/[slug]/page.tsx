@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { AddToCart } from '@/components/add-to-cart';
 import { BackInStockWidget } from '@/components/back-in-stock';
 import { DeliveryCountdown } from '@/components/delivery-countdown';
+import { StockUrgencyBar } from '@/components/stock-urgency-bar';
 import { ProductOffers } from '@/components/product-offers';
 import { ProductFaqAccordion } from '@/components/product-faq-accordion';
 import { PincodeChecker } from '@/components/pincode-checker';
@@ -146,6 +147,9 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
 
           {/* Fast Delivery Urgency Countdown */}
           <DeliveryCountdown />
+
+          {/* Stock Level Urgency Indicator */}
+          <StockUrgencyBar stockCount={product.status === 'OUT_OF_STOCK' ? 0 : 4} />
 
           <AddToCart product={product} />
 

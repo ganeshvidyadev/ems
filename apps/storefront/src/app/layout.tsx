@@ -13,6 +13,7 @@ import { FloatingCompareBar } from '@/components/compare-bar';
 import { CartDrawer } from '@/components/cart-drawer';
 import { SocialProofToast } from '@/components/social-proof-toast';
 import { LiveChatWidget } from '@/components/live-chat-widget';
+import { FirstOrderModal } from '@/components/first-order-modal';
 import './globals.css';
 import './themes.css';
 
@@ -77,6 +78,7 @@ export default async function RootLayout({
           <CartDrawer />
           <SocialProofToast />
           <LiveChatWidget />
+          <FirstOrderModal />
         </Providers>
       </body>
     </html>
