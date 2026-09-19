@@ -263,6 +263,15 @@ export function ThemeHome({ theme, name, featured, latest, failed }: Props) {
   }
 
   // 4. ORGANIC - Botanical, Health & Wellness
+  const organicCategories = [
+    { label: 'Farm Veggies', query: 'Vegetables', image: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=300&auto=format&fit=crop&q=80' },
+    { label: 'Orchard Fruits', query: 'Fruits', image: 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=300&auto=format&fit=crop&q=80' },
+    { label: 'A2 Vedic Ghee', query: 'Ghee', image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=300&auto=format&fit=crop&q=80' },
+    { label: 'Cold-Pressed Oils', query: 'Oil', image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=300&auto=format&fit=crop&q=80' },
+    { label: 'Organic Millets', query: 'Millet', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300&auto=format&fit=crop&q=80' },
+    { label: 'Herbal Teas', query: 'Tea', image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=300&auto=format&fit=crop&q=80' },
+  ];
+
   return (
     <div className="theme-home organic-home">
       <section className="organic-hero">
@@ -272,7 +281,7 @@ export function ThemeHome({ theme, name, featured, latest, failed }: Props) {
             <h1>
               <strong>Organic</strong> Foods at your <b>Doorsteps</b>
             </h1>
-            <p>A fresh approach to your everyday shopping.</p>
+            <p>Harvested at dawn from certified bio-farms and delivered crisp & fresh to your home.</p>
             <div className="theme-actions">
               <Link className="theme-button" href="/products">
                 Start Shopping
@@ -310,13 +319,14 @@ export function ThemeHome({ theme, name, featured, latest, failed }: Props) {
           </div>
         </div>
       </section>
+
       <section className="theme-container organic-features">
         <div className="theme-feature-grid">
           <article>
             <Truck aria-hidden />
             <div>
               <h3>Free delivery</h3>
-              <p>On orders meeting minimum spend.</p>
+              <p>On orders meeting minimum spend of ₹499.</p>
             </div>
           </article>
           <article>
@@ -342,52 +352,57 @@ export function ThemeHome({ theme, name, featured, latest, failed }: Props) {
           </article>
         </div>
       </section>
+
       <section className="theme-container organic-categories">
         <div className="theme-section-title">
-          <h2>Explore the collection</h2>
+          <h2>Explore Organic Categories</h2>
           <Link href="/products">
             View all <ArrowRight size={16} aria-hidden />
           </Link>
         </div>
         <div className="organic-category-grid">
-          {['Breads', 'Fruits', 'Vegetables', 'Drinks', 'Meat', 'Snacks'].map((label, index) => (
-            <Link href={`/products?q=${encodeURIComponent(label)}`} key={label}>
+          {organicCategories.map((cat) => (
+            <Link href={`/products?q=${encodeURIComponent(cat.query)}`} key={cat.label} className="group text-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`/themes/organic/images/category-thumb-${index + 1}.jpg`}
-                alt=""
+                src={cat.image}
+                alt={cat.label}
                 width={150}
                 height={150}
+                className="rounded-2xl object-cover shadow-sm transition-transform duration-300 group-hover:scale-105"
               />
-              <span>{label}</span>
+              <span className="mt-2 block font-medium text-xs sm:text-sm">{cat.label}</span>
             </Link>
           ))}
         </div>
       </section>
-      <Products products={products} failed={failed} title="Our products" />
+
+      <Products products={products} failed={failed} title="Fresh Farm-to-Table Harvest" />
+
       <section className="theme-container organic-promos">
         <Link href="/products" className="organic-promo-main">
           <h2>Everyday favourites</h2>
-          <p>Discover something fresh</p>
+          <p>Discover farm-fresh organic vegetables & cold-pressed staples</p>
           <span>Shop now →</span>
         </Link>
         <div>
           <Link href="/products?sort=-totalSold">
             <h2>Popular picks</h2>
-            <p>Explore the collection</p>
+            <p>A2 Vedic Ghee & Raw Forest Honey</p>
             <span>Shop now →</span>
           </Link>
           <Link href="/products">
             <h2>New arrivals</h2>
-            <p>Find your next favourite</p>
+            <p>Ancient Millets & Himalayan Teas</p>
             <span>Shop now →</span>
           </Link>
         </div>
       </section>
+
       <section className="theme-container organic-discover">
         <div>
           <h2>A little inspiration for your next shop</h2>
-          <p>Explore everything {name} has to offer.</p>
+          <p>Explore everything {name} has to offer with 100% purity guarantee.</p>
           <Link href="/products" className="theme-button">
             Browse all products
           </Link>
