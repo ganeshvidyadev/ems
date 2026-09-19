@@ -1,25 +1,93 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Heart, ShoppingBag, Trash2, Loader2, Package } from 'lucide-react';
+import { Heart, ShoppingBag, Trash2, Loader2, Package, Check, ArrowRight } from 'lucide-react';
 import { useWishlist } from '@/lib/use-wishlist';
 import { useAddToCart } from '@/lib/use-cart';
-import { formatMinor } from '@/lib/money';
+import { discountPercent, formatMinor } from '@/lib/money';
 import { ProductThumb } from '@/components/product-thumb';
 import { api } from '@/lib/api-client';
 import type { ProductResponse } from '@ems/contracts';
 
 export default function CustomerWishlistPage() {
   const { wishlistItems, isLoading, removeFromWishlist } = useWishlist();
+  const addToCart = useAddToCart();
+  const [isMovingAll, setIsMovingAll] = useState(false);
+  const [moveAllResult, setMoveAllResult] = useState<string | null>(null);
+
+  async function handleMoveAllToCart() {
+    if (wishlistItems.length === 0 || isMovingAll) return;
+    setIsMovingAll(true);
+    setMoveAllResult(null);
+    let addedCount = 0;
+
+    for (const item of wishlistItems) {
+      try {
+        await addToCart.mutateAsync({
+          productId: item.productId,
+          variantId: item.variantId ?? undefined,
+          quantity: 1,
+        });
+        addedCount++;
+      } catch (err) {
+        console.error('Failed to move item to cart:', err);
+      }
+    }
+
+    setIsMovingAll(false);
+    setMoveAllResult(`Added ${addedCount} of ${wishlistItems.length} items to your cart!`);
+    setTimeout(() => setMoveAllResult(null), 5000);
+  }
 
   return (
     <div className="space-y-6">
-      <div className="border-b border-line pb-4">
-        <h1 className="text-2xl font-bold tracking-tight text-ink">My Wishlist</h1>
-        <p className="mt-1 text-sm text-ink-muted">Products you have saved for later</p>
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-ink">My Wishlist</h1>
+          <p className="mt-1 text-sm text-ink-muted">
+            {wishlistItems.length === 0
+              ? 'Products you have saved for later'
+              : `${wishlistItems.length} ${wishlistItems.length === 1 ? 'item' : 'items'} saved for later`}
+          </p>
+        </div>
+
+        {wishlistItems.length > 0 && (
+          <div className="flex items-center gap-2.5">
+            <Link
+              href="/cart"
+              className="inline-flex h-9 items-center justify-center rounded-theme border border-line px-3.5 text-xs font-medium text-ink hover:bg-surface-alt"
+            >
+              View Cart
+            </Link>
+            <button
+              onClick={() => void handleMoveAllToCart()}
+              disabled={isMovingAll}
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-theme bg-brand px-4 text-xs font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
+            >
+              {isMovingAll ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <ShoppingBag className="h-3.5 w-3.5" />
+              )}
+              {isMovingAll ? 'Moving to Cart…' : 'Move All to Cart'}
+            </button>
+          </div>
+        )}
       </div>
+
+      {moveAllResult && (
+        <div className="flex items-center justify-between rounded-theme border border-success/30 bg-success/10 px-4 py-3 text-xs font-medium text-success">
+          <div className="flex items-center gap-2">
+            <Check className="h-4 w-4" />
+            <span>{moveAllResult}</span>
+          </div>
+          <Link href="/cart" className="inline-flex items-center gap-1 font-semibold underline hover:text-success/80">
+            Go to Cart <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex h-40 items-center justify-center">
@@ -65,7 +133,8 @@ function WishlistProductCard({
   onRemove: () => void;
 }) {
   const addToCart = useAddToCart();
-  const [isAdding, setIsAdding] = React.useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
 
   const { data: product, isLoading } = useQuery<ProductResponse>({
     queryKey: ['product', productId],
@@ -92,6 +161,8 @@ function WishlistProductCard({
     );
   }
 
+  const saving = discountPercent(product.priceMinor, product.comparePriceMinor);
+
   async function handleAddToCart() {
     setIsAdding(true);
     try {
@@ -100,6 +171,8 @@ function WishlistProductCard({
         quantity: 1,
         variantId: variantId ?? undefined,
       });
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 3000);
     } finally {
       setIsAdding(false);
     }
@@ -107,36 +180,74 @@ function WishlistProductCard({
 
   return (
     <div className="group relative flex flex-col justify-between overflow-hidden rounded-theme border border-line bg-surface transition-shadow hover:shadow-md">
-      <Link href={`/products/${product.slug}`} className="block overflow-hidden bg-surface-alt">
-        <ProductThumb name={product.name} className="h-44 w-full" textClassName="text-4xl" />
-      </Link>
-
-      <div className="p-4">
-        <Link href={`/products/${product.slug}`}>
-          <h3 className="line-clamp-2 text-sm font-semibold text-ink hover:text-brand">
-            {product.name}
-          </h3>
+      <div className="relative overflow-hidden bg-surface-alt">
+        <Link href={`/products/${product.slug}`} className="block">
+          <ProductThumb name={product.name} className="h-44 w-full" textClassName="text-4xl" />
         </Link>
-        <p className="mt-2 text-base font-bold text-ink">{formatMinor(product.priceMinor, product.currency)}</p>
+        {saving !== null && (
+          <span className="absolute left-2.5 top-2.5 rounded bg-danger px-2 py-0.5 text-[11px] font-bold text-white shadow-sm">
+            {saving}% OFF
+          </span>
+        )}
+      </div>
 
-        <div className="mt-4 flex items-center gap-2">
-          <button
-            onClick={() => void handleAddToCart()}
-            disabled={isAdding}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-theme bg-brand py-2 text-xs font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
-          >
-            {isAdding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShoppingBag className="h-3.5 w-3.5" />}
-            Add to Cart
-          </button>
-          <button
-            onClick={onRemove}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-theme border border-line text-ink-muted hover:border-danger hover:text-danger"
-            title="Remove from wishlist"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+      <div className="flex flex-1 flex-col justify-between p-4">
+        <div>
+          <Link href={`/products/${product.slug}`}>
+            <h3 className="line-clamp-2 text-sm font-semibold text-ink hover:text-brand">
+              {product.name}
+            </h3>
+          </Link>
+          <div className="mt-2 flex items-baseline gap-2">
+            <p className="text-base font-bold text-ink">{formatMinor(product.priceMinor, product.currency)}</p>
+            {product.comparePriceMinor && saving !== null && (
+              <span className="text-xs text-ink-muted line-through">
+                {formatMinor(product.comparePriceMinor, product.currency)}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => void handleAddToCart()}
+              disabled={isAdding}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-theme py-2 text-xs font-medium transition-colors ${
+                justAdded
+                  ? 'bg-success text-white hover:bg-success/90'
+                  : 'bg-brand text-brand-foreground hover:bg-brand/90'
+              } disabled:opacity-50`}
+            >
+              {isAdding ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : justAdded ? (
+                <Check className="h-3.5 w-3.5" />
+              ) : (
+                <ShoppingBag className="h-3.5 w-3.5" />
+              )}
+              {justAdded ? 'Added to Cart' : 'Add to Cart'}
+            </button>
+            <button
+              onClick={onRemove}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-theme border border-line text-ink-muted hover:border-danger hover:text-danger"
+              title="Remove from wishlist"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+
+          {justAdded && (
+            <div className="mt-2 flex items-center justify-between text-[11px] text-success">
+              <span>Item added to your cart</span>
+              <Link href="/cart" className="font-semibold underline hover:text-success/80">
+                View Cart →
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
+

@@ -1,10 +1,12 @@
 'use client';
 
+import { Download } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import {
   Alert,
   Badge,
+  Button,
   Input,
   Table,
   TableBody,
@@ -15,6 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/primitives';
 import { isForbidden } from '@/lib/api-client';
+import { downloadCsvFile, generateCsvText } from '@/lib/csv-helper';
 import { useLowStock } from '@/lib/queries/inventory';
 import { useProduct, useProducts } from '@/lib/queries/products';
 import { useCurrentStore } from '@/lib/queries/stores';
@@ -33,6 +36,32 @@ export default function InventoryPage() {
 
   const results = search.trim().length > 0 ? searchQuery.data?.data ?? [] : [];
   const lowStockRows = lowStock.data ?? [];
+
+  function exportLowStockCsv() {
+    if (lowStockRows.length === 0) return;
+    const headers = [
+      'Product ID',
+      'Warehouse ID',
+      'Warehouse Name',
+      'On Hand',
+      'Reserved',
+      'Available',
+      'Reorder Point',
+      'Status',
+    ];
+    const rows = lowStockRows.map((r) => [
+      r.productId,
+      r.warehouseId,
+      r.warehouseName,
+      r.quantityOnHand,
+      r.quantityReserved,
+      r.quantityAvailable,
+      r.reorderPoint ?? '—',
+      r.quantityAvailable <= 0 ? 'OUT_OF_STOCK' : 'LOW_STOCK',
+    ]);
+    const csv = generateCsvText(headers, rows);
+    downloadCsvFile(`low-stock-inventory-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+  }
 
   return (
     <PageShell>
@@ -77,7 +106,25 @@ export default function InventoryPage() {
 
       {/* The low-stock table does not depend on `store` at all, so it renders
           regardless of whether the store lookup succeeded (see BUG-FE-008). */}
-      <h2 className="mb-3 text-sm font-medium text-muted-foreground">Low stock</h2>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">Low Stock & Reorder Alerts</h2>
+          <p className="text-xs text-muted-foreground">
+            Products at or below their configured reorder point requiring restocking.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={lowStockRows.length === 0}
+          onClick={exportLowStockCsv}
+          className="inline-flex items-center gap-1.5"
+        >
+          <Download className="size-3.5 text-slate-600" />
+          Export Low Stock CSV
+        </Button>
+      </div>
+
       {lowStock.isError && (
         <Alert variant="error" className="mb-3">
           {isForbidden(lowStock.error)
@@ -94,13 +141,14 @@ export default function InventoryPage() {
             <TableHead>Reserved</TableHead>
             <TableHead>Available</TableHead>
             <TableHead>Reorder point</TableHead>
+            <TableHead className="w-28 text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {lowStock.isLoading ? (
-            <TableEmptyRow colSpan={6}>Loading…</TableEmptyRow>
+            <TableEmptyRow colSpan={7}>Loading…</TableEmptyRow>
           ) : lowStock.isError ? null : lowStockRows.length === 0 ? (
-            <TableEmptyRow colSpan={6}>Nothing is at or below its reorder point.</TableEmptyRow>
+            <TableEmptyRow colSpan={7}>Nothing is at or below its reorder point.</TableEmptyRow>
           ) : (
             lowStockRows.map((row) => (
               <TableRow key={`${row.productId}-${row.variantId ?? ''}-${row.warehouseId}`}>
@@ -112,10 +160,17 @@ export default function InventoryPage() {
                 <TableCell className="tabular">{row.quantityReserved}</TableCell>
                 <TableCell className="tabular">
                   <Badge variant={row.quantityAvailable <= 0 ? 'destructive' : 'warning'}>
-                    {row.quantityAvailable}
+                    {row.quantityAvailable <= 0
+                      ? 'Out of stock'
+                      : `${row.quantityAvailable} available`}
                   </Badge>
                 </TableCell>
                 <TableCell className="tabular text-muted-foreground">{row.reorderPoint ?? '—'}</TableCell>
+                <TableCell className="text-right">
+                  <Button asChild variant="outline" size="sm" className="h-7 text-xs">
+                    <Link href={`/inventory/${row.productId}`}>Adjust Stock</Link>
+                  </Button>
+                </TableCell>
               </TableRow>
             ))
           )}
