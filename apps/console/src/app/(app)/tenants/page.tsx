@@ -34,7 +34,7 @@ import {
   useSuspendTenant,
 } from '@/lib/queries/platform-tenants';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Palette, Check, FolderCode, Download, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Palette, Check, FolderCode, Download, CheckCircle2, ArrowRight, X } from 'lucide-react';
 import { downloadJsonFile } from '@/lib/csv-helper';
 
 const STATUS_BADGE: Record<TenantStatus, 'default' | 'success' | 'warning' | 'destructive' | 'info'> = {
@@ -409,8 +409,8 @@ function TenantsPageContent() {
 
       {/* Direct Theme Selection & Workspace Exporter Modal */}
       {themeModalTenant && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-2xl rounded-xl border border-border bg-surface p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-xl border border-border bg-card text-card-foreground p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border pb-3">
               <div>
                 <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
@@ -424,14 +424,15 @@ function TenantsPageContent() {
               <button
                 type="button"
                 onClick={() => setThemeModalTenant(null)}
-                className="text-muted-foreground hover:text-foreground text-sm font-semibold"
+                className="text-muted-foreground hover:text-foreground rounded-lg p-1.5 hover:bg-muted/60 transition-colors"
+                aria-label="Close modal"
               >
-                ✕
+                <X className="size-5" />
               </button>
             </div>
 
             {/* Folder storage location indicator */}
-            <div className="p-3 rounded-lg bg-muted/30 border border-border/80 flex items-center justify-between gap-3 text-xs">
+            <div className="p-3 rounded-lg bg-muted/50 border border-border flex items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2 text-foreground font-mono">
                 <FolderCode className="size-4 text-primary shrink-0" />
                 <span className="truncate">
@@ -466,8 +467,8 @@ function TenantsPageContent() {
                       onClick={() => handleSelectThemeForTenant(themeModalTenant, code)}
                       className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
                         isSelected
-                          ? 'border-primary bg-primary/5 ring-2 ring-primary/20 shadow-md'
-                          : 'border-border/80 bg-surface hover:border-primary/40 hover:bg-muted/10'
+                          ? 'border-primary bg-primary/10 ring-2 ring-primary/30 shadow-md'
+                          : 'border-border bg-card hover:border-primary/50 hover:bg-muted/30'
                       }`}
                     >
                       <div className="space-y-2">
@@ -494,7 +495,7 @@ function TenantsPageContent() {
                         </p>
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-[11px]">
+                      <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-[11px]">
                         <span className="text-muted-foreground font-mono">Font: {info.font}</span>
                         <Button
                           type="button"
