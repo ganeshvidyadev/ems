@@ -24,6 +24,11 @@ import {
   Tag,
   Link as LinkIcon,
   ArrowRight,
+  Sliders,
+  Type,
+  Code2,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '@/lib/api-client';
 import { Button, Badge, Alert, Input, Textarea, Card, CardHeader, CardBody } from '@/components/ui/primitives';
@@ -50,6 +55,16 @@ interface BrandingSettings {
   logoUrl: string | null;
   faviconUrl: string | null;
   banners: BannerSlide[];
+}
+
+interface CustomizerSettings {
+  primaryColor: string;
+  accentColor: string;
+  surfaceColor: string;
+  textColor: string;
+  headingFont: string;
+  bodyFont: string;
+  customCss: string;
 }
 
 interface CompanyThemeData {
@@ -126,6 +141,28 @@ const THEME_METADATA: Record<string, ThemeMeta> = {
   },
 };
 
+const FONT_OPTIONS = [
+  'Inter',
+  'Playfair Display',
+  'Lora',
+  'Roboto',
+  'Montserrat',
+  'Nunito',
+  'Space Grotesk',
+  'Poppins',
+  'Outfit',
+  'Plus Jakarta Sans',
+];
+
+const PALETTE_PRESETS = [
+  { name: 'Emerald Nature', primary: '#16a34a', accent: '#15803d', surface: '#f0fdf4', text: '#052e16' },
+  { name: 'Cyber Indigo', primary: '#4f46e5', accent: '#4338ca', surface: '#eef2ff', text: '#1e1b4b' },
+  { name: 'Luxury Rose', primary: '#f43f5e', accent: '#e11d48', surface: '#fff1f2', text: '#881337' },
+  { name: 'Sunset Amber', primary: '#f59e0b', accent: '#d97706', surface: '#fffbeb', text: '#451a03' },
+  { name: 'Electric Cyan', primary: '#0ea5e9', accent: '#0284c7', surface: '#f0f9ff', text: '#082f49' },
+  { name: 'Obsidian Modern', primary: '#0f172a', accent: '#334155', surface: '#f8fafc', text: '#020617' },
+];
+
 function getThemeMeta(code: string): ThemeMeta {
   return THEME_METADATA[code] ?? DEFAULT_META;
 }
@@ -150,6 +187,12 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
     enabled: !!(company?.id ?? tenantId),
   });
 
+  const { data: customizerData } = useQuery<CustomizerSettings>({
+    queryKey: ['platform-theme-customizer', company?.id ?? tenantId],
+    queryFn: () => apiGet<CustomizerSettings>(`/platform/themes/${company?.id ?? tenantId}/customizer`),
+    enabled: !!(company?.id ?? tenantId),
+  });
+
   const [selectedTheme, setSelectedTheme] = useState<string>('');
   const [allowedThemes, setAllowedThemes] = useState<string[]>([]);
   
@@ -164,6 +207,15 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
   const [faviconUrl, setFaviconUrl] = useState<string>('');
   const [banners, setBanners] = useState<BannerSlide[]>([]);
   const [uploadingType, setUploadingType] = useState<string | null>(null);
+
+  // Visual Customizer local states
+  const [primaryColor, setPrimaryColor] = useState<string>('#2563eb');
+  const [accentColor, setAccentColor] = useState<string>('#1d4ed8');
+  const [surfaceColor, setSurfaceColor] = useState<string>('#ffffff');
+  const [textColor, setTextColor] = useState<string>('#0f172a');
+  const [headingFont, setHeadingFont] = useState<string>('Inter');
+  const [bodyFont, setBodyFont] = useState<string>('Inter');
+  const [customCss, setCustomCss] = useState<string>('');
 
   useEffect(() => {
     if (company) {
@@ -183,6 +235,18 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
       if (brandingData.banners) setBanners(brandingData.banners);
     }
   }, [brandingData]);
+
+  useEffect(() => {
+    if (customizerData) {
+      if (customizerData.primaryColor) setPrimaryColor(customizerData.primaryColor);
+      if (customizerData.accentColor) setAccentColor(customizerData.accentColor);
+      if (customizerData.surfaceColor) setSurfaceColor(customizerData.surfaceColor);
+      if (customizerData.textColor) setTextColor(customizerData.textColor);
+      if (customizerData.headingFont) setHeadingFont(customizerData.headingFont);
+      if (customizerData.bodyFont) setBodyFont(customizerData.bodyFont);
+      if (customizerData.customCss) setCustomCss(customizerData.customCss);
+    }
+  }, [customizerData]);
 
   const currentTheme = company?.selectedTheme || 'default';
   const effectiveSelected = selectedTheme || currentTheme;
@@ -252,6 +316,23 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
     },
     onError: (err: any) => {
       setErrorMessage(err?.message ?? 'Failed to save branding assets.');
+    },
+  });
+
+  const saveCustomizerMutation = useMutation({
+    mutationFn: (payload: Partial<CustomizerSettings>) =>
+      apiPut<{ message: string; customizer: CustomizerSettings }>(
+        `/platform/themes/${company?.id ?? tenantId}/customizer`,
+        payload,
+      ),
+    onSuccess: () => {
+      setSuccessMessage('Visual styling tokens & compiled theme.css published to storefront successfully!');
+      setErrorMessage(null);
+      void queryClient.invalidateQueries({ queryKey: ['platform-theme-customizer'] });
+      setTimeout(() => setSuccessMessage(null), 4000);
+    },
+    onError: (err: any) => {
+      setErrorMessage(err?.message ?? 'Failed to save visual customizer settings.');
     },
   });
 
@@ -356,6 +437,13 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
     }
   }
 
+  function applyPreset(preset: typeof PALETTE_PRESETS[0]) {
+    setPrimaryColor(preset.primary);
+    setAccentColor(preset.accent);
+    setSurfaceColor(preset.surface);
+    setTextColor(preset.text);
+  }
+
   function handleExportThemeFolder() {
     if (!company) return;
     const meta = getThemeMeta(effectiveSelected);
@@ -379,6 +467,15 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
         logoUrl: logoUrl || null,
         faviconUrl: faviconUrl || null,
         banners: banners,
+        customizer: {
+          primaryColor,
+          accentColor,
+          surfaceColor,
+          textColor,
+          headingFont,
+          bodyFont,
+          customCss,
+        },
         assetsFolderPath: `storage/tenants/${company.slug}/assets/`,
       },
       fileStructure: {
@@ -393,11 +490,11 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
         },
         'config.json': {
           colors: {
-            primary: meta.brandColor,
-            accent: meta.accentColor,
+            primary: primaryColor || meta.brandColor,
+            accent: accentColor || meta.accentColor,
           },
           typography: {
-            headingFont: meta.font,
+            headingFont: headingFont || meta.font,
           },
           sections: meta.previewFeatures,
         },
@@ -405,8 +502,17 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
           logoUrl: logoUrl || null,
           faviconUrl: faviconUrl || null,
           banners: banners,
+          customizer: {
+            primaryColor,
+            accentColor,
+            surfaceColor,
+            textColor,
+            headingFont,
+            bodyFont,
+            customCss,
+          },
         },
-        'theme.css': `:root { --brand-primary: ${meta.brandColor}; --brand-accent: ${meta.accentColor}; --font-heading: '${meta.font}'; }`,
+        'theme.css': `:root { --brand-primary: ${primaryColor}; --brand-accent: ${accentColor}; --brand-surface: ${surfaceColor}; --brand-text: ${textColor}; --font-heading: '${headingFont}'; --font-body: '${bodyFont}'; }\n${customCss}`,
       },
       previousThemeBackups: effectiveAllowed
         .filter((c) => c !== effectiveSelected)
@@ -445,7 +551,7 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
             <Palette className="h-5 w-5 text-primary" /> Storefront Themes & Design System
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage 5 free standard templates, upload custom brand assets & hero banners, and isolate company files for {company?.name ?? 'this tenant'}.
+            Manage 5 free standard templates, live customize color palettes & fonts, and isolate company files for {company?.name ?? 'this tenant'}.
           </p>
         </div>
 
@@ -522,6 +628,301 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
               <div className="font-mono text-xs font-semibold text-foreground">
                 storage/tenants/{company?.slug ?? 'tenant'}/themes/{currentTheme}/
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Live Visual Theme Customizer Card */}
+      <div className="rounded-xl border border-border bg-card p-5 space-y-6">
+        <div className="flex items-center justify-between border-b border-border pb-3">
+          <div className="space-y-0.5">
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Sliders className="size-4 text-primary" />
+              Live Visual Theme Customizer (Color Palettes & Typography)
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Customize colors, fonts, and CSS tokens. Variables are compiled into <code className="font-mono text-foreground">storage/tenants/{company?.slug}/themes/{currentTheme}/theme.css</code> and injected automatically into the storefront.
+            </p>
+          </div>
+          <Badge variant="outline" className="text-xs font-mono">
+            CSS :root Injection
+          </Badge>
+        </div>
+
+        {/* 1-Click Palette Presets */}
+        <div className="space-y-2">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Instant Color Presets</span>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+            {PALETTE_PRESETS.map((preset) => (
+              <button
+                key={preset.name}
+                type="button"
+                onClick={() => applyPreset(preset)}
+                className="flex items-center gap-2 p-2 rounded-lg border border-border bg-background hover:bg-muted/60 text-left transition-all shadow-xs cursor-pointer"
+              >
+                <div className="size-4 rounded-full border shadow-xs shrink-0" style={{ backgroundColor: preset.primary }} />
+                <span className="text-xs font-medium text-foreground truncate">{preset.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+          {/* Controls Column */}
+          <div className="space-y-4">
+            {/* Colors */}
+            <div className="space-y-3 rounded-lg border border-border p-4 bg-muted/10">
+              <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Palette className="size-3.5 text-primary" /> Color Palette Tokens
+              </span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-muted-foreground">Primary Brand Color</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
+                      className="size-8 rounded border border-input cursor-pointer p-0 bg-transparent"
+                    />
+                    <Input
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
+                      className="h-8 text-xs font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-muted-foreground">Accent Color</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={accentColor}
+                      onChange={(e) => setAccentColor(e.target.value)}
+                      className="size-8 rounded border border-input cursor-pointer p-0 bg-transparent"
+                    />
+                    <Input
+                      value={accentColor}
+                      onChange={(e) => setAccentColor(e.target.value)}
+                      className="h-8 text-xs font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-muted-foreground">Surface / Card Background</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={surfaceColor}
+                      onChange={(e) => setSurfaceColor(e.target.value)}
+                      className="size-8 rounded border border-input cursor-pointer p-0 bg-transparent"
+                    />
+                    <Input
+                      value={surfaceColor}
+                      onChange={(e) => setSurfaceColor(e.target.value)}
+                      className="h-8 text-xs font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-muted-foreground">Text & Headings Color</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={textColor}
+                      onChange={(e) => setTextColor(e.target.value)}
+                      className="size-8 rounded border border-input cursor-pointer p-0 bg-transparent"
+                    />
+                    <Input
+                      value={textColor}
+                      onChange={(e) => setTextColor(e.target.value)}
+                      className="h-8 text-xs font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Typography */}
+            <div className="space-y-3 rounded-lg border border-border p-4 bg-muted/10">
+              <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Type className="size-3.5 text-primary" /> Typography Hierarchy
+              </span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-muted-foreground">Heading Font Family</label>
+                  <select
+                    value={headingFont}
+                    onChange={(e) => setHeadingFont(e.target.value)}
+                    className="flex h-8 w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs shadow-xs"
+                  >
+                    {FONT_OPTIONS.map((f) => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-muted-foreground">Body Font Family</label>
+                  <select
+                    value={bodyFont}
+                    onChange={(e) => setBodyFont(e.target.value)}
+                    className="flex h-8 w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs shadow-xs"
+                  >
+                    {FONT_OPTIONS.map((f) => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Custom CSS */}
+            <div className="space-y-2 rounded-lg border border-border p-4 bg-muted/10">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <Code2 className="size-3.5 text-primary" /> Custom CSS Rules
+                </span>
+                <span className="text-[10px] text-muted-foreground">Applied globally</span>
+              </div>
+              <Textarea
+                rows={3}
+                placeholder="/* Custom tenant styles, e.g. .site-header { backdrop-filter: blur(8px); } */"
+                value={customCss}
+                onChange={(e) => setCustomCss(e.target.value)}
+                className="font-mono text-xs"
+              />
+            </div>
+          </div>
+
+          {/* Real-time Live Preview Swatch */}
+          <div className="space-y-3 rounded-lg border border-border p-5 bg-card flex flex-col justify-between shadow-xs">
+            <div>
+              <div className="flex items-center justify-between border-b border-border pb-2.5 mb-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <Eye className="size-3.5 text-primary" /> Live Storefront Component Swatch
+                </span>
+                <Badge variant="outline" className="text-[10px]">Real-time Render</Badge>
+              </div>
+
+              <div
+                className="rounded-xl border p-4 space-y-4 shadow-sm transition-all"
+                style={{
+                  backgroundColor: surfaceColor,
+                  color: textColor,
+                  fontFamily: `${bodyFont}, sans-serif`,
+                }}
+              >
+                {/* Header Swatch */}
+                <div className="flex items-center justify-between pb-3 border-b border-black/10 dark:border-white/10">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="size-7 rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-xs"
+                      style={{ backgroundColor: primaryColor }}
+                    >
+                      {company?.name ? company.name[0]?.toUpperCase() : 'S'}
+                    </div>
+                    <span
+                      className="font-bold text-sm tracking-tight"
+                      style={{ fontFamily: `${headingFont}, serif` }}
+                    >
+                      {company?.name ?? 'Storefront'}
+                    </span>
+                  </div>
+                  <span
+                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: `${accentColor}20`, color: accentColor }}
+                  >
+                    Special Offer
+                  </span>
+                </div>
+
+                {/* Hero Pitch Banner */}
+                <div
+                  className="rounded-lg p-3 text-white space-y-1 shadow-xs"
+                  style={{
+                    background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+                  }}
+                >
+                  <h4
+                    className="font-bold text-sm"
+                    style={{ fontFamily: `${headingFont}, serif` }}
+                  >
+                    Summer Collection 2026
+                  </h4>
+                  <p className="text-[11px] opacity-90">Discover our handcrafted catalog with express delivery.</p>
+                </div>
+
+                {/* Product Card Mockup */}
+                <div className="rounded-lg border border-black/10 dark:border-white/10 p-3 bg-white/70 dark:bg-black/20 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h5
+                        className="font-bold text-xs"
+                        style={{ fontFamily: `${headingFont}, serif` }}
+                      >
+                        Premium Artisan Roast
+                      </h5>
+                      <span className="text-[11px] opacity-75">100% Organic certified blend</span>
+                    </div>
+                    <span className="font-bold text-sm" style={{ color: primaryColor }}>
+                      ₹899
+                    </span>
+                  </div>
+
+                  {/* Buttons Swatch */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      className="flex-1 text-xs font-semibold py-1.5 px-3 rounded-md text-white shadow-xs transition-all cursor-pointer"
+                      style={{ backgroundColor: primaryColor }}
+                    >
+                      Add to Cart
+                    </button>
+                    <button
+                      type="button"
+                      className="text-xs font-semibold py-1.5 px-3 rounded-md border shadow-xs transition-all cursor-pointer"
+                      style={{
+                        borderColor: primaryColor,
+                        color: primaryColor,
+                        backgroundColor: 'transparent',
+                      }}
+                    >
+                      Quick View
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Publish Button */}
+            <div className="pt-4 border-t border-border flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">
+                Compiles CSS tokens to <code className="font-mono text-foreground">theme.css</code>
+              </span>
+              <Button
+                size="sm"
+                onClick={() =>
+                  saveCustomizerMutation.mutate({
+                    primaryColor,
+                    accentColor,
+                    surfaceColor,
+                    textColor,
+                    headingFont,
+                    bodyFont,
+                    customCss,
+                  })
+                }
+                loading={saveCustomizerMutation.isPending}
+                className="text-xs font-semibold gap-1.5"
+              >
+                <Sparkles className="size-3.5" />
+                <span>Publish Custom Styling to Storefront</span>
+              </Button>
             </div>
           </div>
         </div>

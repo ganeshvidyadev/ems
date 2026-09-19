@@ -51,6 +51,18 @@ export const assetUploadSchema = z
   })
   .strict();
 
+export const customizerSchema = z
+  .object({
+    primaryColor: z.string().max(32).optional(),
+    accentColor: z.string().max(32).optional(),
+    surfaceColor: z.string().max(32).optional(),
+    textColor: z.string().max(32).optional(),
+    headingFont: z.string().max(64).optional(),
+    bodyFont: z.string().max(64).optional(),
+    customCss: z.string().max(50000).optional(),
+  })
+  .strict();
+
 @Controller({ version: '1' })
 export class ThemeAccessController {
   constructor(private readonly access: ThemeAccessService) {}
@@ -100,6 +112,21 @@ export class ThemeAccessController {
     return this.access.updateBranding(id, body);
   }
 
+  @Get('platform/themes/:companyId/customizer')
+  @PlatformOnly()
+  @Permissions('platform.tenant:read')
+  getCustomizer(@Param('companyId') id: string) {
+    return this.access.getCustomizerSettings(id);
+  }
+
+  @Put('platform/themes/:companyId/customizer')
+  @PlatformOnly()
+  @Permissions('platform.tenant:update')
+  @Validate(customizerSchema)
+  updateCustomizer(@Param('companyId') id: string, @Body() body: z.infer<typeof customizerSchema>) {
+    return this.access.updateCustomizerSettings(id, body);
+  }
+
   @Post('platform/themes/:companyId/assets/upload')
   @PlatformOnly()
   @Permissions('platform.tenant:update')
@@ -114,3 +141,4 @@ export class ThemeAccessController {
     return this.access.current();
   }
 }
+

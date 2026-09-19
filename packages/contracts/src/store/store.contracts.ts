@@ -4,6 +4,17 @@ import { publicIdSchema } from '../common/primitives.js';
 export const STORE_STATUSES = ['DRAFT', 'ACTIVE', 'MAINTENANCE', 'CLOSED'] as const;
 export type StoreStatus = (typeof STORE_STATUSES)[number];
 
+export const themeCustomizationSchema = z.object({
+  primaryColor: z.string().optional(),
+  accentColor: z.string().optional(),
+  surfaceColor: z.string().optional(),
+  textColor: z.string().optional(),
+  headingFont: z.string().optional(),
+  bodyFont: z.string().optional(),
+  customCss: z.string().optional(),
+}).optional();
+export type ThemeCustomization = z.infer<typeof themeCustomizationSchema>;
+
 /**
  * A read-only summary — enough for a store picker or a "which store am I
  * managing" header, not the full settings surface (logo/address/timezone
@@ -17,6 +28,7 @@ export const storeResponseSchema = z.object({
   currency: z.string(),
   logoUrl: z.string().nullable().optional(),
   faviconUrl: z.string().nullable().optional(),
+  themeCustomization: themeCustomizationSchema,
 });
 export type StoreResponse = z.infer<typeof storeResponseSchema>;
 
@@ -38,5 +50,7 @@ export const storefrontStoreResponseSchema = z.object({
   currency: z.string(),
   logoUrl: z.string().nullable().optional(),
   faviconUrl: z.string().nullable().optional(),
+  themeCustomization: themeCustomizationSchema,
 });
 export type StorefrontStoreResponse = z.infer<typeof storefrontStoreResponseSchema>;
+

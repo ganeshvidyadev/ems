@@ -507,6 +507,116 @@ export class ThemeAccessService {
     };
   }
 
+  async getCustomizerSettings(publicId: string) {
+    this.requireSuperAdmin();
+    const repo = this.manager.getRepository(TenantEntity);
+    const tenant = await repo.findOne({ where: { publicId } });
+    if (!tenant || tenant.deletedAt || tenant.status === 'DELETED') {
+      throw new NotFoundException('Company not found');
+    }
+
+    const currentTheme = tenant.storefrontTheme || 'default';
+    const themeDef = getThemeDefinition(currentTheme);
+    const overridesPath = path.resolve(
+      process.cwd(),
+      'storage',
+      'tenants',
+      tenant.slug,
+      'themes',
+      currentTheme,
+      'overrides.json',
+    );
+    let customizerData: any = {};
+    if (fs.existsSync(overridesPath)) {
+      try {
+        const raw = fs.readFileSync(overridesPath, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (parsed.customizer) customizerData = parsed.customizer;
+      } catch {
+        // ignore parse error
+      }
+    }
+
+    return {
+      primaryColor: customizerData.primaryColor ?? themeDef.brandColor,
+      accentColor: customizerData.accentColor ?? themeDef.accentColor,
+      surfaceColor: customizerData.surfaceColor ?? '#ffffff',
+      textColor: customizerData.textColor ?? '#0f172a',
+      headingFont: customizerData.headingFont ?? themeDef.font,
+      bodyFont: customizerData.bodyFont ?? 'Inter, sans-serif',
+      customCss: customizerData.customCss ?? '',
+    };
+  }
+
+  async updateCustomizerSettings(
+    publicId: string,
+    input: {
+      primaryColor?: string;
+      accentColor?: string;
+      surfaceColor?: string;
+      textColor?: string;
+      headingFont?: string;
+      bodyFont?: string;
+      customCss?: string;
+    },
+  ) {
+    this.requireSuperAdmin();
+    const repo = this.manager.getRepository(TenantEntity);
+    const tenant = await repo.findOne({ where: { publicId } });
+    if (!tenant || tenant.deletedAt || tenant.status === 'DELETED') {
+      throw new NotFoundException('Company not found');
+    }
+
+    const currentTheme = tenant.storefrontTheme || 'default';
+    const themeDef = getThemeDefinition(currentTheme);
+    const themeDir = path.resolve(process.cwd(), 'storage', 'tenants', tenant.slug, 'themes', currentTheme);
+    fs.mkdirSync(themeDir, { recursive: true });
+
+    // Update overrides.json
+    const overridesPath = path.join(themeDir, 'overrides.json');
+    let overrides: any = {};
+    if (fs.existsSync(overridesPath)) {
+      try {
+        overrides = JSON.parse(fs.readFileSync(overridesPath, 'utf8'));
+      } catch {
+        overrides = {};
+      }
+    }
+
+    overrides.customizer = {
+      primaryColor: input.primaryColor || themeDef.brandColor,
+      accentColor: input.accentColor || themeDef.accentColor,
+      surfaceColor: input.surfaceColor || '#ffffff',
+      textColor: input.textColor || '#0f172a',
+      headingFont: input.headingFont || themeDef.font,
+      bodyFont: input.bodyFont || 'Inter, sans-serif',
+      customCss: input.customCss || '',
+      updatedAt: new Date().toISOString(),
+    };
+
+    fs.writeFileSync(overridesPath, JSON.stringify(overrides, null, 2), 'utf8');
+
+    // Update theme.css
+    const compiledCss = `:root {
+  --brand-primary: ${input.primaryColor || themeDef.brandColor};
+  --brand-accent: ${input.accentColor || themeDef.accentColor};
+  --brand-surface: ${input.surfaceColor || '#ffffff'};
+  --brand-text: ${input.textColor || '#0f172a'};
+  --font-heading: '${input.headingFont || themeDef.font}';
+  --font-body: '${input.bodyFont || 'Inter, sans-serif'}';
+}
+
+/* Custom Tenant CSS Overrides */
+${input.customCss || ''}
+`;
+    fs.writeFileSync(path.join(themeDir, 'theme.css'), compiledCss, 'utf8');
+
+    return {
+      message: 'Theme visual customizer styles updated and compiled to theme.css successfully.',
+      customizer: overrides.customizer,
+    };
+  }
+
   async current() {
     const id = this.context.requireTenantId('storefront theme assignment');
     const tenant = await this.manager.getRepository(TenantEntity).findOne({ where: { id } });
