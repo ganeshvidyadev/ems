@@ -124,6 +124,22 @@ export function downloadCsvFile(filename: string, csvContent: string): void {
 }
 
 /**
+ * Initiates an automatic browser download of a JSON file.
+ */
+export function downloadJsonFile(filename: string, data: unknown): void {
+  const jsonContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename.endsWith('.json') ? filename : `${filename}.json`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
  * Returns a ready-to-use Sample Product Import CSV template with instructions.
  */
 export function getSampleProductTemplateCsv(): string {
