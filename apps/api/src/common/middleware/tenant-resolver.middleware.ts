@@ -109,10 +109,13 @@ export class TenantResolverMiddleware implements NestMiddleware {
    * — so it grants no read the tenant's own hostname would not already give.
    */
   private async resolveFromHost(req: Request): Promise<void> {
-    const candidates = [
-      this.normalizeHost(req.headers.host ?? ''),
-      this.normalizeHost(this.forwardedHostname(req)),
-    ].filter((value): value is string => value !== null);
+    const hostHeader = this.normalizeHost(req.headers.host ?? '');
+    const forwarded = this.normalizeHost(this.forwardedHostname(req));
+    const isDevHost = hostHeader === 'localhost' || hostHeader === '127.0.0.1' || hostHeader === 'ems.localhost';
+    const candidates = (isDevHost && forwarded
+      ? [forwarded, hostHeader]
+      : [hostHeader, forwarded]
+    ).filter((value): value is string => value !== null);
 
     for (const hostname of candidates) {
       const resolution = await this.lookupDomain(hostname);

@@ -13,7 +13,7 @@ export class MysqlFulltextAdapter implements SearchPort {
   constructor(@InjectEntityManager() private readonly manager: EntityManager) {}
 
   async search(input: SearchInput): Promise<SearchResult> {
-    const params: unknown[] = [input.query, input.tenantId];
+    const params: unknown[] = [input.tenantId];
     let storeClause = '';
     if (input.storeId) {
       storeClause = 'AND store_id = ?';
@@ -29,24 +29,60 @@ export class MysqlFulltextAdapter implements SearchPort {
           AND visibility IN ('VISIBLE', 'SEARCH_ONLY')
           ${storeClause}
           AND MATCH(name, short_description, meta_keywords) AGAINST (? IN NATURAL LANGUAGE MODE)`,
-      [...params.slice(1), input.query],
+      [...params, input.query],
     )) as { total: number | string }[];
 
-    const rows = (await this.manager.query(
-      `SELECT id,
-              MATCH(name, short_description, meta_keywords) AGAINST (? IN NATURAL LANGUAGE MODE) AS relevance
+    const total = Number(countRows[0]?.total ?? 0);
+
+    if (total > 0) {
+      const rows = (await this.manager.query(
+        `SELECT id,
+                MATCH(name, short_description, meta_keywords) AGAINST (? IN NATURAL LANGUAGE MODE) AS relevance
+           FROM products
+          WHERE tenant_id = ?
+            AND deleted_at IS NULL
+            AND status = 'ACTIVE'
+            AND visibility IN ('VISIBLE', 'SEARCH_ONLY')
+            ${storeClause}
+            AND MATCH(name, short_description, meta_keywords) AGAINST (? IN NATURAL LANGUAGE MODE)
+          ORDER BY relevance DESC
+          LIMIT ? OFFSET ?`,
+        [input.query, ...params, input.query, input.take, input.skip],
+      )) as { id: string }[];
+
+      return { ids: rows.map((row) => row.id), total };
+    }
+
+    // Fallback for short words, partial terms, and stopwords that natural language fulltext skips
+    const likePattern = `%${input.query}%`;
+    const likeCountRows = (await this.manager.query(
+      `SELECT COUNT(*) AS total
          FROM products
         WHERE tenant_id = ?
           AND deleted_at IS NULL
           AND status = 'ACTIVE'
           AND visibility IN ('VISIBLE', 'SEARCH_ONLY')
           ${storeClause}
-          AND MATCH(name, short_description, meta_keywords) AGAINST (? IN NATURAL LANGUAGE MODE)
-        ORDER BY relevance DESC
+          AND (name LIKE ? OR short_description LIKE ? OR sku LIKE ?)`,
+      [...params, likePattern, likePattern, likePattern],
+    )) as { total: number | string }[];
+
+    const likeTotal = Number(likeCountRows[0]?.total ?? 0);
+
+    const likeRows = (await this.manager.query(
+      `SELECT id
+         FROM products
+        WHERE tenant_id = ?
+          AND deleted_at IS NULL
+          AND status = 'ACTIVE'
+          AND visibility IN ('VISIBLE', 'SEARCH_ONLY')
+          ${storeClause}
+          AND (name LIKE ? OR short_description LIKE ? OR sku LIKE ?)
+        ORDER BY id DESC
         LIMIT ? OFFSET ?`,
-      [input.query, ...params.slice(1), input.query, input.take, input.skip],
+      [...params, likePattern, likePattern, likePattern, input.take, input.skip],
     )) as { id: string }[];
 
-    return { ids: rows.map((row) => row.id), total: Number(countRows[0]?.total ?? 0) };
+    return { ids: likeRows.map((row) => row.id), total: likeTotal };
   }
 }
