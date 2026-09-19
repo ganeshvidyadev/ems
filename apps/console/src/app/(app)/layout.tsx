@@ -163,6 +163,7 @@ export const COMPANY_ADMIN_NAV = [
       { href: '/customers', label: 'Customers' },
       { href: '/coupons', label: 'Coupons' },
       { href: '/abandoned-carts', label: 'Abandoned Carts' },
+      { href: '/gift-cards', label: 'Gift Cards' },
     ],
   },
   {
