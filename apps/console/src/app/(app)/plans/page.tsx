@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { Download } from 'lucide-react';
 import {
   Alert,
   Badge,
@@ -18,6 +19,7 @@ import {
 } from '@/components/ui/primitives';
 import { usePermission } from '@/hooks/use-auth';
 import { formatMoney } from '@/lib/utils';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
 import { useArchivePlan, useDeletePlan, usePlatformPlans } from '@/lib/queries/platform-plans';
 
 export default function PlansPage() {
@@ -30,6 +32,22 @@ export default function PlansPage() {
   const remove = useDeletePlan();
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
+  const handleExportPlansCsv = () => {
+    if (!plans.data || plans.data.length === 0) return;
+    const headers = ['Plan Name', 'Code', 'Monthly Price', 'Yearly Price', 'Currency', 'Visibility', 'Status', 'Subscribers Count'];
+    const rows = plans.data.map((p) => [
+      p.name,
+      p.code,
+      p.priceMonthlyMinor,
+      p.priceYearlyMinor,
+      p.currency,
+      p.isPublic ? 'Public' : 'Negotiated',
+      p.status,
+      String(p.subscriberCount),
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `subscription-plans-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
+
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -37,11 +55,22 @@ export default function PlansPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Plans</h1>
           <p className="text-sm text-muted-foreground">The subscription catalogue every tenant chooses from.</p>
         </div>
-        {canCreate && (
-          <Button asChild>
-            <Link href="/plans/new">New plan</Link>
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {plans.data && plans.data.length > 0 && (
+            <button
+              type="button"
+              onClick={handleExportPlansCsv}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              <Download className="size-4" /> Export CSV
+            </button>
+          )}
+          {canCreate && (
+            <Button asChild>
+              <Link href="/plans/new">New plan</Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       {plans.isError && <Alert variant="error">Could not load plans. Try refreshing the page.</Alert>}
