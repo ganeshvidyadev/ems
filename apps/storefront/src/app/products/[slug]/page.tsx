@@ -8,6 +8,7 @@ import { BackInStockWidget } from '@/components/back-in-stock';
 import { DeliveryCountdown } from '@/components/delivery-countdown';
 import { StockUrgencyBar } from '@/components/stock-urgency-bar';
 import { ProductOffers } from '@/components/product-offers';
+import { ProductBundle } from '@/components/product-bundle';
 import { ProductFaqAccordion } from '@/components/product-faq-accordion';
 import { PincodeChecker } from '@/components/pincode-checker';
 import { ProductGrid } from '@/components/product-card';
@@ -229,6 +230,9 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
           </dl>
         </section>
       )}
+
+      {/* Frequently Bought Together Bundle */}
+      <ProductBundle mainProduct={product} relatedProducts={relatedProducts} />
 
       <ProductFaqAccordion />
 
