@@ -1,8 +1,9 @@
 'use client';
 
-import { Download } from 'lucide-react';
+import { Download, PackagePlus } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import type { InventoryLevelResponse } from '@ems/contracts';
 import {
   Alert,
   Badge,
@@ -21,11 +22,13 @@ import { downloadCsvFile, generateCsvText } from '@/lib/csv-helper';
 import { useLowStock } from '@/lib/queries/inventory';
 import { useProduct, useProducts } from '@/lib/queries/products';
 import { useCurrentStore } from '@/lib/queries/stores';
+import { QuickRestockModal } from './quick-restock-modal';
 
 export default function InventoryPage() {
   const { store, isLoading: storeLoading, isError: storeIsError, error: storeError } = useCurrentStore();
   const lowStock = useLowStock();
   const [search, setSearch] = useState('');
+  const [restockItem, setRestockItem] = useState<InventoryLevelResponse | null>(null);
 
   const searchQuery = useProducts({
     page: 1,
@@ -141,7 +144,7 @@ export default function InventoryPage() {
             <TableHead>Reserved</TableHead>
             <TableHead>Available</TableHead>
             <TableHead>Reorder point</TableHead>
-            <TableHead className="w-28 text-right">Action</TableHead>
+            <TableHead className="w-44 text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -167,15 +170,34 @@ export default function InventoryPage() {
                 </TableCell>
                 <TableCell className="tabular text-muted-foreground">{row.reorderPoint ?? '—'}</TableCell>
                 <TableCell className="text-right">
-                  <Button asChild variant="outline" size="sm" className="h-7 text-xs">
-                    <Link href={`/inventory/${row.productId}`}>Adjust Stock</Link>
-                  </Button>
+                  <div className="flex items-center justify-end gap-1.5">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="h-7 px-2.5 text-xs font-semibold gap-1"
+                      onClick={() => setRestockItem(row)}
+                    >
+                      <PackagePlus className="size-3.5" />
+                      <span>Restock</span>
+                    </Button>
+                    <Button asChild variant="outline" size="sm" className="h-7 text-xs">
+                      <Link href={`/inventory/${row.productId}`}>Details</Link>
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))
           )}
         </TableBody>
       </Table>
+
+      <QuickRestockModal
+        open={Boolean(restockItem)}
+        onOpenChange={(open) => {
+          if (!open) setRestockItem(null);
+        }}
+        item={restockItem}
+      />
     </PageShell>
   );
 }

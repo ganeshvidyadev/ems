@@ -8,6 +8,7 @@ import { BackInStockWidget } from '@/components/back-in-stock';
 import { DeliveryCountdown } from '@/components/delivery-countdown';
 import { StockUrgencyBar } from '@/components/stock-urgency-bar';
 import { ProductOffers } from '@/components/product-offers';
+import { SizeGuideModal } from '@/components/size-guide-modal';
 import { ProductBundle } from '@/components/product-bundle';
 import { ProductFaqAccordion } from '@/components/product-faq-accordion';
 import { PincodeChecker } from '@/components/pincode-checker';
@@ -151,6 +152,11 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
 
           {/* Stock Level Urgency Indicator */}
           <StockUrgencyBar stockCount={product.status === 'OUT_OF_STOCK' ? 0 : 4} />
+
+          {/* Size & Fit Reference Guide */}
+          <div className="flex justify-end">
+            <SizeGuideModal productName={product.name} />
+          </div>
 
           <AddToCart product={product} />
 
