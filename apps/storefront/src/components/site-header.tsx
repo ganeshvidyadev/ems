@@ -11,6 +11,7 @@ import { useStore } from '@/lib/store-context';
 import { useCart } from '@/lib/use-cart';
 import { useCustomer } from '@/lib/customer-context';
 import { useWishlist } from '@/lib/use-wishlist';
+import { useCartDrawer } from '@/lib/use-cart-drawer';
 import { ProductThumb } from '@/components/product-thumb';
 import { CurrencySwitcher } from '@/components/currency-switcher';
 import type { StorefrontTheme } from '@/lib/theme';
@@ -285,11 +286,13 @@ function HeaderSearch() {
 
 function CartLink() {
   const { itemCount, isLoading } = useCart();
+  const openDrawer = useCartDrawer((state) => state.openDrawer);
 
   return (
-    <Link
-      href="/cart"
-      className="relative inline-flex h-10 items-center gap-2 rounded-theme border border-line px-3 text-sm font-medium text-ink hover:border-brand hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+    <button
+      type="button"
+      onClick={openDrawer}
+      className="relative inline-flex h-10 items-center gap-2 rounded-theme border border-line px-3 text-sm font-medium text-ink hover:border-brand hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand cursor-pointer"
       aria-label={isLoading ? 'Cart' : `Cart, ${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
     >
       <ShoppingBag className="h-4 w-4" aria-hidden />
@@ -304,6 +307,6 @@ function CartLink() {
           {itemCount > 99 ? '99+' : itemCount}
         </span>
       )}
-    </Link>
+    </button>
   );
 }

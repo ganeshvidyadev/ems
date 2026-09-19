@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AddToCart } from '@/components/add-to-cart';
 import { BackInStockWidget } from '@/components/back-in-stock';
+import { DeliveryCountdown } from '@/components/delivery-countdown';
+import { ProductOffers } from '@/components/product-offers';
+import { ProductFaqAccordion } from '@/components/product-faq-accordion';
 import { PincodeChecker } from '@/components/pincode-checker';
 import { ProductGrid } from '@/components/product-card';
 import { ProductReviews } from '@/components/product-reviews';
@@ -144,9 +147,15 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
             )}
           </div>
 
+          {/* Fast Delivery Urgency Countdown */}
+          <DeliveryCountdown />
+
           <AddToCart product={product} />
 
           <BackInStockWidget product={product} />
+
+          {/* Available Coupons & Offers */}
+          <ProductOffers />
 
           <dl className="space-y-2 border-t border-line pt-5 text-sm">
             {product.sku && (
@@ -219,6 +228,8 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
           </dl>
         </section>
       )}
+
+      <ProductFaqAccordion />
 
       <RecentlyViewedTracker product={product} />
 

@@ -10,6 +10,7 @@ import { ThemeFooter } from '@/components/theme-footer';
 import { CookieBanner } from '@/components/cookie-banner';
 import { MobileNav } from '@/components/mobile-nav';
 import { FloatingCompareBar } from '@/components/compare-bar';
+import { CartDrawer } from '@/components/cart-drawer';
 import './globals.css';
 import './themes.css';
 
@@ -71,6 +72,7 @@ export default async function RootLayout({
           <CookieBanner />
           <MobileNav />
           <FloatingCompareBar />
+          <CartDrawer />
         </Providers>
       </body>
     </html>

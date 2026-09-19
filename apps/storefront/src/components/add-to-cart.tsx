@@ -10,6 +10,7 @@ import { ApiError } from '@/lib/api-client';
 import { formatMinor } from '@/lib/money';
 import { useStore } from '@/lib/store-context';
 import { useAddToCart } from '@/lib/use-cart';
+import { useCartDrawer } from '@/lib/use-cart-drawer';
 import { WishlistButton } from '@/components/wishlist-button';
 import { cn } from '@/lib/utils';
 
@@ -51,6 +52,7 @@ export function AddToCart({ product }: { product: ProductResponse }) {
 
   const price = selectedVariant?.priceMinor ?? product.priceMinor;
 
+  const openDrawer = useCartDrawer((state) => state.openDrawer);
   const router = useRouter();
   const [buyingNow, setBuyingNow] = useState(false);
 
@@ -59,6 +61,7 @@ export function AddToCart({ product }: { product: ProductResponse }) {
     try {
       await addToCart.mutateAsync({ productId: product.id, variantId, quantity });
       setAdded(true);
+      openDrawer();
     } catch {
       // Rendered from the mutation's own error state below; swallowed here so an
       // unhandled rejection does not reach the console.

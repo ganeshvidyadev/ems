@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useCart } from '@/lib/use-cart';
 import { useWishlist } from '@/lib/use-wishlist';
 import { useCustomer } from '@/lib/customer-context';
+import { useCartDrawer } from '@/lib/use-cart-drawer';
 
 /**
  * Mobile Bottom Navigation Bar.
@@ -58,6 +59,8 @@ export function MobileNav() {
     },
   ];
 
+  const openDrawer = useCartDrawer((state) => state.openDrawer);
+
   return (
     <nav
       aria-label="Mobile Bottom Navigation"
@@ -66,6 +69,28 @@ export function MobileNav() {
       {navItems.map((item) => {
         const Icon = item.icon;
         const activeClass = item.isActive ? 'font-semibold text-brand' : 'text-ink-muted hover:text-ink';
+
+        if (item.label === 'Cart') {
+          return (
+            <button
+              key={item.href}
+              type="button"
+              onClick={openDrawer}
+              className={'relative flex flex-1 flex-col items-center justify-center py-1 text-center transition-colors cursor-pointer ' + activeClass}
+            >
+              <div className="relative">
+                <Icon className="h-5 w-5" aria-hidden="true" />
+                {item.badge !== null && (
+                  <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-brand-foreground shadow-sm">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
+              <span className="mt-1 text-[11px] leading-none">{item.label}</span>
+            </button>
+          );
+        }
+
         return (
           <Link
             key={item.href}
