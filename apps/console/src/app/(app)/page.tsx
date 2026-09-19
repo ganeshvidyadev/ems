@@ -330,6 +330,14 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
+
+          {/* Revenue Trend + Top Products row */}
+          {canReadReports && summary.data && (
+            <div className="mt-4 grid items-start gap-4 lg:grid-cols-2">
+              <RevenueTrendCard data={summary.data} />
+              <TopProductsCard storeId={storeId} />
+            </div>
+          )}
         </>
       )}
     </PageShell>
@@ -708,6 +716,151 @@ function ActivityPanel({
             ))}
           </ul>
         )}
+      </CardBody>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Revenue trend bar chart
+// ---------------------------------------------------------------------------
+
+function RevenueTrendCard({ data }: { data: import('@ems/contracts').SalesSummaryResponse }) {
+  if (!data) return null;
+  const days = data.byDay;
+  const max = Math.max(...days.map((d) => Number(d.netMinor)), 1);
+
+  return (
+    <Card variant="elevated">
+      <CardHeader
+        as="h2"
+        title="Revenue trend"
+        description={`${data.byDay.length}-day breakdown`}
+      />
+      <CardBody className="pt-0">
+        <div className="flex items-end gap-1 h-28" aria-hidden>
+          {days.map((day) => {
+            const pct = Math.max((Number(day.netMinor) / max) * 100, 2);
+            return (
+              <div
+                key={day.date}
+                className="flex-1 flex flex-col items-center gap-1 group"
+                title={`${day.date}: ${formatMoney({ amountMinor: day.netMinor, currency: data.currency })}`}
+              >
+                <div
+                  className="w-full rounded-t-sm bg-primary/20 group-hover:bg-primary/60 transition-colors"
+                  style={{ height: `${pct}%` }}
+                />
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3">
+          <div>
+            <p className="text-xs text-muted-foreground">Gross</p>
+            <p className="text-sm font-semibold">
+              {formatMoney({ amountMinor: data.grossMinor, currency: data.currency })}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Refunds</p>
+            <p className="text-sm font-semibold text-destructive">
+              − {formatMoney({ amountMinor: data.refundMinor, currency: data.currency })}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Tax collected</p>
+            <p className="text-sm font-semibold">
+              {formatMoney({ amountMinor: data.taxMinor, currency: data.currency })}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Shipping</p>
+            <p className="text-sm font-semibold">
+              {formatMoney({ amountMinor: data.shippingMinor, currency: data.currency })}
+            </p>
+          </div>
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Top products panel
+// ---------------------------------------------------------------------------
+
+function TopProductsCard({ storeId }: { storeId: string }) {
+  const products = useProducts({ page: 1, limit: 5, storeId });
+  const rows = products.data?.data ?? [];
+
+  return (
+    <Card variant="elevated">
+      <CardHeader
+        as="h2"
+        title="Products directory"
+        description="5 most recently added products"
+        action={
+          <Link
+            href="/products"
+            className="rounded-sm text-sm text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            All products
+          </Link>
+        }
+      />
+      <CardBody className="px-0 pb-0 pt-0">
+        <Table className="rounded-none border-0">
+          <TableHeader className="bg-transparent">
+            <TableRow>
+              <TableHead className="pl-6">Product</TableHead>
+              <TableHead className="text-right">Price</TableHead>
+              <TableHead className="pr-6 text-right">Stock</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {products.isLoading ? (
+              Array.from({ length: 4 }, (_, i) => (
+                <TableRow key={i}>
+                  <TableCell className="pl-6"><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="ml-auto h-4 w-16" /></TableCell>
+                  <TableCell className="pr-6"><Skeleton className="ml-auto h-4 w-12" /></TableCell>
+                </TableRow>
+              ))
+            ) : rows.length === 0 ? (
+              <TableEmptyRow colSpan={3}>No products yet.</TableEmptyRow>
+            ) : (
+              rows.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell className="pl-6">
+                    <Link
+                      href={`/products/${p.id}`}
+                      className="block max-w-[180px] truncate font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {p.name}
+                    </Link>
+                    {p.sku && (
+                      <p className="truncate font-mono text-xs text-muted-foreground">{p.sku}</p>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {formatMoney({ amountMinor: p.priceMinor, currency: p.currency })}
+                  </TableCell>
+                  <TableCell className="pr-6 text-right">
+                    <span
+                      className={cn(
+                        'tabular text-sm font-semibold',
+                        p.status === 'OUT_OF_STOCK' ? 'text-destructive' : 'text-foreground',
+                      )}
+                    >
+                      {p.status === 'OUT_OF_STOCK' ? 'Out of stock' : p.status}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </CardBody>
     </Card>
   );

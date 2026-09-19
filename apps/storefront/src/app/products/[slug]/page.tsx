@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AddToCart } from '@/components/add-to-cart';
+import { BackInStockWidget } from '@/components/back-in-stock';
 import { PincodeChecker } from '@/components/pincode-checker';
 import { ProductGrid } from '@/components/product-card';
 import { ProductReviews } from '@/components/product-reviews';
@@ -144,6 +145,8 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
           </div>
 
           <AddToCart product={product} />
+
+          <BackInStockWidget product={product} />
 
           <dl className="space-y-2 border-t border-line pt-5 text-sm">
             {product.sku && (

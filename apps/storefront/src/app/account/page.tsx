@@ -3,178 +3,177 @@
 import React from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Package, MapPin, Heart, ArrowRight, Loader2, Clock, CheckCircle2 } from 'lucide-react';
-import { useCustomer } from '@/lib/customer-context';
+import {
+  Package,
+  Heart,
+  MapPin,
+  ShoppingBag,
+  RotateCcw,
+  User,
+  ChevronRight,
+  Loader2,
+  Star,
+  Gift,
+} from 'lucide-react';
 import { api, type Page } from '@/lib/api-client';
 import { formatMinor } from '@/lib/money';
-import { useStore } from '@/lib/store-context';
-import type { OrderResponse, AddressResponse } from '@ems/contracts';
+import { useCustomer } from '@/lib/customer-context';
+import { useWishlist } from '@/lib/use-wishlist';
+import type { OrderResponse } from '@ems/contracts';
 
-export default function CustomerDashboardPage() {
+export const metadata = { title: 'My Account' };
+
+export default function AccountDashboardPage() {
   const { customer } = useCustomer();
-  const { currency } = useStore();
+  const { wishlistItems } = useWishlist();
 
-  const { data: ordersPage, isLoading: ordersLoading } = useQuery<Page<OrderResponse>>({
-    queryKey: ['account-recent-orders'],
-    queryFn: () => api.requestPage<OrderResponse>('account/orders', { query: { limit: 3 } }),
-  });
-
-  const { data: addresses = [], isLoading: addressesLoading } = useQuery<AddressResponse[]>({
-    queryKey: ['account-addresses'],
-    queryFn: () => api.request<AddressResponse[]>('account/addresses'),
+  const { data: ordersPage, isLoading } = useQuery<Page<OrderResponse>>({
+    queryKey: ['account-orders-dashboard'],
+    queryFn: () => api.requestPage<OrderResponse>('account/orders', { query: { page: 1, limit: 3 } }),
   });
 
   const recentOrders = ordersPage?.items ?? [];
-  const defaultShipping = addresses.find((a) => a.isDefaultShipping) ?? addresses[0];
+  const totalOrders = ordersPage?.pagination.total ?? 0;
+
+  const STATUS_COLORS: Record<string, string> = {
+    DELIVERED: 'bg-emerald-50 text-emerald-700',
+    CONFIRMED: 'bg-blue-50 text-blue-700',
+    SHIPPED: 'bg-blue-50 text-blue-700',
+    PROCESSING: 'bg-amber-50 text-amber-700',
+    CANCELLED: 'bg-red-50 text-red-700',
+    RETURNED: 'bg-orange-50 text-orange-700',
+    PENDING: 'bg-slate-100 text-slate-600',
+  };
+
+  const quickLinks = [
+    { href: '/account/orders', label: 'My Orders', icon: Package, badge: totalOrders > 0 ? String(totalOrders) : undefined },
+    { href: '/account/wishlist', label: 'Wishlist', icon: Heart, badge: wishlistItems.length > 0 ? String(wishlistItems.length) : undefined },
+    { href: '/account/addresses', label: 'Saved Addresses', icon: MapPin },
+    { href: '/account/returns', label: 'Returns & RMA', icon: RotateCcw },
+    { href: '/account/profile', label: 'Profile & Security', icon: User },
+  ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Welcome Banner */}
-      <div className="rounded-theme border border-line bg-gradient-to-r from-brand/10 to-transparent p-6">
-        <h1 className="text-2xl font-bold tracking-tight text-ink">
-          Welcome back, {customer?.firstName || customer?.displayName}!
-        </h1>
-        <p className="mt-1 text-sm text-ink-muted">
-          Here is what is happening with your store account today.
-        </p>
+      <div className="rounded-2xl bg-gradient-to-r from-brand/10 to-brand/5 border border-brand/20 p-5 flex items-center gap-4">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand text-brand-foreground text-xl font-bold shadow-md">
+          {customer?.firstName ? customer.firstName[0]?.toUpperCase() : 'U'}
+        </div>
+        <div>
+          <p className="text-lg font-bold text-ink">Hello, {customer?.firstName || 'Shopper'}! 👋</p>
+          <p className="text-sm text-ink-muted">{customer?.email}</p>
+        </div>
       </div>
 
-      {/* Metrics Grid */}
+      {/* Stats Tiles */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <div className="rounded-theme border border-line bg-surface p-4">
-          <div className="flex items-center gap-2 text-ink-muted">
-            <Package className="h-4 w-4 text-brand" />
-            <span className="text-xs font-medium uppercase tracking-wider">Total Orders</span>
+        <div className="rounded-theme border border-line bg-surface p-4 text-center">
+          <div className="flex justify-center mb-2">
+            <ShoppingBag className="h-5 w-5 text-brand" />
           </div>
-          <p className="mt-2 text-2xl font-bold text-ink">{customer?.totalOrders ?? 0}</p>
+          <p className="text-2xl font-bold text-ink">{totalOrders}</p>
+          <p className="text-xs text-ink-muted mt-0.5">Total Orders</p>
         </div>
 
-        <div className="rounded-theme border border-line bg-surface p-4">
-          <div className="flex items-center gap-2 text-ink-muted">
-            <MapPin className="h-4 w-4 text-brand" />
-            <span className="text-xs font-medium uppercase tracking-wider">Saved Addresses</span>
+        <div className="rounded-theme border border-line bg-surface p-4 text-center">
+          <div className="flex justify-center mb-2">
+            <Heart className="h-5 w-5 text-rose-500" />
           </div>
-          <p className="mt-2 text-2xl font-bold text-ink">{addresses.length}</p>
+          <p className="text-2xl font-bold text-ink">{wishlistItems.length}</p>
+          <p className="text-xs text-ink-muted mt-0.5">Saved Items</p>
         </div>
 
-        <div className="col-span-2 rounded-theme border border-line bg-surface p-4 sm:col-span-1">
-          <div className="flex items-center gap-2 text-ink-muted">
-            <span className="text-xs font-medium uppercase tracking-wider">Total Spent</span>
+        <div className="rounded-theme border border-line bg-surface p-4 text-center col-span-2 sm:col-span-1">
+          <div className="flex justify-center mb-2">
+            <Star className="h-5 w-5 text-amber-500" />
           </div>
-          <p className="mt-2 text-2xl font-bold text-ink">
-            {formatMinor(customer?.totalSpentMinor ?? '0', currency)}
-          </p>
+          <p className="text-2xl font-bold text-ink">Valued</p>
+          <p className="text-xs text-ink-muted mt-0.5">Member Status</p>
         </div>
       </div>
 
-      {/* Recent Orders Section */}
-      <div className="rounded-theme border border-line bg-surface p-6">
-        <div className="flex items-center justify-between border-b border-line pb-4">
-          <h2 className="text-lg font-semibold text-ink">Recent Orders</h2>
-          <Link
-            href="/account/orders"
-            className="inline-flex items-center gap-1 text-xs font-medium text-brand hover:underline"
-          >
-            View all orders <ArrowRight className="h-3 w-3" />
-          </Link>
-        </div>
-
-        {ordersLoading ? (
-          <div className="flex h-32 items-center justify-center">
-            <Loader2 className="h-5 w-5 animate-spin text-brand" />
-          </div>
-        ) : recentOrders.length === 0 ? (
-          <div className="py-8 text-center">
-            <Package className="mx-auto h-8 w-8 text-ink-muted" />
-            <p className="mt-2 text-sm text-ink font-medium">No orders yet</p>
-            <p className="text-xs text-ink-muted">When you place an order, it will appear here.</p>
-            <Link
-              href="/products"
-              className="mt-4 inline-flex h-9 items-center justify-center rounded-theme bg-brand px-3 text-xs font-medium text-brand-foreground hover:bg-brand/90"
-            >
-              Explore Products
-            </Link>
-          </div>
-        ) : (
-          <div className="divide-y divide-line">
-            {recentOrders.map((order) => (
-              <div key={order.id} className="flex flex-wrap items-center justify-between gap-4 py-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-ink">#{order.orderNumber}</span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                        order.status === 'DELIVERED'
-                          ? 'bg-success/10 text-success'
-                          : order.status === 'CANCELLED'
-                            ? 'bg-danger/10 text-danger'
-                            : 'bg-brand/10 text-brand'
-                      }`}
-                    >
-                      {order.status}
+      {/* Quick Links Grid */}
+      <div>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-ink-muted">Quick Access</h2>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {quickLinks.map((link) => {
+            const Icon = link.icon;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="flex items-center justify-between rounded-theme border border-line bg-surface px-4 py-3 hover:border-brand hover:bg-surface-alt transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <Icon className="h-4 w-4 text-ink-muted group-hover:text-brand" />
+                  <span className="text-sm font-medium text-ink">{link.label}</span>
+                  {link.badge && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-brand-foreground">
+                      {link.badge}
                     </span>
-                  </div>
-                  <p className="mt-0.5 text-xs text-ink-muted">
-                    Placed on {new Date(order.createdAt).toLocaleDateString()}
-                  </p>
+                  )}
                 </div>
-
-                <div className="flex items-center gap-4">
-                  <span className="font-semibold text-ink">
-                    {formatMinor(order.total.amountMinor, order.total.currency)}
-                  </span>
-                  <Link
-                    href={`/account/orders/${order.id}`}
-                    className="rounded-theme border border-line px-3 py-1.5 text-xs font-medium text-ink hover:border-brand hover:text-brand"
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+                <ChevronRight className="h-4 w-4 text-ink-muted group-hover:text-brand transition-colors" />
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Default Address Card */}
-      <div className="rounded-theme border border-line bg-surface p-6">
-        <div className="flex items-center justify-between border-b border-line pb-4">
-          <h2 className="text-lg font-semibold text-ink">Default Delivery Address</h2>
-          <Link
-            href="/account/addresses"
-            className="inline-flex items-center gap-1 text-xs font-medium text-brand hover:underline"
-          >
-            Manage addresses <ArrowRight className="h-3 w-3" />
+      {/* Recent Orders */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-muted">Recent Orders</h2>
+          <Link href="/account/orders" className="text-xs font-medium text-brand hover:underline">
+            View All →
           </Link>
         </div>
 
-        {addressesLoading ? (
+        {isLoading ? (
           <div className="flex h-24 items-center justify-center">
             <Loader2 className="h-5 w-5 animate-spin text-brand" />
           </div>
-        ) : defaultShipping ? (
-          <div className="pt-4">
-            <p className="font-medium text-ink">{defaultShipping.recipientName}</p>
-            <p className="text-sm text-ink-muted">{defaultShipping.addressLine1}</p>
-            {defaultShipping.addressLine2 && (
-              <p className="text-sm text-ink-muted">{defaultShipping.addressLine2}</p>
-            )}
-            <p className="text-sm text-ink-muted">
-              {defaultShipping.city}, {defaultShipping.stateName || defaultShipping.stateCode} {defaultShipping.postalCode}
-            </p>
-            {defaultShipping.phone && (
-              <p className="mt-1 text-xs text-ink-muted">Phone: {defaultShipping.phone}</p>
-            )}
+        ) : recentOrders.length === 0 ? (
+          <div className="rounded-theme border border-dashed border-line p-8 text-center">
+            <Gift className="mx-auto h-8 w-8 text-ink-muted" />
+            <p className="mt-2 text-sm font-medium text-ink">No orders yet</p>
+            <p className="mt-1 text-xs text-ink-muted">Your first purchase will appear here.</p>
+            <Link
+              href="/products"
+              className="mt-3 inline-flex h-8 items-center justify-center rounded-theme bg-brand px-4 text-xs font-medium text-brand-foreground hover:bg-brand/90"
+            >
+              Start Shopping
+            </Link>
           </div>
         ) : (
-          <div className="py-6 text-center">
-            <p className="text-sm text-ink-muted">No saved addresses yet.</p>
-            <Link
-              href="/account/addresses"
-              className="mt-2 inline-flex items-center text-xs font-medium text-brand hover:underline"
-            >
-              Add an address
-            </Link>
+          <div className="divide-y divide-line rounded-theme border border-line overflow-hidden">
+            {recentOrders.map((order) => {
+              const colorClass = STATUS_COLORS[order.status] ?? 'bg-slate-100 text-slate-600';
+              return (
+                <Link
+                  key={order.id}
+                  href={'/account/orders/' + order.id}
+                  className="flex items-center justify-between gap-3 px-4 py-3 bg-surface hover:bg-surface-alt transition-colors"
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold text-ink text-sm">#{order.orderNumber}</p>
+                    <p className="text-xs text-ink-muted">
+                      {new Date(order.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className={'rounded-full px-2.5 py-0.5 text-xs font-semibold ' + colorClass}>
+                      {order.status}
+                    </span>
+                    <span className="font-bold text-ink text-sm">
+                      {formatMinor(order.total.amountMinor, order.total.currency)}
+                    </span>
+                    <ChevronRight className="h-4 w-4 text-ink-muted" />
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>
