@@ -9,6 +9,7 @@ import { ProductGrid } from '@/components/product-card';
 import { ProductReviews } from '@/components/product-reviews';
 import { ProductShare } from '@/components/product-share';
 import { RecentlyViewedShelf, RecentlyViewedTracker } from '@/components/recently-viewed';
+import { StickyPdpBar } from '@/components/sticky-pdp-bar';
 import { ProductThumb } from '@/components/product-thumb';
 import { StarRating } from '@/components/star-rating';
 import { Badge } from '@/components/ui';
@@ -238,6 +239,8 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
       )}
 
       <RecentlyViewedShelf currentProductId={product.id} />
+
+      <StickyPdpBar product={product} />
     </div>
   );
 }

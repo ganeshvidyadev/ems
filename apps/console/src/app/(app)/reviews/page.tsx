@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, MessageSquare, Star, X } from 'lucide-react';
+import { Check, Download, MessageSquare, Star, X } from 'lucide-react';
 import { useModerateReview, useReplyToReview, useReviews } from '@/lib/queries/reviews';
+import { downloadCsvFile, generateCsvText } from '@/lib/csv-helper';
 
 export default function ReviewsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -52,6 +53,41 @@ export default function ReviewsPage() {
 
   const displayReviews = reviews?.length ? reviews : sampleReviews;
 
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportReviews = () => {
+    if (!displayReviews || displayReviews.length === 0) return;
+    setExporting(true);
+    try {
+      const headers = [
+        'Review ID',
+        'Product ID',
+        'Customer Name',
+        'Rating (Stars)',
+        'Review Title',
+        'Review Body',
+        'Status',
+        'Merchant Reply',
+        'Created At',
+      ];
+      const rows = displayReviews.map((r) => [
+        r.id,
+        r.productId,
+        r.customerName,
+        r.rating,
+        r.title,
+        r.body,
+        r.status,
+        r.merchantReply ?? '',
+        r.createdAt ? new Date(r.createdAt).toISOString() : '',
+      ]);
+      const csv = generateCsvText(headers, rows);
+      downloadCsvFile(`product-reviews-export-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="mantis-page-header flex flex-wrap items-center justify-between gap-4">
@@ -61,6 +97,15 @@ export default function ReviewsPage() {
             Moderate verified customer feedback, manage star ratings, and reply publicly to reviews
           </p>
         </div>
+        <button
+          type="button"
+          onClick={handleExportReviews}
+          disabled={exporting || displayReviews.length === 0}
+          className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
+        >
+          <Download className="size-4 text-slate-500" />
+          {exporting ? 'Exporting...' : 'Export Reviews CSV'}
+        </button>
       </div>
 
       {/* Filter Tabs */}

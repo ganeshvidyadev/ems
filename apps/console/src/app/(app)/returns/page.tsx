@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, RotateCcw, X } from 'lucide-react';
+import { Check, Download, RotateCcw, X } from 'lucide-react';
 import Link from 'next/link';
 import {
   useApproveReturn,
@@ -10,6 +10,7 @@ import {
   useRejectReturn,
   useReturns,
 } from '@/lib/queries/returns';
+import { downloadCsvFile, generateCsvText } from '@/lib/csv-helper';
 
 export default function ReturnsPage() {
   const { data: returns, isLoading } = useReturns();
@@ -33,6 +34,39 @@ export default function ReturnsPage() {
     }
   };
 
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportRMA = () => {
+    if (!returns || returns.length === 0) return;
+    setExporting(true);
+    try {
+      const headers = [
+        'RMA ID',
+        'Order ID',
+        'Order Number',
+        'Reason',
+        'Refund Amount',
+        'Currency',
+        'Status',
+        'Created Date',
+      ];
+      const rows = returns.map((r) => [
+        r.id,
+        r.orderId,
+        r.orderNumber ?? '',
+        r.reason ?? '',
+        (r.refundAmountMinor / 100).toFixed(2),
+        r.currency ?? 'INR',
+        r.status,
+        r.createdAt ? new Date(r.createdAt).toISOString() : '',
+      ]);
+      const csv = generateCsvText(headers, rows);
+      downloadCsvFile(`rma-returns-export-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="mantis-page-header flex flex-wrap items-center justify-between gap-4">
@@ -42,6 +76,15 @@ export default function ReturnsPage() {
             Process customer return merchandise authorizations (RMA), warehouse inspections, and refunds
           </p>
         </div>
+        <button
+          type="button"
+          onClick={handleExportRMA}
+          disabled={exporting || !returns || returns.length === 0}
+          className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
+        >
+          <Download className="size-4 text-slate-500" />
+          {exporting ? 'Exporting...' : 'Export RMA CSV'}
+        </button>
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
