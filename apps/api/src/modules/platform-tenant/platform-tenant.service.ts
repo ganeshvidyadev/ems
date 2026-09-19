@@ -20,7 +20,7 @@ import { PermissionResolverService } from '../auth/services/permission-resolver.
 import { TokenService } from '../auth/services/token.service';
 import { SubscriptionService } from '../subscription/services/subscription.service';
 import { CacheService } from '../../common/services/cache.service';
-import { RoleEntity, SubscriptionEntity, TenantEntity, TenantDomainEntity, UserEntity, UserRoleEntity } from '../../database/entities';
+import { RoleEntity, StoreEntity, SubscriptionEntity, TenantEntity, TenantDomainEntity, UserEntity, UserRoleEntity } from '../../database/entities';
 
 export interface PlatformTenantList {
   items: TenantEntity[];
@@ -250,6 +250,47 @@ export class PlatformTenantService {
       await this.dataSource.getRepository(TenantEntity).save(tenant);
     } catch {
       // Non-blocking: tenant creation proceeds even if auto-owner provisioning encounters existing user
+    }
+
+    // Ensure default store and primary subdomain exist for the new tenant
+    try {
+      const storeRepo = this.dataSource.getRepository(StoreEntity);
+      let store = await storeRepo.findOne({ where: { tenantId: tenant.id } });
+      if (!store) {
+        store = await storeRepo.save(
+          storeRepo.create({
+            publicId: newPublicId(),
+            tenantId: tenant.id,
+            name: `${tenant.businessName} Store`,
+            slug: `${tenant.slug}-store`,
+            status: 'ACTIVE',
+            currency: tenant.defaultCurrency,
+            locale: tenant.defaultLocale,
+            timezone: tenant.timezone,
+            supportEmail: tenant.contactEmail,
+          }),
+        );
+      }
+
+      const domainRepo = this.dataSource.getRepository(TenantDomainEntity);
+      const rootDomain = process.env.PLATFORM_ROOT_DOMAIN ?? 'ems.localhost';
+      const hostname = `${tenant.slug}.${rootDomain}`.toLowerCase();
+      let domain = await domainRepo.findOne({ where: { hostname } });
+      if (!domain) {
+        await domainRepo.save(
+          domainRepo.create({
+            tenantId: tenant.id,
+            storeId: store.id,
+            hostname,
+            type: 'SUBDOMAIN',
+            isPrimary: true,
+            verifiedAt: new Date(),
+            sslStatus: 'NONE',
+          }),
+        );
+      }
+    } catch {
+      // Non-blocking
     }
 
     await this.audit(actor, 'tenant.created', tenant.id, { severity: 'INFO', after: { slug: tenant.slug, planCode: input.planCode } });
