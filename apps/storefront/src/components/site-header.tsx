@@ -87,6 +87,12 @@ export function SiteHeader({ theme = 'default' }: { theme?: StorefrontTheme }) {
           <Link href="/products" className="hover:text-ink">
             All products
           </Link>
+          <Link href="/track-order" className="hover:text-ink">
+            Track Order
+          </Link>
+          <Link href="/contact" className="hover:text-ink">
+            Help
+          </Link>
         </nav>
 
         <div className="order-last w-full sm:order-none sm:ml-auto sm:w-auto sm:flex-1 sm:max-w-sm">

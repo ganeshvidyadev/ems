@@ -63,13 +63,23 @@ export function SiteFooter({ name, currency }: { name: string; currency: string 
             <h4 className="font-heading text-sm font-semibold text-ink">Customer Care</h4>
             <ul className="space-y-2 text-xs text-ink-muted">
               <li>
+                <Link href="/track-order" className="hover:text-brand transition-colors font-medium text-ink">
+                  Track Order
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-brand transition-colors">
+                  Help &amp; Contact Us
+                </Link>
+              </li>
+              <li>
                 <Link href="/account" className="hover:text-brand transition-colors">
                   My Account
                 </Link>
               </li>
               <li>
                 <Link href="/account/orders" className="hover:text-brand transition-colors">
-                  Order Tracking & History
+                  Order History &amp; RMA
                 </Link>
               </li>
               <li>
