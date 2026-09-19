@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, ShoppingBag, Heart, User, Loader2, ArrowRight, Package } from 'lucide-react';
+import { Search, ShoppingBag, Heart, User, Loader2, ArrowRight, Package, X, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -13,6 +13,27 @@ import { useCustomer } from '@/lib/customer-context';
 import { useWishlist } from '@/lib/use-wishlist';
 import { ProductThumb } from '@/components/product-thumb';
 import type { StorefrontTheme } from '@/lib/theme';
+
+function AnnouncementBar() {
+  const [closed, setClosed] = useState(false);
+  if (closed) return null;
+
+  return (
+    <div className="relative bg-brand px-4 py-1.5 text-center text-[11px] sm:text-xs font-medium text-brand-foreground transition-all">
+      <div className="mx-auto flex max-w-content items-center justify-center gap-2">
+        <Sparkles className="h-3.5 w-3.5 shrink-0 animate-pulse" />
+        <span>Free All-India Delivery on orders ₹999+ · Use code <span className="font-bold underline">WELCOME10</span> for 10% Off!</span>
+      </div>
+      <button
+        onClick={() => setClosed(true)}
+        className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-brand-foreground/70 hover:bg-black/10 hover:text-brand-foreground transition-colors"
+        aria-label="Dismiss banner"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </div>
+  );
+}
 
 /**
  * The persistent shop chrome: store name, search, cart, wishlist, customer account.
@@ -27,6 +48,7 @@ export function SiteHeader({ theme = 'default' }: { theme?: StorefrontTheme }) {
 
   if (theme !== 'default') return (
     <header className={`theme-header ${theme}-header`}>
+      <AnnouncementBar />
       <div className="theme-container theme-header-inner">
         <Link href="/" className="theme-logo" aria-label={`${name} home`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -50,6 +72,7 @@ export function SiteHeader({ theme = 'default' }: { theme?: StorefrontTheme }) {
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-surface">
+      <AnnouncementBar />
       <div className="mx-auto flex max-w-content flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3">
         <Link
           href="/"

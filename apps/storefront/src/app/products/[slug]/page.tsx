@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { AddToCart } from '@/components/add-to-cart';
 import { ProductReviews } from '@/components/product-reviews';
 import { ProductShare } from '@/components/product-share';
+import { RecentlyViewedShelf, RecentlyViewedTracker } from '@/components/recently-viewed';
 import { ProductThumb } from '@/components/product-thumb';
 import { StarRating } from '@/components/star-rating';
 import { Badge } from '@/components/ui';
@@ -196,7 +197,11 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
         </section>
       )}
 
+      <RecentlyViewedTracker product={product} />
+
       <ProductReviews productId={product.id} />
+
+      <RecentlyViewedShelf currentProductId={product.id} />
     </div>
   );
 }
