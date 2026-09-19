@@ -9,6 +9,7 @@ import { getStorefrontTheme } from '@/lib/theme';
 import { ThemeFooter } from '@/components/theme-footer';
 import { CookieBanner } from '@/components/cookie-banner';
 import { MobileNav } from '@/components/mobile-nav';
+import { FloatingCompareBar } from '@/components/compare-bar';
 import './globals.css';
 import './themes.css';
 
@@ -69,6 +70,7 @@ export default async function RootLayout({
           {theme === 'default' ? <SiteFooter name={store.name} currency={store.currency} /> : <ThemeFooter theme={theme} name={store.name} currency={store.currency} />}
           <CookieBanner />
           <MobileNav />
+          <FloatingCompareBar />
         </Providers>
       </body>
     </html>

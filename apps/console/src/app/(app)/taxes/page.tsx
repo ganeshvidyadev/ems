@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Percent, Plus, Trash2, X } from 'lucide-react';
+import { Check, Download, Percent, Plus, Trash2, X } from 'lucide-react';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
 import {
   useCreateTaxClass,
   useCreateTaxRate,
@@ -37,6 +38,33 @@ export default function TaxesPage() {
   const [rateInclusive, setRateInclusive] = useState(true);
 
   const [error, setError] = useState<string | null>(null);
+
+  const handleExportRatesCsv = () => {
+    if (!taxRates || taxRates.length === 0) return;
+    const headers = ['Rate Name', 'Tax Class ID', 'Country Code', 'State Code', 'Rate (%)', 'Inclusive', 'Priority'];
+    const rows = taxRates.map((r) => [
+      r.name,
+      r.taxClassId,
+      r.countryCode,
+      r.stateCode ?? '',
+      String(r.rate),
+      r.isInclusive ? 'Yes' : 'No',
+      String(r.priority),
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `tax-rates-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
+
+  const handleExportClassesCsv = () => {
+    if (!taxClasses || taxClasses.length === 0) return;
+    const headers = ['Tax Class ID', 'Code', 'Name', 'Is Default'];
+    const rows = taxClasses.map((c) => [
+      c.id,
+      c.code,
+      c.name,
+      c.isDefault ? 'Yes' : 'No',
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `tax-classes-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
 
   const handleCreateClass = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,21 +115,43 @@ export default function TaxesPage() {
         </div>
         <div className="flex items-center gap-2">
           {activeTab === 'classes' ? (
-            <button
-              type="button"
-              onClick={() => setClassModalOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
-            >
-              <Plus className="size-4" /> Add Tax Class
-            </button>
+            <>
+              {taxClasses && taxClasses.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleExportClassesCsv}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+                >
+                  <Download className="size-4" /> Export CSV
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setClassModalOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
+              >
+                <Plus className="size-4" /> Add Tax Class
+              </button>
+            </>
           ) : (
-            <button
-              type="button"
-              onClick={() => setRateModalOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
-            >
-              <Plus className="size-4" /> Add Tax Rate
-            </button>
+            <>
+              {taxRates && taxRates.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleExportRatesCsv}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+                >
+                  <Download className="size-4" /> Export CSV
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setRateModalOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
+              >
+                <Plus className="size-4" /> Add Tax Rate
+              </button>
+            </>
           )}
         </div>
       </div>

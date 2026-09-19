@@ -5,6 +5,7 @@ import { StarRating } from '@/components/star-rating';
 import { Badge } from '@/components/ui';
 import { discountPercent, formatMinor } from '@/lib/money';
 import { WishlistButton } from '@/components/wishlist-button';
+import { CompareButton } from '@/components/compare-button';
 
 /**
  * One product in a grid.
@@ -25,7 +26,10 @@ export function ProductCard({ product }: { product: ProductResponse }) {
             {saving}% off
           </Badge>
         )}
-        <WishlistButton productId={product.id} className="absolute right-2 top-2 z-10" />
+        <div className="absolute right-2 top-2 z-10 flex flex-col gap-1.5">
+          <WishlistButton productId={product.id} />
+          <CompareButton product={product} />
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col gap-2">

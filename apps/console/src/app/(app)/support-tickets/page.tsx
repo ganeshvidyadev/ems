@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import {
+  Download,
   HelpCircle,
   LifeBuoy,
   MessageSquare,
@@ -9,6 +10,8 @@ import {
   Send,
   X,
 } from 'lucide-react';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
+import { formatDate } from '@/lib/utils';
 import {
   useAddSupportTicketMessage,
   useCreateSupportTicket,
@@ -38,6 +41,24 @@ export default function TenantSupportTicketsPage() {
   const { data: activeTicket } = useSupportTicket(selectedTicketId ?? undefined);
   const { data: messages, isLoading: loadingMessages } = useSupportTicketMessages(selectedTicketId ?? undefined);
   const addMessage = useAddSupportTicketMessage(selectedTicketId ?? '');
+
+  const handleExportTicketsCsv = () => {
+    if (!tickets || tickets.length === 0) return;
+    const headers = ['Ticket ID', 'Ticket #', 'Subject', 'Category', 'Priority', 'Status', 'Overdue', 'Created At', 'Resolved At', 'Closed At'];
+    const rows = tickets.map((t) => [
+      t.id,
+      t.ticketNumber ?? '',
+      t.subject,
+      t.category ?? '',
+      t.priority,
+      t.status,
+      t.isOverdue ? 'Yes' : 'No',
+      formatDate(t.createdAt),
+      t.resolvedAt ? formatDate(t.resolvedAt) : '',
+      t.closedAt ? formatDate(t.closedAt) : '',
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `support-tickets-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,13 +98,24 @@ export default function TenantSupportTicketsPage() {
             Submit questions, report technical issues, or request assistance from the EMS engineering team
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
-        >
-          <Plus className="size-4" /> Create Support Ticket
-        </button>
+        <div className="flex items-center gap-2">
+          {tickets && tickets.length > 0 && (
+            <button
+              type="button"
+              onClick={handleExportTicketsCsv}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              <Download className="size-4" /> Export CSV
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
+          >
+            <Plus className="size-4" /> Create Support Ticket
+          </button>
+        </div>
       </div>
 
       {/* Tickets List */}
