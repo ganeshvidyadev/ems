@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+import { DataSource, IsNull } from 'typeorm';
 import { newPublicId, slugify, BusinessRuleError, NotFoundError } from '@ems/kernel';
 import type {
   CancelTenantSubscriptionRequest,
@@ -19,7 +20,7 @@ import { PermissionResolverService } from '../auth/services/permission-resolver.
 import { TokenService } from '../auth/services/token.service';
 import { SubscriptionService } from '../subscription/services/subscription.service';
 import { CacheService } from '../../common/services/cache.service';
-import { SubscriptionEntity, TenantEntity, TenantDomainEntity, UserEntity } from '../../database/entities';
+import { RoleEntity, SubscriptionEntity, TenantEntity, TenantDomainEntity, UserEntity, UserRoleEntity } from '../../database/entities';
 
 export interface PlatformTenantList {
   items: TenantEntity[];
@@ -205,6 +206,51 @@ export class PlatformTenantService {
       // A platform admin assigning a plan directly, not a merchant's own trial choice.
       skipTrial: true,
     });
+
+    // Automatically provision store owner user if contactEmail does not already have an owner
+    try {
+      const emailNormalized = UserEntity.normalizeEmail(input.contactEmail);
+      let owner = await this.dataSource.getRepository(UserEntity).findOne({
+        where: { emailNormalized, tenantId: tenant.id },
+      });
+      if (!owner) {
+        const passwordHash = await bcrypt.hash('DemoPassword123!', Number(process.env.BCRYPT_ROUNDS ?? 12));
+        owner = await this.dataSource.getRepository(UserEntity).save(
+          this.dataSource.getRepository(UserEntity).create({
+            publicId: newPublicId(),
+            tenantId: tenant.id,
+            userType: 'TENANT',
+            email: input.contactEmail,
+            emailNormalized,
+            passwordHash,
+            passwordAlgo: 'bcrypt',
+            passwordChangedAt: new Date(),
+            firstName: input.businessName.split(' ')[0] || 'Store',
+            lastName: 'Owner',
+            status: 'ACTIVE',
+            emailVerifiedAt: new Date(),
+          }),
+        );
+
+        const ownerRole = await this.dataSource.getRepository(RoleEntity).findOne({
+          where: { code: 'STORE_OWNER', tenantId: IsNull() },
+        });
+        if (ownerRole) {
+          await this.dataSource.getRepository(UserRoleEntity).save(
+            this.dataSource.getRepository(UserRoleEntity).create({
+              userId: owner.id,
+              roleId: ownerRole.id,
+              storeId: null,
+            }),
+          );
+        }
+      }
+      tenant.ownerUserId = owner.id;
+      tenant.status = 'ACTIVE';
+      await this.dataSource.getRepository(TenantEntity).save(tenant);
+    } catch {
+      // Non-blocking: tenant creation proceeds even if auto-owner provisioning encounters existing user
+    }
 
     await this.audit(actor, 'tenant.created', tenant.id, { severity: 'INFO', after: { slug: tenant.slug, planCode: input.planCode } });
 

@@ -105,7 +105,13 @@ export interface PlanSummary {
 export function usePlans() {
   return useQuery({
     queryKey: ['plans'],
-    queryFn: () => apiGet<PlanSummary[]>('/plans'),
+    queryFn: async () => {
+      try {
+        return await apiGet<PlanSummary[]>('/platform/plans');
+      } catch {
+        return await apiGet<PlanSummary[]>('/plans');
+      }
+    },
   });
 }
 

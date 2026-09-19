@@ -1,9 +1,19 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Button, Card, CardBody, CardHeader, Field, Input, Select } from '@/components/ui/primitives';
+import { ApiError } from '@/lib/api-client';
 import { useCreateTenant, usePlans } from '@/lib/queries/platform-tenants';
+
+function normalizePhone(phone: string): string | undefined {
+  const trimmed = phone.trim();
+  if (!trimmed) return undefined;
+  if (trimmed.startsWith('+')) return trimmed;
+  // If exactly 10 digits (common Indian format), prefix with +91
+  if (/^\d{10}$/.test(trimmed)) return `+91${trimmed}`;
+  return trimmed;
+}
 
 export default function NewTenantPage() {
   const router = useRouter();
@@ -16,7 +26,18 @@ export default function NewTenantPage() {
   const [planCode, setPlanCode] = useState('');
   const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
 
-  const canSubmit = businessName.trim().length >= 2 && contactEmail.trim().length > 0 && planCode;
+  // Auto-select first available plan once plans load
+  useEffect(() => {
+    const firstPlan = plans.data?.[0];
+    if (!planCode && firstPlan) {
+      setPlanCode(firstPlan.code);
+    }
+  }, [plans.data, planCode]);
+
+  const canSubmit = businessName.trim().length >= 2 && contactEmail.trim().length > 0 && Boolean(planCode);
+
+  const errorObj = createTenant.error;
+  const apiError = errorObj instanceof ApiError ? errorObj : null;
 
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-6">
@@ -32,19 +53,57 @@ export default function NewTenantPage() {
         <CardBody className="space-y-4">
           {createTenant.isError && (
             <Alert variant="error">
-              Could not create this tenant. Check the plan code and try again.
+              <div className="space-y-1">
+                <p className="font-medium">
+                  {errorObj instanceof Error ? errorObj.message : 'Could not create this tenant.'}
+                </p>
+                {apiError?.details && apiError.details.length > 0 && (
+                  <ul className="list-inside list-disc text-xs space-y-0.5 mt-1">
+                    {apiError.details.map((d, i) => (
+                      <li key={i}>
+                        {d.field ? <span className="font-semibold">{d.field}: </span> : null}
+                        {d.message}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </Alert>
           )}
-          {plans.isError && <Alert variant="error">Could not load plans.</Alert>}
+          {plans.isError && <Alert variant="error">Could not load plans from server.</Alert>}
 
           <Field label="Business name" htmlFor="businessName">
-            <Input id="businessName" value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
+            <Input
+              id="businessName"
+              placeholder="e.g. Acme Retail Pvt Ltd"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+            />
           </Field>
-          <Field label="Contact email" htmlFor="contactEmail" hint="The owner account is provisioned separately today; this is a record contact.">
-            <Input id="contactEmail" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
+          <Field
+            label="Contact email"
+            htmlFor="contactEmail"
+            hint="Store owner login and primary contact for notifications."
+          >
+            <Input
+              id="contactEmail"
+              type="email"
+              placeholder="owner@company.com"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+            />
           </Field>
-          <Field label="Contact phone" htmlFor="contactPhone" hint="Optional">
-            <Input id="contactPhone" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} />
+          <Field
+            label="Contact phone"
+            htmlFor="contactPhone"
+            hint="E.164 format, e.g. +919876543210 (or 10-digit mobile number)"
+          >
+            <Input
+              id="contactPhone"
+              placeholder="+919876543210"
+              value={contactPhone}
+              onChange={(e) => setContactPhone(e.target.value)}
+            />
           </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -59,7 +118,11 @@ export default function NewTenantPage() {
               </Select>
             </Field>
             <Field label="Billing cycle" htmlFor="billingCycle">
-              <Select id="billingCycle" value={billingCycle} onChange={(e) => setBillingCycle(e.target.value as 'MONTHLY' | 'YEARLY')}>
+              <Select
+                id="billingCycle"
+                value={billingCycle}
+                onChange={(e) => setBillingCycle(e.target.value as 'MONTHLY' | 'YEARLY')}
+              >
                 <option value="MONTHLY">Monthly</option>
                 <option value="YEARLY">Yearly</option>
               </Select>
@@ -78,7 +141,7 @@ export default function NewTenantPage() {
                   {
                     businessName: businessName.trim(),
                     contactEmail: contactEmail.trim(),
-                    contactPhone: contactPhone.trim() || undefined,
+                    contactPhone: normalizePhone(contactPhone),
                     countryCode: 'IN',
                     defaultCurrency: 'INR',
                     defaultLocale: 'en-IN',
