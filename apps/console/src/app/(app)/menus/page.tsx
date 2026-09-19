@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Navigation, Plus, Trash2, X } from 'lucide-react';
+import { Download, Navigation, Plus, Trash2, X } from 'lucide-react';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
 import { useAddMenuItem, useDeleteMenuItem, useMenu } from '@/lib/queries/menus';
 
 export default function MenusPage() {
@@ -14,6 +15,28 @@ export default function MenusPage() {
   const [label, setLabel] = useState('');
   const [url, setUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  const defaultItems = [
+    { id: '1', label: 'Home', url: '/' },
+    { id: '2', label: 'All Products', url: '/products' },
+    { id: '3', label: 'About Us', url: '/pages/about' },
+    { id: '4', label: 'Contact', url: '/pages/contact' },
+  ];
+
+  const items = menu?.items?.length ? menu.items : defaultItems;
+
+  const handleExportMenusCsv = () => {
+    if (items.length === 0) return;
+    const headers = ['Item ID', 'Menu Code', 'Order', 'Label', 'URL'];
+    const rows = items.map((item, idx) => [
+      item.id,
+      menuCode,
+      String(idx + 1),
+      item.label,
+      item.url,
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `menu-${menuCode.toLowerCase()}-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,15 +51,6 @@ export default function MenusPage() {
     }
   };
 
-  const defaultItems = [
-    { id: '1', label: 'Home', url: '/' },
-    { id: '2', label: 'All Products', url: '/products' },
-    { id: '3', label: 'About Us', url: '/pages/about' },
-    { id: '4', label: 'Contact', url: '/pages/contact' },
-  ];
-
-  const items = menu?.items?.length ? menu.items : defaultItems;
-
   return (
     <div className="space-y-6">
       <div className="mantis-page-header flex flex-wrap items-center justify-between gap-4">
@@ -46,13 +60,24 @@ export default function MenusPage() {
             Structure your storefront header navbar, dropdown links, and footer navigation columns
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
-        >
-          <Plus className="size-4" /> Add Menu Item
-        </button>
+        <div className="flex items-center gap-2">
+          {items.length > 0 && (
+            <button
+              type="button"
+              onClick={handleExportMenusCsv}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              <Download className="size-4" /> Export CSV
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
+          >
+            <Plus className="size-4" /> Add Menu Item
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2">

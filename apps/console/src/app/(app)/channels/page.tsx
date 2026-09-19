@@ -1,12 +1,19 @@
 'use client';
 
-import { Cable, Download, Plus, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { Cable, Download, Plus, RefreshCw, X } from 'lucide-react';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
+import { formatDate } from '@/lib/utils';
 import { useChannels, useImportChannelOrders, useSyncChannelInventory } from '@/lib/queries/channels';
 
 export default function ChannelsPage() {
   const { data: channels } = useChannels();
   const syncInventory = useSyncChannelInventory();
   const importOrders = useImportChannelOrders();
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [channelType, setChannelType] = useState('AMAZON');
+  const [channelName, setChannelName] = useState('');
 
   const sampleChannels = [
     {
@@ -37,6 +44,20 @@ export default function ChannelsPage() {
 
   const list = channels?.length ? channels : sampleChannels;
 
+  const handleExportChannelsCsv = () => {
+    if (list.length === 0) return;
+    const headers = ['Channel ID', 'Channel Name', 'Type', 'Status', 'Listings Count', 'Last Synced At'];
+    const rows = list.map((c) => [
+      c.id,
+      c.name,
+      c.type,
+      c.status,
+      String(c.listingsCount ?? 0),
+      c.lastSyncAt ? formatDate(c.lastSyncAt) : 'Never',
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `sales-channels-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="mantis-page-header flex flex-wrap items-center justify-between gap-4">
@@ -46,12 +67,24 @@ export default function ChannelsPage() {
             Sync catalog inventory and import orders automatically from Amazon, Flipkart, and external channels
           </p>
         </div>
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
-        >
-          <Plus className="size-4" /> Connect New Channel
-        </button>
+        <div className="flex items-center gap-2">
+          {list.length > 0 && (
+            <button
+              type="button"
+              onClick={handleExportChannelsCsv}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              <Download className="size-4" /> Export CSV
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
+          >
+            <Plus className="size-4" /> Connect New Channel
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

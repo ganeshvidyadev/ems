@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { ExternalLink, Image as ImageIcon, MousePointerClick, Plus, Trash2, X } from 'lucide-react';
+import { Download, ExternalLink, Image as ImageIcon, MousePointerClick, Plus, Trash2, X } from 'lucide-react';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
 import { useBanners, useCreateBanner, useDeleteBanner } from '@/lib/queries/banners';
 import { useCurrentStore } from '@/lib/queries/stores';
 
@@ -17,6 +18,19 @@ export default function BannersPage() {
   const [imageUrl, setImageUrl] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  const handleExportBannersCsv = () => {
+    if (!banners || banners.length === 0) return;
+    const headers = ['Banner ID', 'Title', 'Placement', 'Image URL', 'Link URL'];
+    const rows = banners.map((b) => [
+      b.id,
+      b.title,
+      b.placement ?? placement,
+      b.imageUrl,
+      b.linkUrl ?? '',
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `banners-${placement.toLowerCase()}-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,13 +62,24 @@ export default function BannersPage() {
             Design and schedule homepage hero sliders, category banners, and flash sale announcements
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
-        >
-          <Plus className="size-4" /> Add Banner
-        </button>
+        <div className="flex items-center gap-2">
+          {banners && banners.length > 0 && (
+            <button
+              type="button"
+              onClick={handleExportBannersCsv}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              <Download className="size-4" /> Export CSV
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
+          >
+            <Plus className="size-4" /> Add Banner
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2">

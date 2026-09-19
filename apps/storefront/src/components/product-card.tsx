@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui';
 import { discountPercent, formatMinor } from '@/lib/money';
 import { WishlistButton } from '@/components/wishlist-button';
 import { CompareButton } from '@/components/compare-button';
+import { QuickViewButton } from '@/components/quick-view-modal';
 
 /**
  * One product in a grid.
@@ -30,6 +31,7 @@ export function ProductCard({ product }: { product: ProductResponse }) {
           <WishlistButton productId={product.id} />
           <CompareButton product={product} />
         </div>
+        <QuickViewButton product={product} />
       </div>
 
       <div className="flex flex-1 flex-col gap-2">
