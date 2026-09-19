@@ -55,6 +55,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
+import { useLowStock } from '@/lib/queries/inventory';
 import { AdminThemeContext } from './admin-theme';
 import { GlobalSearchPalette } from './global-search-palette';
 
@@ -325,7 +326,11 @@ function Sidebar({
 }
 
 function NotificationsBell() {
-  const [unreadCount, setUnreadCount] = useState(2);
+  const lowStock = useLowStock();
+  const lowStockItems = lowStock.data ?? [];
+  const [cleared, setCleared] = useState(false);
+
+  const unreadCount = cleared ? 0 : lowStockItems.length;
 
   return (
     <Dropdown.Root>
@@ -352,37 +357,39 @@ function NotificationsBell() {
         >
           <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2 text-xs">
             <span className="font-bold text-slate-900">Activity & Alerts</span>
-            {unreadCount > 0 && (
+            {unreadCount > 0 ? (
               <button
                 type="button"
-                onClick={() => setUnreadCount(0)}
+                onClick={() => setCleared(true)}
                 className="text-[11px] font-semibold text-blue-600 hover:text-blue-700"
               >
                 Mark all as read
               </button>
+            ) : (
+              <span className="text-[10px] text-emerald-600 font-semibold">All Clear ✓</span>
             )}
           </div>
-          <div className="divide-y divide-slate-100 max-h-64 overflow-y-auto">
-            <div className="p-2.5 hover:bg-slate-50 rounded-lg text-xs space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-900">New Order Received</span>
-                <span className="text-[10px] text-slate-400">10m ago</span>
+          <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto">
+            {lowStockItems.length > 0 ? (
+              lowStockItems.slice(0, 5).map((item) => (
+                <div key={`${item.productId}-${item.warehouseId}`} className="p-2.5 hover:bg-slate-50 rounded-lg text-xs space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-amber-700">Low Stock Alert</span>
+                    <span className="text-[10px] text-rose-600 font-bold">{item.quantityAvailable} left</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    Product <span className="font-mono text-[10px]">{item.productId.slice(0, 12)}…</span> in {item.warehouseName} is at/below reorder point.
+                  </p>
+                  <Link href={`/inventory/${item.productId}`} className="text-[10px] font-semibold text-blue-600 hover:underline inline-block">
+                    Quick Restock →
+                  </Link>
+                </div>
+              ))
+            ) : (
+              <div className="p-4 text-center text-xs text-slate-400">
+                No active critical stock or platform warnings.
               </div>
-              <p className="text-[11px] text-slate-600">Order #ORD-1042 was placed by customer.</p>
-              <Link href="/orders" className="text-[10px] font-semibold text-blue-600 hover:underline inline-block">
-                View order →
-              </Link>
-            </div>
-            <div className="p-2.5 hover:bg-slate-50 rounded-lg text-xs space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-amber-800">Low Stock Warning</span>
-                <span className="text-[10px] text-slate-400">1h ago</span>
-              </div>
-              <p className="text-[11px] text-slate-600">Variant inventory is below threshold (2 items remaining).</p>
-              <Link href="/inventory" className="text-[10px] font-semibold text-blue-600 hover:underline inline-block">
-                Adjust stock →
-              </Link>
-            </div>
+            )}
           </div>
         </Dropdown.Content>
       </Dropdown.Portal>
