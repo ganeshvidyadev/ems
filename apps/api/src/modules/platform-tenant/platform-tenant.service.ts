@@ -21,6 +21,7 @@ import { TokenService } from '../auth/services/token.service';
 import { SubscriptionService } from '../subscription/services/subscription.service';
 import { CacheService } from '../../common/services/cache.service';
 import { RoleEntity, StoreEntity, SubscriptionEntity, TenantEntity, TenantDomainEntity, UserEntity, UserRoleEntity } from '../../database/entities';
+import { provisionTenantThemeWorkspace } from '../theme/theme-access.service';
 
 export interface PlatformTenantList {
   items: TenantEntity[];
@@ -174,6 +175,9 @@ export class PlatformTenantService {
   }
 
   async create(input: CreateTenantRequest, actor: AuditActor): Promise<TenantEntity> {
+    const initialTheme = (input as any).initialTheme || 'default';
+    const allowedThemes = ['default', 'organic', 'famms', 'circuit', 'harvest'];
+
     const tenant = await this.dataSource.transaction(async (manager) => {
       const slug = input.slug ?? (await this.allocateSlug(manager, input.businessName));
       const created = await manager.save(
@@ -190,6 +194,8 @@ export class PlatformTenantService {
           timezone: input.timezone,
           taxRegistration: input.taxRegistration ?? null,
           status: 'PENDING',
+          storefrontTheme: initialTheme,
+          allowedStorefrontThemes: allowedThemes,
         }),
       );
       return created;
@@ -289,6 +295,13 @@ export class PlatformTenantService {
           }),
         );
       }
+    } catch {
+      // Non-blocking
+    }
+
+    // Provision isolated filesystem workspace directory for company's theme
+    try {
+      provisionTenantThemeWorkspace(tenant.slug, tenant.storefrontTheme ?? initialTheme, tenant.businessName);
     } catch {
       // Non-blocking
     }
@@ -442,6 +455,8 @@ export class PlatformTenantService {
       suspendedAt: tenant.suspendedAt?.toISOString() ?? null,
       suspensionReason: tenant.suspensionReason,
       primaryDomain,
+      storefrontTheme: tenant.storefrontTheme ?? 'default',
+      allowedStorefrontThemes: tenant.allowedStorefrontThemes ?? ['default', 'organic', 'famms', 'circuit', 'harvest'],
       createdAt: tenant.createdAt.toISOString(),
       updatedAt: tenant.updatedAt.toISOString(),
     };

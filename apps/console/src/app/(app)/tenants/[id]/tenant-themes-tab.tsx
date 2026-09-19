@@ -8,9 +8,16 @@ import {
   Download,
   CheckCircle2,
   Loader2,
+  FolderCode,
+  DollarSign,
+  FileCode,
+  RefreshCw,
+  Sparkles,
+  ShieldCheck,
+  Layers,
 } from 'lucide-react';
-import { apiGet, apiPut } from '@/lib/api-client';
-import { Button, Badge, Alert } from '@/components/ui/primitives';
+import { apiGet, apiPost, apiPut } from '@/lib/api-client';
+import { Button, Badge, Alert, Input, Textarea, Card, CardHeader, CardBody } from '@/components/ui/primitives';
 import { downloadJsonFile } from '@/lib/csv-helper';
 
 interface Theme {
@@ -25,6 +32,11 @@ interface CompanyThemeData {
   slug: string;
   selectedTheme: string;
   allowedThemes: string[];
+  isCustomized?: boolean;
+  customizationFeeINR?: number;
+  customizationStatus?: 'STANDARD_FREE' | 'MODIFIED_PAID' | 'BESPOKE_CUSTOM';
+  customNotes?: string | null;
+  workspacePath?: string;
 }
 
 interface PlatformThemeSettings {
@@ -106,6 +118,14 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
 
   const [selectedTheme, setSelectedTheme] = useState<string>('');
   const [allowedThemes, setAllowedThemes] = useState<string[]>([]);
+  
+  // Customization & Monetization local states
+  const [isCustomized, setIsCustomized] = useState<boolean>(company?.isCustomized ?? false);
+  const [customizationFee, setCustomizationFee] = useState<string>(String(company?.customizationFeeINR ?? '0'));
+  const [customizationStatus, setCustomizationStatus] = useState<'STANDARD_FREE' | 'MODIFIED_PAID' | 'BESPOKE_CUSTOM'>(
+    company?.customizationStatus ?? 'STANDARD_FREE'
+  );
+  const [customNotes, setCustomNotes] = useState<string>(company?.customNotes ?? '');
 
   const currentTheme = company?.selectedTheme || 'default';
   const effectiveSelected = selectedTheme || currentTheme;
@@ -125,6 +145,41 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
     },
     onError: (err: any) => {
       setErrorMessage(err?.message ?? 'Failed to update theme assignment.');
+    },
+  });
+
+  const syncWorkspaceMutation = useMutation({
+    mutationFn: () =>
+      apiPost<{ message: string; workspacePath: string }>(
+        `/platform/themes/${company?.id ?? tenantId}/provision-workspace`,
+        { themeCode: effectiveSelected },
+      ),
+    onSuccess: (result) => {
+      setSuccessMessage(`Workspace folder successfully initialized/synchronized on server at "${result.workspacePath}".`);
+      setErrorMessage(null);
+      setTimeout(() => setSuccessMessage(null), 4000);
+    },
+    onError: (err: any) => {
+      setErrorMessage(err?.message ?? 'Failed to synchronize workspace folder.');
+    },
+  });
+
+  const saveCustomizationMutation = useMutation({
+    mutationFn: () =>
+      apiPut(`/platform/themes/${company?.id ?? tenantId}/customization`, {
+        isCustomized,
+        customizationFeeINR: Number(customizationFee) || 0,
+        customizationStatus,
+        notes: customNotes.trim() || undefined,
+      }),
+    onSuccess: () => {
+      setSuccessMessage('Customization monetization & fee details saved successfully. Dedicated folder updated.');
+      setErrorMessage(null);
+      void queryClient.invalidateQueries({ queryKey: ['platform-themes'] });
+      setTimeout(() => setSuccessMessage(null), 4000);
+    },
+    onError: (err: any) => {
+      setErrorMessage(err?.message ?? 'Failed to save customization details.');
     },
   });
 
@@ -167,6 +222,9 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
       activeTheme: {
         code: effectiveSelected,
         meta,
+        themeTier: isCustomized ? 'CUSTOM_PAID' : 'STANDARD_FREE',
+        customizationFeeINR: Number(customizationFee) || 0,
+        customizationStatus,
         folderPath: `storage/tenants/${company.slug}/themes/${effectiveSelected}/`,
       },
       fileStructure: {
@@ -175,6 +233,9 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
           themeCode: effectiveSelected,
           tenantSlug: company.slug,
           allowedThemes: effectiveAllowed,
+          isCustomized,
+          customizationFeeINR: Number(customizationFee) || 0,
+          customizationStatus,
         },
         'config.json': {
           colors: {
@@ -186,7 +247,7 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
           },
           sections: meta.previewFeatures,
         },
-        'theme.css': `:root { --brand: ${meta.brandColor}; --font-heading: '${meta.font}'; }`,
+        'theme.css': `:root { --brand-primary: ${meta.brandColor}; --brand-accent: ${meta.accentColor}; --font-heading: '${meta.font}'; }`,
       },
       previousThemeBackups: effectiveAllowed
         .filter((c) => c !== effectiveSelected)
@@ -225,19 +286,36 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
             <Palette className="h-5 w-5 text-primary" /> Storefront Themes & Design System
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage active storefront engine, assign standard theme templates, and export workspace files for {company?.name ?? 'this tenant'}.
+            Manage 5 free standard templates, configure custom paid modifications, and sync dedicated company folders for {company?.name ?? 'this tenant'}.
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExportThemeFolder}
-          className="gap-1.5 text-xs font-semibold"
-        >
-          <Download className="size-3.5" />
-          <span>Export Theme Workspace (JSON)</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => syncWorkspaceMutation.mutate()}
+            disabled={syncWorkspaceMutation.isPending}
+            className="gap-1.5 text-xs font-semibold"
+          >
+            {syncWorkspaceMutation.isPending ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="size-3.5 text-primary" />
+            )}
+            <span>Sync Server Folder</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportThemeFolder}
+            className="gap-1.5 text-xs font-semibold"
+          >
+            <Download className="size-3.5" />
+            <span>Export Workspace (JSON)</span>
+          </Button>
+        </div>
       </div>
 
       {successMessage && (
@@ -253,7 +331,19 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
       <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-primary">Currently Live On Storefront</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-primary">Currently Live On Storefront</span>
+              {company?.isCustomized ? (
+                <Badge variant="warning" className="text-[10px] font-semibold">
+                  Custom / Bespoke Theme (Paid)
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 border-emerald-300 bg-emerald-50 dark:bg-emerald-950/40">
+                  Standard Free Tier
+                </Badge>
+              )}
+            </div>
+
             <div className="flex items-center gap-2">
               <h3 className="text-xl font-bold text-foreground">
                 {themes.find((t) => t.code === currentTheme)?.name ?? currentTheme}
@@ -266,21 +356,97 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="rounded-lg border bg-background px-3 py-2 text-center text-xs">
-              <span className="text-muted-foreground block text-[10px]">Folder Workspace</span>
-              <span className="font-mono font-semibold text-foreground">
-                /tenants/{company?.slug ?? 'tenant'}/themes/{currentTheme}/
-              </span>
+            <div className="rounded-lg border border-border bg-card px-3.5 py-2.5 text-xs shadow-xs space-y-1">
+              <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] font-semibold uppercase">
+                <FolderCode className="size-3.5 text-primary" /> Dedicated Company Folder:
+              </div>
+              <div className="font-mono text-xs font-semibold text-foreground">
+                storage/tenants/{company?.slug ?? 'tenant'}/themes/{currentTheme}/
+              </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Theme Customization & Monetization Fee Manager */}
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+        <div className="flex items-center justify-between border-b border-border pb-3">
+          <div className="space-y-0.5">
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <DollarSign className="size-4 text-emerald-600" />
+              Theme Customization & Monetization Billing
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Standard 5 themes are 100% free. If this company requested custom code, bespoke sections, or modifications, bill them here.
+            </p>
+          </div>
+          <Badge variant={isCustomized ? 'warning' : 'outline'} className="text-xs">
+            {isCustomized ? 'Custom Paid Theme' : 'Standard Free Theme'}
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground">Customization Status</label>
+            <select
+              value={customizationStatus}
+              onChange={(e) => {
+                const val = e.target.value as any;
+                setCustomizationStatus(val);
+                setIsCustomized(val !== 'STANDARD_FREE');
+              }}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs"
+            >
+              <option value="STANDARD_FREE">Standard Free (No custom charge)</option>
+              <option value="MODIFIED_PAID">Modified Standard (Paid custom edits)</option>
+              <option value="BESPOKE_CUSTOM">Bespoke Custom Theme (Full custom design)</option>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground">Custom Modification Fee (INR ₹)</label>
+            <Input
+              type="number"
+              placeholder="0"
+              value={customizationFee}
+              onChange={(e) => setCustomizationFee(e.target.value)}
+              className="h-9 text-xs"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground">Customization Notes / Invoice Ref</label>
+            <Input
+              placeholder="e.g. Added custom banner slider & brand fonts"
+              value={customNotes}
+              onChange={(e) => setCustomNotes(e.target.value)}
+              className="h-9 text-xs"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between pt-2 border-t border-border">
+          <span className="text-xs text-muted-foreground">
+            Saves monetization metadata to tenant profile and updates <code className="font-mono text-foreground">manifest.json</code> in company folder.
+          </span>
+          <Button
+            size="sm"
+            onClick={() => saveCustomizationMutation.mutate()}
+            loading={saveCustomizationMutation.isPending}
+            className="text-xs font-semibold"
+          >
+            Save Monetization & Fee Settings
+          </Button>
         </div>
       </div>
 
       {/* 5 Standard Themes Catalog */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-foreground">Available Standard Themes Catalog (5 Standard Engines)</h3>
-          <span className="text-xs text-muted-foreground">Select any theme to activate for this company</span>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Available Standard Themes Catalog (5 Free Standard Engines)</h3>
+            <span className="text-xs text-muted-foreground">Any company can switch between all 5 standard themes freely at zero cost</span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -303,10 +469,14 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${meta.tagColor}`}>
                       {meta.tag}
                     </span>
-                    {isLive && (
+                    {isLive ? (
                       <Badge variant="default" className="gap-1 text-[10px] h-5">
                         <Check className="size-3" /> Live
                       </Badge>
+                    ) : (
+                      <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        100% Free Standard
+                      </span>
                     )}
                   </div>
 
@@ -316,7 +486,7 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
                   </div>
 
                   {/* Color Palettes & Specs preview */}
-                  <div className="space-y-2 pt-2 border-t text-xs">
+                  <div className="space-y-2 pt-2 border-t border-border text-xs">
                     <div className="flex items-center justify-between text-muted-foreground">
                       <span>Typography:</span>
                       <span className="font-medium text-foreground">{meta.font}</span>
@@ -353,7 +523,7 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
                 </div>
 
                 {/* Actions */}
-                <div className="pt-4 mt-4 border-t flex items-center justify-between gap-2">
+                <div className="pt-4 mt-4 border-t border-border flex items-center justify-between gap-2">
                   <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
                     <input
                       type="checkbox"

@@ -53,11 +53,13 @@ export const createTenantRequestSchema = z.object({
   taxRegistration: z.string().trim().max(64).optional(),
   planCode: z.string().trim().min(1).max(64),
   billingCycle: z.enum(['MONTHLY', 'YEARLY']).default('MONTHLY'),
+  /** Storefront template (standard free themes: default, organic, famms, circuit, harvest) */
+  initialTheme: z.enum(['default', 'organic', 'famms', 'circuit', 'harvest']).default('default').optional(),
 });
 export type CreateTenantRequest = z.infer<typeof createTenantRequestSchema>;
 
 export const updateTenantRequestSchema = createTenantRequestSchema
-  .omit({ slug: true, planCode: true, billingCycle: true })
+  .omit({ slug: true, planCode: true, billingCycle: true, initialTheme: true })
   .partial();
 
 export const tenantResponseSchema = z.object({
@@ -78,6 +80,8 @@ export const tenantResponseSchema = z.object({
   suspendedAt: z.string().nullable(),
   suspensionReason: z.string().nullable(),
   primaryDomain: z.string().nullable(),
+  storefrontTheme: z.string().optional(),
+  allowedStorefrontThemes: z.array(z.string()).nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

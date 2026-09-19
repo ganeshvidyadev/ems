@@ -24,7 +24,7 @@ import {
   Textarea,
 } from '@/components/ui/primitives';
 import { useAuth, usePermission } from '@/hooks/use-auth';
-import { isForbidden, apiGet, apiPut } from '@/lib/api-client';
+import { isForbidden, apiGet, apiPut, apiPost } from '@/lib/api-client';
 import { formatDate } from '@/lib/utils';
 import {
   useDeleteTenant,
@@ -34,7 +34,7 @@ import {
   useSuspendTenant,
 } from '@/lib/queries/platform-tenants';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Palette, Check, FolderCode, Download, CheckCircle2, ArrowRight, X } from 'lucide-react';
+import { Palette, Check, FolderCode, Download, CheckCircle2, ArrowRight, X, RefreshCw } from 'lucide-react';
 import { downloadJsonFile } from '@/lib/csv-helper';
 
 const STATUS_BADGE: Record<TenantStatus, 'default' | 'success' | 'warning' | 'destructive' | 'info'> = {
@@ -439,16 +439,37 @@ function TenantsPageContent() {
                   storage/tenants/{themeModalTenant.slug}/themes/{getTenantThemeCode(themeModalTenant)}/
                 </span>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs shrink-0"
-                onClick={() => handleExportWorkspace(themeModalTenant, getTenantThemeCode(themeModalTenant))}
-              >
-                <Download className="size-3.5 mr-1" />
-                Export Workspace
-              </Button>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={async () => {
+                    try {
+                      await apiPost(`/platform/themes/${themeModalTenant.id}/provision-workspace`, {
+                        themeCode: getTenantThemeCode(themeModalTenant),
+                      });
+                      setThemeSuccessMsg(`Dedicated workspace folder synchronized on server for "${themeModalTenant.businessName}"!`);
+                    } catch {
+                      // fallback
+                    }
+                  }}
+                >
+                  <RefreshCw className="size-3 mr-1 text-primary" />
+                  Sync Folder
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs shrink-0"
+                  onClick={() => handleExportWorkspace(themeModalTenant, getTenantThemeCode(themeModalTenant))}
+                >
+                  <Download className="size-3.5 mr-1" />
+                  Export Workspace
+                </Button>
+              </div>
             </div>
 
             {/* 5 Themes Selection Cards */}

@@ -52,4 +52,6 @@ Thumbs.db
 
 # Local data volumes
 docker/data/
+storage/
+apps/api/storage/
 *.rdb
