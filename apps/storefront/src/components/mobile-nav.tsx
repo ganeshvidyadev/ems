@@ -18,6 +18,7 @@ export function MobileNav() {
   const { itemCount, isLoading: cartLoading } = useCart();
   const { wishlistItems } = useWishlist();
   const { isAuthenticated } = useCustomer();
+  const openDrawer = useCartDrawer((state) => state.openDrawer);
 
   // Hide on checkout flow and printable views
   if (pathname.startsWith('/checkout')) {
@@ -58,8 +59,6 @@ export function MobileNav() {
       isActive: pathname.startsWith('/account') && !pathname.startsWith('/account/wishlist'),
     },
   ];
-
-  const openDrawer = useCartDrawer((state) => state.openDrawer);
 
   return (
     <nav
