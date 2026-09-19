@@ -1,7 +1,7 @@
 'use client';
 
 import type { OrderListQuery, OrderResponse } from '@ems/contracts';
-import { Download } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
@@ -19,7 +19,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/primitives';
-import { isForbidden } from '@/lib/api-client';
+import { apiGetPaginated, isForbidden } from '@/lib/api-client';
+import { downloadCsvFile, generateCsvText } from '@/lib/csv-helper';
 import { useOrders } from '@/lib/queries/orders';
 import { useCurrentStore } from '@/lib/queries/stores';
 import { formatDate, formatMoney } from '@/lib/utils';
@@ -81,27 +82,83 @@ function OrdersPageContent() {
   const orders = ordersQuery.data?.data ?? [];
   const pagination = ordersQuery.data?.meta.pagination;
 
-  function exportOrdersCsv() {
-    if (!orders || orders.length === 0) return;
-    const headers = ['Order Number', 'Date', 'Customer Email', 'Status', 'Payment Status', 'Fulfilment Status', 'Currency', 'Total Amount'];
-    const rows = orders.map((o) => [
-      o.orderNumber,
-      formatDate(o.placedAt ?? o.createdAt),
-      o.email ?? '',
-      o.status,
-      o.paymentStatus,
-      o.fulfilmentStatus,
-      o.currency,
-      (Number(o.total.amountMinor) / 100).toFixed(2),
-    ]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `orders-export-${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const [isExporting, setIsExporting] = useState(false);
+
+  async function exportOrdersCsv() {
+    if (!store?.id) return;
+    setIsExporting(true);
+    try {
+      const res = await apiGetPaginated<OrderResponse>('/console/orders', {
+        params: {
+          page: 1,
+          limit: 500,
+          status: status || undefined,
+          paymentStatus: paymentStatus || undefined,
+          fulfilmentStatus: fulfilmentStatus || undefined,
+          storeId: store.id,
+        },
+      });
+
+      const exportList = res.data?.length ? res.data : orders;
+      if (!exportList || exportList.length === 0) return;
+
+      const headers = [
+        'Order Number',
+        'Date',
+        'Customer Email',
+        'Customer Phone',
+        'Recipient Name',
+        'Status',
+        'Payment Status',
+        'Fulfilment Status',
+        'Items Count',
+        'Currency',
+        'Subtotal',
+        'Discount',
+        'Shipping',
+        'Tax',
+        'COD Fee',
+        'Total Amount',
+        'Shipping City',
+        'Shipping State',
+        'Shipping Postal Code',
+        'Channel',
+      ];
+
+      const rows = exportList.map((o) => {
+        const itemCount = o.items ? o.items.reduce((sum, item) => sum + (item.quantity || 1), 0) : 0;
+        return [
+          o.orderNumber,
+          formatDate(o.placedAt ?? o.createdAt),
+          o.email ?? '',
+          o.phone ?? o.shippingAddress?.phone ?? '',
+          o.shippingAddress?.recipientName ?? '',
+          o.status,
+          o.paymentStatus,
+          o.fulfilmentStatus,
+          itemCount,
+          o.currency,
+          (Number(o.subtotal?.amountMinor || 0) / 100).toFixed(2),
+          (Number(o.discount?.amountMinor || 0) / 100).toFixed(2),
+          (Number(o.shipping?.amountMinor || 0) / 100).toFixed(2),
+          (Number(o.tax?.amountMinor || 0) / 100).toFixed(2),
+          (Number(o.codFee?.amountMinor || 0) / 100).toFixed(2),
+          (Number(o.total?.amountMinor || 0) / 100).toFixed(2),
+          o.shippingAddress?.city ?? '',
+          o.shippingAddress?.stateName ?? o.shippingAddress?.stateCode ?? '',
+          o.shippingAddress?.postalCode ?? '',
+          o.channel ?? 'STOREFRONT',
+        ];
+      });
+
+      const csvContent = generateCsvText(headers, rows);
+      const filename = `orders-export-${store.slug ?? 'store'}-${new Date().toISOString().slice(0, 10)}.csv`;
+      downloadCsvFile(filename, csvContent);
+    } catch (err) {
+      console.error('Failed to export orders CSV:', err);
+    } finally {
+      setIsExporting(false);
+    }
   }
 
   return (
@@ -152,12 +209,16 @@ function OrdersPageContent() {
         <Button
           variant="outline"
           size="sm"
-          disabled={orders.length === 0}
-          onClick={exportOrdersCsv}
+          disabled={orders.length === 0 || isExporting}
+          onClick={() => void exportOrdersCsv()}
           className="inline-flex items-center gap-1.5"
         >
-          <Download className="size-3.5 text-slate-600" />
-          Export Orders CSV
+          {isExporting ? (
+            <Loader2 className="size-3.5 animate-spin text-slate-600" />
+          ) : (
+            <Download className="size-3.5 text-slate-600" />
+          )}
+          {isExporting ? 'Exporting…' : 'Export Orders CSV'}
         </Button>
       </div>
 

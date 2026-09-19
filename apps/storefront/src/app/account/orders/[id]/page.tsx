@@ -15,6 +15,8 @@ import {
   CheckCircle2,
   AlertCircle,
   ShoppingBag,
+  Truck,
+  Check,
 } from 'lucide-react';
 import { api, ApiError } from '@/lib/api-client';
 import { useAddToCart } from '@/lib/use-cart';
@@ -206,43 +208,244 @@ export default function CustomerOrderDetailPage({ params }: { params: Promise<{ 
         </div>
       )}
 
-      {/* Status Badges & Timeline */}
-      <div className="rounded-theme border border-line bg-surface p-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-muted">Order Status</h2>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-bold ${
-              order.status === 'DELIVERED'
-                ? 'bg-success/15 text-success'
-                : order.status === 'CANCELLED'
-                  ? 'bg-danger/15 text-danger'
-                  : 'bg-brand/15 text-brand'
-            }`}
-          >
-            Status: {order.status}
-          </span>
-          <span className="rounded-full bg-surface-alt px-3 py-1 text-xs font-medium text-ink">
-            Payment: {order.paymentStatus}
-          </span>
-          <span className="rounded-full bg-surface-alt px-3 py-1 text-xs font-medium text-ink">
-            Fulfillment: {order.fulfilmentStatus}
-          </span>
+      {/* Status Alert Banners (if Cancelled or Returned) */}
+      {order.status === 'CANCELLED' && (
+        <div className="rounded-theme border border-danger/30 bg-danger/5 p-5">
+          <div className="flex items-start gap-3">
+            <div className="rounded-full bg-danger/10 p-2 text-danger">
+              <XCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-danger">This order was cancelled</h3>
+              <p className="mt-1 text-xs text-ink-muted">
+                {order.cancelReason ? `Reason: ${order.cancelReason}` : 'No specific reason was provided.'}
+              </p>
+              <p className="mt-1 text-[11px] text-ink-muted">
+                Updated on {new Date(order.updatedAt).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {order.status === 'RETURNED' && (
+        <div className="rounded-theme border border-amber-300/40 bg-amber-50 dark:bg-amber-950/20 p-5">
+          <div className="flex items-start gap-3">
+            <div className="rounded-full bg-amber-500/15 p-2 text-amber-600">
+              <RotateCcw className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-400">Order Returned</h3>
+              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                Items in this order have been recorded as returned and processed.
+              </p>
+              <p className="mt-1 text-[11px] text-ink-muted">
+                Updated on {new Date(order.updatedAt).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Visual Tracking Stepper Card */}
+      <div className="rounded-theme border border-line bg-surface p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+          <div>
+            <h2 className="text-sm font-semibold text-ink">Order Delivery Progress</h2>
+            <p className="text-xs text-ink-muted mt-0.5">Live tracking updates for order #{order.orderNumber}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-bold ${
+                order.status === 'DELIVERED' || order.status === 'COMPLETED'
+                  ? 'bg-success/15 text-success'
+                  : order.status === 'CANCELLED'
+                    ? 'bg-danger/15 text-danger'
+                    : 'bg-brand/15 text-brand'
+              }`}
+            >
+              {order.status}
+            </span>
+            <span className="rounded-full bg-surface-alt px-3 py-1 text-xs font-medium text-ink">
+              Payment: {order.paymentStatus}
+            </span>
+            <span className="rounded-full bg-surface-alt px-3 py-1 text-xs font-medium text-ink">
+              Fulfillment: {order.fulfilmentStatus}
+            </span>
+          </div>
         </div>
 
-        {/* Timeline Events */}
+        {/* 4-Step Progress Stepper */}
+        {(() => {
+          const isCancelled = order.status === 'CANCELLED' || order.status === 'FAILED';
+          const isReturned = order.status === 'RETURNED';
+
+          const placedDate = order.placedAt || order.createdAt;
+          const confirmedTimeline = order.timeline?.find(
+            (t) => t.statusType === 'ORDER' && (t.toStatus === 'CONFIRMED' || t.toStatus === 'PROCESSING')
+          );
+          const isConfirmed =
+            Boolean(order.confirmedAt) ||
+            ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'COMPLETED'].includes(order.status) ||
+            Boolean(confirmedTimeline);
+          const confirmedDate = order.confirmedAt || confirmedTimeline?.createdAt;
+
+          const shippedTimeline = order.timeline?.find(
+            (t) =>
+              (t.statusType === 'ORDER' && (t.toStatus === 'SHIPPED' || t.toStatus === 'DELIVERED' || t.toStatus === 'COMPLETED')) ||
+              (t.statusType === 'FULFILMENT' && t.toStatus === 'FULFILLED')
+          );
+          const isShipped =
+            ['SHIPPED', 'DELIVERED', 'COMPLETED'].includes(order.status) ||
+            order.fulfilmentStatus === 'FULFILLED' ||
+            Boolean(shippedTimeline);
+          const shippedDate = shippedTimeline?.createdAt;
+
+          const deliveredTimeline = order.timeline?.find(
+            (t) => t.statusType === 'ORDER' && (t.toStatus === 'DELIVERED' || t.toStatus === 'COMPLETED')
+          );
+          const isDelivered =
+            Boolean(order.deliveredAt) ||
+            ['DELIVERED', 'COMPLETED'].includes(order.status) ||
+            Boolean(deliveredTimeline);
+          const deliveredDate = order.deliveredAt || deliveredTimeline?.createdAt;
+
+          let activeIndex = 0;
+          if (isDelivered) activeIndex = 3;
+          else if (isShipped) activeIndex = 2;
+          else if (isConfirmed) activeIndex = 1;
+          else activeIndex = 0;
+
+          const steps = [
+            {
+              id: 'placed',
+              label: 'Order Placed',
+              date: placedDate ? new Date(placedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : undefined,
+              done: true,
+              active: activeIndex === 0 && !isCancelled && !isReturned,
+              icon: ShoppingBag,
+            },
+            {
+              id: 'confirmed',
+              label: 'Confirmed',
+              date: confirmedDate ? new Date(confirmedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : undefined,
+              done: isConfirmed && !isCancelled,
+              active: activeIndex === 1 && !isCancelled && !isReturned,
+              icon: CheckCircle2,
+            },
+            {
+              id: 'shipped',
+              label: 'Shipped',
+              date: shippedDate ? new Date(shippedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : undefined,
+              done: isShipped && !isCancelled,
+              active: activeIndex === 2 && !isCancelled && !isReturned,
+              icon: Truck,
+            },
+            {
+              id: 'delivered',
+              label: 'Delivered',
+              date: deliveredDate ? new Date(deliveredDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : undefined,
+              done: isDelivered && !isCancelled,
+              active: activeIndex === 3 && !isCancelled && !isReturned,
+              icon: Package,
+            },
+          ];
+
+          return (
+            <div className="mt-8 mb-4 px-2">
+              <div className="relative flex items-center justify-between">
+                {/* Horizontal Line behind icons */}
+                <div className="absolute left-6 right-6 top-5 -translate-y-1/2 h-1 bg-surface-alt -z-0">
+                  <div
+                    className="h-full bg-brand transition-all duration-500"
+                    style={{
+                      width: isCancelled
+                        ? '0%'
+                        : activeIndex === 3
+                          ? '100%'
+                          : activeIndex === 2
+                            ? '66%'
+                            : activeIndex === 1
+                              ? '33%'
+                              : '0%',
+                    }}
+                  />
+                </div>
+
+                {steps.map((step, idx) => {
+                  const Icon = step.icon;
+                  return (
+                    <div key={step.id} className="relative z-10 flex flex-col items-center text-center">
+                      <div
+                        className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 ${
+                          step.done && !isCancelled
+                            ? 'bg-brand text-white shadow-sm'
+                            : step.active
+                              ? 'border-2 border-brand bg-surface text-brand ring-4 ring-brand/15'
+                              : isCancelled && idx > 0
+                                ? 'border border-line bg-surface-alt text-ink-muted opacity-50'
+                                : 'border border-line bg-surface-alt text-ink-muted'
+                        }`}
+                      >
+                        {step.done && !step.active && !isCancelled ? (
+                          <Check className="h-5 w-5" />
+                        ) : (
+                          <Icon className="h-5 w-5" />
+                        )}
+                      </div>
+                      <div className="mt-2.5 max-w-[90px] sm:max-w-[120px]">
+                        <p
+                          className={`text-xs font-medium ${
+                            step.done || step.active ? 'text-ink font-semibold' : 'text-ink-muted'
+                          }`}
+                        >
+                          {step.label}
+                        </p>
+                        {step.date ? (
+                          <p className="mt-0.5 text-[11px] text-ink-muted leading-tight">{step.date}</p>
+                        ) : step.active ? (
+                          <p className="mt-0.5 text-[11px] text-brand font-medium animate-pulse">In progress</p>
+                        ) : (
+                          <p className="mt-0.5 text-[11px] text-ink-muted/60">Pending</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Timeline Events Log */}
         {order.timeline && order.timeline.length > 0 && (
-          <div className="mt-6 border-t border-line pt-4">
-            <h3 className="text-xs font-medium text-ink-muted uppercase tracking-wider mb-3">Order History Timeline</h3>
+          <div className="mt-8 border-t border-line pt-5">
+            <h3 className="text-xs font-semibold text-ink uppercase tracking-wider mb-3">
+              Order Activity History
+            </h3>
             <div className="space-y-3">
               {order.timeline.map((event, idx) => (
                 <div key={idx} className="flex items-start gap-3 text-xs">
-                  <div className="mt-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand/10 text-brand">
-                    <Clock className="h-2.5 w-2.5" />
+                  <div className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-brand/10 text-brand shrink-0">
+                    <Clock className="h-3 w-3" />
                   </div>
-                  <div>
-                    <span className="font-semibold text-ink">{event.toStatus}</span>
-                    {event.reason && <span className="text-ink-muted"> — {event.reason}</span>}
-                    <p className="text-[11px] text-ink-muted">{new Date(event.createdAt).toLocaleString()}</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="font-semibold text-ink">{event.toStatus}</span>
+                      {event.fromStatus && (
+                        <span className="text-ink-muted">(from {event.fromStatus})</span>
+                      )}
+                      <span className="rounded bg-surface-alt px-1.5 py-0.5 text-[10px] text-ink-muted uppercase">
+                        {event.actorType}
+                      </span>
+                    </div>
+                    {event.reason && <p className="text-ink-muted mt-0.5">{event.reason}</p>}
+                    <p className="text-[11px] text-ink-muted mt-0.5">
+                      {new Date(event.createdAt).toLocaleString(undefined, {
+                        dateStyle: 'medium',
+                        timeStyle: 'short',
+                      })}
+                    </p>
                   </div>
                 </div>
               ))}
