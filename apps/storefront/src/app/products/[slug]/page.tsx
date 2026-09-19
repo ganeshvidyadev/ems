@@ -13,6 +13,7 @@ import { ProductGrid } from '@/components/product-card';
 import { ProductReviews } from '@/components/product-reviews';
 import { ProductShare } from '@/components/product-share';
 import { RecentlyViewedShelf, RecentlyViewedTracker } from '@/components/recently-viewed';
+import { ProductGallery } from '@/components/product-gallery';
 import { StickyPdpBar } from '@/components/sticky-pdp-bar';
 import { ProductThumb } from '@/components/product-thumb';
 import { StarRating } from '@/components/star-rating';
@@ -101,14 +102,10 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
       </nav>
 
       <div className="grid gap-10 lg:grid-cols-2">
-        <div className="relative">
-          <ProductThumb name={product.name} className="aspect-square w-full" textClassName="text-7xl" />
-          {saving !== null && (
-            <Badge tone="sale" className="absolute left-3 top-3 text-sm">
-              {saving}% off
-            </Badge>
-          )}
-        </div>
+        <ProductGallery
+          productName={product.name}
+          saving={saving}
+        />
 
         <div className="space-y-6">
           <div className="space-y-3">

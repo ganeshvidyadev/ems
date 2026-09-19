@@ -11,6 +11,7 @@ import { CookieBanner } from '@/components/cookie-banner';
 import { MobileNav } from '@/components/mobile-nav';
 import { FloatingCompareBar } from '@/components/compare-bar';
 import { CartDrawer } from '@/components/cart-drawer';
+import { SocialProofToast } from '@/components/social-proof-toast';
 import './globals.css';
 import './themes.css';
 
@@ -73,6 +74,7 @@ export default async function RootLayout({
           <MobileNav />
           <FloatingCompareBar />
           <CartDrawer />
+          <SocialProofToast />
         </Providers>
       </body>
     </html>
