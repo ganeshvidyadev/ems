@@ -8,6 +8,7 @@ import { useCart, useUpdateCartItem, useRemoveCartItem } from '@/lib/use-cart';
 import { useCartDrawer } from '@/lib/use-cart-drawer';
 import { formatMinor } from '@/lib/money';
 import { ProductThumb } from '@/components/product-thumb';
+import { CartReservationTimer } from '@/components/cart-reservation-timer';
 
 const FREE_SHIPPING_THRESHOLD_MINOR = 99900; // ₹999.00
 
@@ -94,6 +95,8 @@ export function CartDrawer() {
                   style={{ width: progressPercent + '%' }}
                 />
               </div>
+
+              <CartReservationTimer className="mt-2.5" />
             </div>
           )}
 

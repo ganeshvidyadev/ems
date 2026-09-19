@@ -10,6 +10,7 @@ import { Alert, Button, Card, EmptyState, Input, Spinner } from '@/components/ui
 import { ApiError } from '@/lib/api-client';
 import { formatMinor } from '@/lib/money';
 import { CouponBox } from '@/components/coupon-box';
+import { CartReservationTimer } from '@/components/cart-reservation-timer';
 import {
   useCart,
   useRemoveCartItem,
@@ -101,6 +102,8 @@ export function CartView() {
             />
           </div>
         </div>
+
+        <CartReservationTimer />
 
         <ul className="divide-y divide-line rounded-theme border border-line">
           {cart.items.map((item) => (

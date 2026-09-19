@@ -1,7 +1,7 @@
-﻿'use client';
+'use client';
 
 import type { BrandResponse, CategoryResponse } from '@ems/contracts';
-import { ChevronDown, ChevronRight, Filter, SlidersHorizontal, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Filter, SlidersHorizontal, X, Star, CheckSquare, Square, Sparkles, Tag, CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { Button, Card, Input } from '@/components/ui';
@@ -14,6 +14,9 @@ export interface FilterState {
   brand?: string;
   minPrice?: string;
   maxPrice?: string;
+  inStock?: string;
+  onSale?: string;
+  rating?: string;
 }
 
 interface CatalogueFiltersProps {
@@ -28,6 +31,12 @@ const PRICE_PRESETS = [
   { label: '₹500 – ₹1,000', min: '500', max: '1000' },
   { label: '₹1,000 – ₹2,500', min: '1000', max: '2500' },
   { label: 'Above ₹2,500', min: '2500', max: '' },
+];
+
+const RATING_PRESETS = [
+  { label: '4★ & Above', value: '4' },
+  { label: '3★ & Above', value: '3' },
+  { label: '2★ & Above', value: '2' },
 ];
 
 export function CatalogueFilters({ categories, brands, filters, className }: CatalogueFiltersProps) {
@@ -49,6 +58,9 @@ export function CatalogueFilters({ categories, brands, filters, className }: Cat
     if (next.brand) params.set('brand', next.brand);
     if (next.minPrice) params.set('minPrice', next.minPrice);
     if (next.maxPrice) params.set('maxPrice', next.maxPrice);
+    if (next.inStock) params.set('inStock', next.inStock);
+    if (next.onSale) params.set('onSale', next.onSale);
+    if (next.rating) params.set('rating', next.rating);
 
     const qs = params.toString();
     startTransition(() => {
@@ -68,13 +80,44 @@ export function CatalogueFilters({ categories, brands, filters, className }: Cat
   const activeFiltersCount =
     (filters.category ? 1 : 0) +
     (filters.brand ? 1 : 0) +
-    (filters.minPrice || filters.maxPrice ? 1 : 0);
+    (filters.minPrice || filters.maxPrice ? 1 : 0) +
+    (filters.inStock === 'true' ? 1 : 0) +
+    (filters.onSale === 'true' ? 1 : 0) +
+    (filters.rating ? 1 : 0);
 
   const filterContent = (
     <div className="space-y-6">
+      {/* Availability & Special Offers Toggles */}
+      <div className="space-y-3">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Quick Filters</h3>
+        <div className="space-y-2">
+          <label 
+            onClick={() => updateQuery({ inStock: filters.inStock === 'true' ? undefined : 'true' })}
+            className="flex items-center justify-between rounded-lg border border-line p-2.5 text-xs text-ink cursor-pointer hover:bg-surface-alt transition"
+          >
+            <span className="flex items-center gap-2">
+              <CheckCircle2 className={cn('h-4 w-4', filters.inStock === 'true' ? 'text-brand' : 'text-ink-muted')} />
+              <span>In Stock Only</span>
+            </span>
+            {filters.inStock === 'true' && <span className="h-2 w-2 rounded-full bg-brand" />}
+          </label>
+
+          <label 
+            onClick={() => updateQuery({ onSale: filters.onSale === 'true' ? undefined : 'true' })}
+            className="flex items-center justify-between rounded-lg border border-line p-2.5 text-xs text-ink cursor-pointer hover:bg-surface-alt transition"
+          >
+            <span className="flex items-center gap-2">
+              <Tag className={cn('h-4 w-4', filters.onSale === 'true' ? 'text-sale' : 'text-ink-muted')} />
+              <span>Discounted / On Sale</span>
+            </span>
+            {filters.onSale === 'true' && <span className="h-2 w-2 rounded-full bg-sale" />}
+          </label>
+        </div>
+      </div>
+
       {/* Categories section */}
       {categories.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-3 border-t border-line pt-6">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Categories</h3>
           <ul className="space-y-1.5 text-sm">
             <li>
@@ -82,7 +125,7 @@ export function CatalogueFilters({ categories, brands, filters, className }: Cat
                 type="button"
                 onClick={() => updateQuery({ category: undefined })}
                 className={cn(
-                  'flex w-full items-center justify-between rounded px-2 py-1.5 text-left transition',
+                  'flex w-full items-center justify-between rounded px-2 py-1.5 text-left transition text-xs',
                   !filters.category
                     ? 'font-medium text-brand bg-surface-alt'
                     : 'text-ink-muted hover:bg-surface-alt hover:text-ink',
@@ -99,7 +142,7 @@ export function CatalogueFilters({ categories, brands, filters, className }: Cat
                     type="button"
                     onClick={() => updateQuery({ category: isSelected ? undefined : cat.id })}
                     className={cn(
-                      'flex w-full items-center justify-between rounded px-2 py-1.5 text-left transition',
+                      'flex w-full items-center justify-between rounded px-2 py-1.5 text-left transition text-xs',
                       isSelected
                         ? 'font-semibold text-brand bg-surface-alt'
                         : 'text-ink-muted hover:bg-surface-alt hover:text-ink',
@@ -125,7 +168,7 @@ export function CatalogueFilters({ categories, brands, filters, className }: Cat
                 type="button"
                 onClick={() => updateQuery({ brand: undefined })}
                 className={cn(
-                  'flex w-full items-center justify-between rounded px-2 py-1.5 text-left transition',
+                  'flex w-full items-center justify-between rounded px-2 py-1.5 text-left transition text-xs',
                   !filters.brand
                     ? 'font-medium text-brand bg-surface-alt'
                     : 'text-ink-muted hover:bg-surface-alt hover:text-ink',
@@ -142,7 +185,7 @@ export function CatalogueFilters({ categories, brands, filters, className }: Cat
                     type="button"
                     onClick={() => updateQuery({ brand: isSelected ? undefined : b.id })}
                     className={cn(
-                      'flex w-full items-center justify-between rounded px-2 py-1.5 text-left transition',
+                      'flex w-full items-center justify-between rounded px-2 py-1.5 text-left transition text-xs',
                       isSelected
                         ? 'font-semibold text-brand bg-surface-alt'
                         : 'text-ink-muted hover:bg-surface-alt hover:text-ink',
@@ -157,6 +200,33 @@ export function CatalogueFilters({ categories, brands, filters, className }: Cat
           </ul>
         </div>
       )}
+
+      {/* Customer Ratings Section */}
+      <div className="space-y-3 border-t border-line pt-6">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Customer Rating</h3>
+        <div className="space-y-1.5">
+          {RATING_PRESETS.map((r) => {
+            const isSelected = filters.rating === r.value;
+            return (
+              <button
+                key={r.value}
+                type="button"
+                onClick={() => updateQuery({ rating: isSelected ? undefined : r.value })}
+                className={cn(
+                  'flex w-full items-center justify-between rounded px-2 py-1.5 text-left transition text-xs',
+                  isSelected ? 'font-semibold text-brand bg-surface-alt' : 'text-ink-muted hover:bg-surface-alt hover:text-ink'
+                )}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Star className={cn('h-3.5 w-3.5 fill-amber-400 text-amber-400')} />
+                  <span>{r.label}</span>
+                </div>
+                {isSelected && <span className="h-1.5 w-1.5 rounded-full bg-brand" />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Price Range section */}
       <div className="space-y-3 border-t border-line pt-6">
@@ -241,7 +311,15 @@ export function CatalogueFilters({ categories, brands, filters, className }: Cat
             onClick={() => {
               setMinPriceInput('');
               setMaxPriceInput('');
-              updateQuery({ category: undefined, brand: undefined, minPrice: undefined, maxPrice: undefined });
+              updateQuery({ 
+                category: undefined, 
+                brand: undefined, 
+                minPrice: undefined, 
+                maxPrice: undefined,
+                inStock: undefined,
+                onSale: undefined,
+                rating: undefined,
+              });
             }}
             className="w-full text-xs text-sale hover:text-sale"
           >
@@ -341,6 +419,9 @@ export function ActiveFilterChips({
     if (next.brand) params.set('brand', next.brand);
     if (next.minPrice) params.set('minPrice', next.minPrice);
     if (next.maxPrice) params.set('maxPrice', next.maxPrice);
+    if (next.inStock) params.set('inStock', next.inStock);
+    if (next.onSale) params.set('onSale', next.onSale);
+    if (next.rating) params.set('rating', next.rating);
 
     const qs = params.toString();
     startTransition(() => {
@@ -363,6 +444,9 @@ export function ActiveFilterChips({
       selectedBrand ||
       filters.minPrice ||
       filters.maxPrice ||
+      filters.inStock ||
+      filters.onSale ||
+      filters.rating ||
       filters.q,
   );
 
@@ -408,6 +492,48 @@ export function ActiveFilterChips({
             onClick={() => removeFilter('brand')}
             className="text-brand hover:opacity-75"
             aria-label="Remove brand filter"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      )}
+
+      {filters.inStock === 'true' && (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-xs text-ink font-medium">
+          <span>In Stock Only</span>
+          <button
+            type="button"
+            onClick={() => removeFilter('inStock')}
+            className="text-ink-muted hover:text-ink"
+            aria-label="Remove in-stock filter"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      )}
+
+      {filters.onSale === 'true' && (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-sale/40 bg-sale/10 px-2.5 py-1 text-xs font-medium text-sale">
+          <span>On Sale</span>
+          <button
+            type="button"
+            onClick={() => removeFilter('onSale')}
+            className="text-sale hover:opacity-75"
+            aria-label="Remove sale filter"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      )}
+
+      {filters.rating && (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-xs text-ink">
+          <span>Rating: {filters.rating}★+</span>
+          <button
+            type="button"
+            onClick={() => removeFilter('rating')}
+            className="text-ink-muted hover:text-ink"
+            aria-label="Remove rating filter"
           >
             <X className="h-3 w-3" />
           </button>

@@ -1,4 +1,4 @@
-﻿import type { BrandResponse, CategoryResponse, ProductResponse } from '@ems/contracts';
+import type { BrandResponse, CategoryResponse, ProductResponse } from '@ems/contracts';
 import { PackageOpen, SearchX } from 'lucide-react';
 import type { Metadata } from 'next';
 import { ActiveFilterChips, CatalogueFilters } from '@/components/catalogue-filters';
@@ -18,6 +18,9 @@ type SearchParams = {
   brand?: string;
   minPrice?: string;
   maxPrice?: string;
+  inStock?: string;
+  onSale?: string;
+  rating?: string;
 };
 
 export async function generateMetadata({
@@ -45,6 +48,9 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   const brand = (params.brand ?? '').trim() || undefined;
   const minPrice = (params.minPrice ?? '').trim() || undefined;
   const maxPrice = (params.maxPrice ?? '').trim() || undefined;
+  const inStock = (params.inStock ?? '').trim() || undefined;
+  const onSale = (params.onSale ?? '').trim() || undefined;
+  const rating = (params.rating ?? '').trim() || undefined;
 
   const query = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
   if (q) query.set('q', q);
@@ -98,14 +104,14 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         <CatalogueFilters
           categories={categories}
           brands={brands}
-          filters={{ q, sort, category, brand, minPrice, maxPrice }}
+          filters={{ q, sort, category, brand, minPrice, maxPrice, inStock, onSale, rating }}
         />
 
         <div className="flex-1 min-w-0 w-full space-y-4">
           <ActiveFilterChips
             categories={categories}
             brands={brands}
-            filters={{ q, sort, category, brand, minPrice, maxPrice }}
+            filters={{ q, sort, category, brand, minPrice, maxPrice, inStock, onSale, rating }}
           />
 
           <CatalogueResults q={q} sort={sort}>
@@ -129,7 +135,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                 <Pagination
                   pagination={productResult.pagination}
                   buildHref={(nextPage) =>
-                    buildHref({ q, sort, page: nextPage, category, brand, minPrice, maxPrice })
+                    buildHref({ q, sort, page: nextPage, category, brand, minPrice, maxPrice, inStock, onSale, rating })
                   }
                   className="pt-2"
                 />
@@ -150,6 +156,9 @@ function buildHref({
   brand,
   minPrice,
   maxPrice,
+  inStock,
+  onSale,
+  rating,
 }: {
   q: string;
   sort: string;
@@ -158,6 +167,9 @@ function buildHref({
   brand?: string;
   minPrice?: string;
   maxPrice?: string;
+  inStock?: string;
+  onSale?: string;
+  rating?: string;
 }): string {
   const params = new URLSearchParams();
   if (q) params.set('q', q);
@@ -166,6 +178,9 @@ function buildHref({
   if (brand) params.set('brand', brand);
   if (minPrice) params.set('minPrice', minPrice);
   if (maxPrice) params.set('maxPrice', maxPrice);
+  if (inStock) params.set('inStock', inStock);
+  if (onSale) params.set('onSale', onSale);
+  if (rating) params.set('rating', rating);
   if (page > 1) params.set('page', String(page));
 
   const qs = params.toString();
