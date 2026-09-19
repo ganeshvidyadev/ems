@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import type { CartResponse } from '@ems/contracts';
 import { Tag, X } from 'lucide-react';
@@ -12,8 +12,7 @@ export function CouponBox({ cart, onApplied }: { cart: CartResponse; onApplied?:
   const applyCoupon = useApplyCoupon();
   const removeCoupon = useRemoveCoupon();
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function handleApply() {
     const trimmed = code.trim();
     if (!trimmed) return;
 
@@ -54,7 +53,7 @@ export function CouponBox({ cart, onApplied }: { cart: CartResponse; onApplied?:
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-2">
+    <div className="space-y-2">
       <label htmlFor="coupon" className="block text-sm font-medium text-ink">
         Coupon code
       </label>
@@ -64,10 +63,22 @@ export function CouponBox({ cart, onApplied }: { cart: CartResponse; onApplied?:
           value={code}
           maxLength={64}
           onChange={(event) => setCode(event.target.value.toUpperCase())}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              handleApply();
+            }
+          }}
           placeholder="Enter a code"
           aria-invalid={applyCoupon.isError || undefined}
         />
-        <Button type="submit" variant="secondary" loading={applyCoupon.isPending} disabled={!code.trim()}>
+        <Button
+          type="button"
+          onClick={handleApply}
+          variant="secondary"
+          loading={applyCoupon.isPending}
+          disabled={!code.trim()}
+        >
           Apply
         </Button>
       </div>
@@ -79,6 +90,6 @@ export function CouponBox({ cart, onApplied }: { cart: CartResponse; onApplied?:
             : 'That code could not be applied.'}
         </p>
       )}
-    </form>
+    </div>
   );
 }
