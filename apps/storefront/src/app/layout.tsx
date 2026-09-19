@@ -7,6 +7,7 @@ import { getStoreSummary } from '@/lib/store';
 import { getTenantContext } from '@/lib/tenant';
 import { getStorefrontTheme } from '@/lib/theme';
 import { ThemeFooter } from '@/components/theme-footer';
+import { CookieBanner } from '@/components/cookie-banner';
 import './globals.css';
 import './themes.css';
 
@@ -65,6 +66,7 @@ export default async function RootLayout({
             <div className="storefront-content mx-auto max-w-content px-4 py-8">{children}</div>
           </main>
           {theme === 'default' ? <SiteFooter name={store.name} currency={store.currency} /> : <ThemeFooter theme={theme} name={store.name} currency={store.currency} />}
+          <CookieBanner />
         </Providers>
       </body>
     </html>
