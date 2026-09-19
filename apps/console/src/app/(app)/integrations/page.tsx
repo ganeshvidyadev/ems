@@ -2,6 +2,7 @@
 
 import type { PlatformChannelConnection } from '@ems/contracts';
 import { useMemo, useState } from 'react';
+import { Download } from 'lucide-react';
 import {
   Alert,
   Badge,
@@ -21,6 +22,7 @@ import {
   TableRow,
 } from '@/components/ui/primitives';
 import { formatDate } from '@/lib/utils';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
 import { usePlatformIntegrations } from '@/lib/queries/platform-integrations';
 
 const STATUS_BADGE: Record<string, 'success' | 'warning' | 'destructive' | 'info' | 'default'> = {
@@ -44,6 +46,22 @@ export default function PlatformIntegrationsPage() {
     () => integrations.data?.channelConnections ?? [],
     [integrations.data?.channelConnections],
   );
+
+  const handleExportIntegrationsCsv = () => {
+    if (filtered.length === 0) return;
+    const headers = ['Tenant Name', 'Tenant ID', 'Channel Type', 'Status', 'Account ID', 'Last Synced At', 'Last Error', 'Token Expires At'];
+    const rows = filtered.map((c) => [
+      c.tenantName,
+      c.tenantId,
+      c.type,
+      c.status,
+      c.id,
+      c.lastSyncAt ? formatDate(c.lastSyncAt) : 'Never',
+      c.lastError ?? '',
+      c.tokenExpiresAt ? formatDate(c.tokenExpiresAt) : 'N/A',
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `integrations-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
 
   const availableTypes = useMemo(() => {
     const types = new Set<string>();
@@ -94,6 +112,15 @@ export default function PlatformIntegrationsPage() {
             Cross-tenant visibility into marketplace connections, sync health, and token status.
           </p>
         </div>
+        {connections.length > 0 && (
+          <button
+            type="button"
+            onClick={handleExportIntegrationsCsv}
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+          >
+            <Download className="size-4" /> Export CSV
+          </button>
+        )}
       </div>
 
       {/* Summary KPI cards */}

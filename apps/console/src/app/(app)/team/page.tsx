@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { RotateCw, Trash2, UserCheck, UserPlus, Users, X } from 'lucide-react';
+import { Download, RotateCw, Trash2, UserCheck, UserPlus, Users, X } from 'lucide-react';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
+import { formatDate } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useCreateInvitation, useInvitations, useResendInvitation, useRevokeInvitation } from '@/lib/queries/team';
 
@@ -18,6 +20,21 @@ export default function TeamPage() {
   const [lastName, setLastName] = useState('');
   const [role, setRole] = useState('TENANT_ADMIN');
   const [error, setError] = useState<string | null>(null);
+
+  const handleExportTeamCsv = () => {
+    if (!invitations || invitations.length === 0) return;
+    const headers = ['Invitation ID', 'Email', 'Name', 'Roles', 'Status', 'Expires At', 'Created At'];
+    const rows = invitations.map((inv) => [
+      inv.id,
+      inv.email,
+      [inv.firstName, inv.lastName].filter(Boolean).join(' ') || '—',
+      (inv.roles ?? []).join('; '),
+      inv.status,
+      inv.expiresAt ? formatDate(inv.expiresAt) : '',
+      formatDate(inv.createdAt),
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `team-invitations-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,13 +64,24 @@ export default function TeamPage() {
             Invite colleagues to help manage products, orders, fulfillment, and customer support
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
-        >
-          <UserPlus className="size-4" /> Invite Staff Member
-        </button>
+        <div className="flex items-center gap-2">
+          {invitations && invitations.length > 0 && (
+            <button
+              type="button"
+              onClick={handleExportTeamCsv}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              <Download className="size-4" /> Export CSV
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
+          >
+            <UserPlus className="size-4" /> Invite Staff Member
+          </button>
+        </div>
       </div>
 
       {/* Current User Card */}

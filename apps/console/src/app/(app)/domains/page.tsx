@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle2, Copy, Globe, HelpCircle, Lock, Plus, RefreshCw, Trash2, X } from 'lucide-react';
+import { CheckCircle2, Copy, Download, Globe, HelpCircle, Lock, Plus, RefreshCw, Trash2, X } from 'lucide-react';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
 import { useAddDomain, useDeleteDomain, useDomains, useVerifyDomain } from '@/lib/queries/domains';
 
 export default function DomainsPage() {
@@ -15,6 +16,19 @@ export default function DomainsPage() {
   const [copied, setCopied] = useState<string | null>(null);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const handleExportDomainsCsv = () => {
+    if (!domains || domains.length === 0) return;
+    const headers = ['Domain ID', 'Hostname', 'Is Primary', 'Verification Status', 'SSL Status'];
+    const rows = domains.map((d) => [
+      d.id,
+      d.hostname,
+      d.isPrimary ? 'Yes' : 'No',
+      d.verifiedAt ? 'VERIFIED' : 'PENDING',
+      d.sslStatus ?? 'ACTIVE',
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `custom-domains-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
 
   const handleAddDomain = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,13 +68,24 @@ export default function DomainsPage() {
             Connect your own branded domain to your online store with automated free SSL
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
-        >
-          <Plus className="size-4" /> Add Custom Domain
-        </button>
+        <div className="flex items-center gap-2">
+          {domains && domains.length > 0 && (
+            <button
+              type="button"
+              onClick={handleExportDomainsCsv}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              <Download className="size-4" /> Export CSV
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
+          >
+            <Plus className="size-4" /> Add Custom Domain
+          </button>
+        </div>
       </div>
 
       {/* Domains Table */}
