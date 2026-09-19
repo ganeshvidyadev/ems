@@ -21,9 +21,8 @@ import { useCustomer } from '@/lib/customer-context';
 import { useWishlist } from '@/lib/use-wishlist';
 import type { OrderResponse } from '@ems/contracts';
 
-export const metadata = { title: 'My Account' };
-
 export default function AccountDashboardPage() {
+
   const { customer } = useCustomer();
   const { wishlistItems } = useWishlist();
 
