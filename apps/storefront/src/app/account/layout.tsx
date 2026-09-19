@@ -12,6 +12,7 @@ import {
   User,
   CreditCard,
   Gift,
+  Award,
   LogOut,
   Loader2,
 } from 'lucide-react';
@@ -28,6 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'My Orders', href: '/account/orders', icon: Package },
   { label: 'Addresses', href: '/account/addresses', icon: MapPin },
   { label: 'Payment Methods', href: '/account/payment-methods', icon: CreditCard },
+  { label: 'Loyalty & Rewards', href: '/account/loyalty', icon: Award },
   { label: 'Wishlist', href: '/account/wishlist', icon: Heart },
   { label: 'Returns', href: '/account/returns', icon: RotateCcw },
   { label: 'Refer & Earn', href: '/account/referrals', icon: Gift },
