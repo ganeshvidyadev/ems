@@ -2,7 +2,9 @@
 
 import type { PlanLimitKey } from '@ems/contracts';
 import { useState } from 'react';
+import { Download } from 'lucide-react';
 import { Alert, Card, CardBody, CardHeader, EmptyState, Skeleton } from '@/components/ui/primitives';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
 import { usePlatformQuota } from '@/lib/queries/platform-quota';
 import { cn } from '@/lib/utils';
 
@@ -27,17 +29,6 @@ function barColor(percentage: number | null): string {
   return 'bg-success';
 }
 
-/**
- * Central visibility into tenant consumption against their plan's own limits — the
- * console-wide "which tenants are approaching quota" view the master brief asks for.
- * `used / limit / percentage` only; plan limits themselves stay entirely server-driven
- * (`PlatformQuotaService.overview()`), nothing here is hardcoded.
- *
- * Quota *overrides* (temporary limit, reason, expiry, createdBy, audited) are
- * deliberately not built in this pass — this page is read-only visibility, which is
- * the more clearly-scoped half of the ask; a write path that changes what a tenant is
- * actually allowed to do is real, separate work.
- */
 export default function PlatformQuotaPage() {
   const quota = usePlatformQuota();
   const [onlyNearLimit, setOnlyNearLimit] = useState(false);
@@ -46,6 +37,23 @@ export default function PlatformQuotaPage() {
   const visible = onlyNearLimit
     ? tenants.filter((t) => t.quotas.some((q) => q.percentage !== null && q.percentage >= WARNING_THRESHOLD))
     : tenants;
+
+  const handleExportQuotaCsv = () => {
+    if (visible.length === 0) return;
+    const headers = ['Tenant Name', 'Tenant ID', 'Plan Code', 'Resource', 'Used', 'Limit', 'Usage (%)'];
+    const rows = visible.flatMap((t) =>
+      t.quotas.map((q) => [
+        t.tenantName,
+        t.tenantId,
+        t.planCode,
+        LIMIT_LABEL[q.limitKey] ?? q.limitKey,
+        String(q.current),
+        q.max === -1 ? 'Unlimited' : String(q.max),
+        q.percentage !== null ? `${q.percentage}%` : 'N/A',
+      ]),
+    );
+    downloadCsvFile(generateCsvText(headers, rows), `quota-usage-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
 
   return (
     <main className="mx-auto max-w-4xl space-y-6 p-6">
@@ -56,15 +64,26 @@ export default function PlatformQuotaPage() {
             Every tenant with a live plan, against their own plan&apos;s limits.
           </p>
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            className="size-4"
-            checked={onlyNearLimit}
-            onChange={(e) => setOnlyNearLimit(e.target.checked)}
-          />
-          Only show tenants near a limit (≥{WARNING_THRESHOLD}%)
-        </label>
+        <div className="flex items-center gap-3">
+          {tenants.length > 0 && (
+            <button
+              type="button"
+              onClick={handleExportQuotaCsv}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              <Download className="size-4" /> Export CSV
+            </button>
+          )}
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="size-4"
+              checked={onlyNearLimit}
+              onChange={(e) => setOnlyNearLimit(e.target.checked)}
+            />
+            Only show near limit (≥{WARNING_THRESHOLD}%)
+          </label>
+        </div>
       </div>
 
       {quota.isError && <Alert variant="error">Could not load quota usage.</Alert>}

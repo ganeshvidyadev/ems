@@ -1,6 +1,9 @@
 'use client';
 
-import { Handshake, Plus, Store } from 'lucide-react';
+import { useState } from 'react';
+import { Download, Handshake, Plus, Store } from 'lucide-react';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
+import { formatDate } from '@/lib/utils';
 import { useMarketplaceResellers, useMarketplaceShares } from '@/lib/queries/marketplace';
 
 export default function MarketplacePage() {
@@ -34,6 +37,21 @@ export default function MarketplacePage() {
 
   const list = shares?.length ? shares : sampleShares;
 
+  const handleExportSharesCsv = () => {
+    if (list.length === 0) return;
+    const headers = ['Share ID', 'Product Name', 'Product ID', 'Reseller Partner', 'Commission Rate (%)', 'Status', 'Shared Date'];
+    const rows = list.map((s) => [
+      s.id,
+      s.productName ?? 'Curated SKU',
+      s.productId,
+      s.resellerName ?? 'Partner Tenant',
+      String(s.commissionRate),
+      s.status,
+      formatDate(s.createdAt),
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `b2b-shares-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="mantis-page-header flex flex-wrap items-center justify-between gap-4">
@@ -43,12 +61,23 @@ export default function MarketplacePage() {
             Share products with affiliate reseller tenants, automate B2B wholesale orders, and track commission splits
           </p>
         </div>
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
-        >
-          <Plus className="size-4" /> Share Product with Partner
-        </button>
+        <div className="flex items-center gap-2">
+          {list.length > 0 && (
+            <button
+              type="button"
+              onClick={handleExportSharesCsv}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              <Download className="size-4" /> Export CSV
+            </button>
+          )}
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
+          >
+            <Plus className="size-4" /> Share Product with Partner
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
