@@ -1,7 +1,7 @@
 'use client';
 
 import type { CartLineItem, CartResponse } from '@ems/contracts';
-import { Minus, Plus, ShoppingBag, Tag, Trash2, X } from 'lucide-react';
+import { Minus, Plus, ShoppingBag, Tag, Trash2, X, Truck, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 import { OrderSummary } from '@/components/order-summary';
@@ -57,13 +57,57 @@ export function CartView() {
     );
   }
 
+  const FREE_SHIPPING_THRESHOLD_MINOR = 99900; // ₹999.00
+  const subtotalAmount = Number(cart.subtotal.amountMinor || 0);
+  const isFreeShipping = subtotalAmount >= FREE_SHIPPING_THRESHOLD_MINOR || cart.shippingEstimate.amountMinor === '0';
+  const remainingMinor = Math.max(0, FREE_SHIPPING_THRESHOLD_MINOR - subtotalAmount);
+  const progressPercent = Math.min(100, Math.round((subtotalAmount / FREE_SHIPPING_THRESHOLD_MINOR) * 100));
+
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_22rem] lg:items-start">
-      <ul className="divide-y divide-line rounded-theme border border-line">
-        {cart.items.map((item) => (
-          <CartLine key={`${item.productId}:${item.variantId ?? ''}`} item={item} currency={cart.currency} />
-        ))}
-      </ul>
+      <div className="space-y-4">
+        {/* Free Shipping Progress Indicator */}
+        <div className="rounded-theme border border-line bg-surface p-4 shadow-sm">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <div className="flex items-center gap-2">
+              <div
+                className={`flex h-7 w-7 items-center justify-center rounded-full shrink-0 ${
+                  isFreeShipping ? 'bg-success/15 text-success' : 'bg-brand/15 text-brand'
+                }`}
+              >
+                {isFreeShipping ? <CheckCircle2 className="h-4 w-4" /> : <Truck className="h-4 w-4" />}
+              </div>
+              {isFreeShipping ? (
+                <span className="font-semibold text-success">
+                  🎉 Congratulations! Your order qualifies for FREE Delivery!
+                </span>
+              ) : (
+                <span className="text-ink">
+                  Add <span className="font-bold text-brand">{formatMinor(String(remainingMinor), cart.currency)}</span> more to unlock <span className="font-semibold">FREE Delivery</span>!
+                </span>
+              )}
+            </div>
+            <span className="text-[11px] font-medium text-ink-muted hidden sm:inline">
+              Free at ₹999
+            </span>
+          </div>
+
+          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-surface-alt">
+            <div
+              className={`h-full transition-all duration-500 rounded-full ${
+                isFreeShipping ? 'bg-success' : 'bg-brand'
+              }`}
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+
+        <ul className="divide-y divide-line rounded-theme border border-line">
+          {cart.items.map((item) => (
+            <CartLine key={`${item.productId}:${item.variantId ?? ''}`} item={item} currency={cart.currency} />
+          ))}
+        </ul>
+      </div>
 
       <Card className="space-y-5 p-5 lg:sticky lg:top-24">
         <h2 className="font-heading text-base font-semibold text-ink">Order summary</h2>
