@@ -10,6 +10,7 @@ import {
   Heart,
   RotateCcw,
   User,
+  CreditCard,
   LogOut,
   Loader2,
 } from 'lucide-react';
@@ -25,6 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/account', icon: LayoutDashboard },
   { label: 'My Orders', href: '/account/orders', icon: Package },
   { label: 'Addresses', href: '/account/addresses', icon: MapPin },
+  { label: 'Payment Methods', href: '/account/payment-methods', icon: CreditCard },
   { label: 'Wishlist', href: '/account/wishlist', icon: Heart },
   { label: 'Returns', href: '/account/returns', icon: RotateCcw },
   { label: 'Profile & Security', href: '/account/profile', icon: User },
