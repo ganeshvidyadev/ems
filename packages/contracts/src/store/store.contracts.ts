@@ -15,6 +15,8 @@ export const storeResponseSchema = z.object({
   slug: z.string(),
   status: z.enum(STORE_STATUSES),
   currency: z.string(),
+  logoUrl: z.string().nullable().optional(),
+  faviconUrl: z.string().nullable().optional(),
 });
 export type StoreResponse = z.infer<typeof storeResponseSchema>;
 
@@ -34,5 +36,7 @@ export const storefrontStoreResponseSchema = z.object({
   name: z.string(),
   slug: z.string(),
   currency: z.string(),
+  logoUrl: z.string().nullable().optional(),
+  faviconUrl: z.string().nullable().optional(),
 });
 export type StorefrontStoreResponse = z.infer<typeof storefrontStoreResponseSchema>;

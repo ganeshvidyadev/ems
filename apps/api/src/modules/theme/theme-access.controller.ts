@@ -21,6 +21,36 @@ export const themeCustomizationSchema = z
   })
   .strict();
 
+export const brandingSchema = z
+  .object({
+    logoUrl: z.string().max(1000).nullable().optional(),
+    faviconUrl: z.string().max(1000).nullable().optional(),
+    banners: z
+      .array(
+        z.object({
+          id: z.string().optional(),
+          title: z.string().max(255).nullable().optional(),
+          subtitle: z.string().max(500).nullable().optional(),
+          imageUrl: z.string().max(1000).nullable().optional(),
+          mobileImageUrl: z.string().max(1000).nullable().optional(),
+          linkUrl: z.string().max(1000).nullable().optional(),
+          ctaLabel: z.string().max(64).nullable().optional(),
+          badgeTag: z.string().max(64).nullable().optional(),
+          isActive: z.boolean().default(true),
+        }),
+      )
+      .optional(),
+  })
+  .strict();
+
+export const assetUploadSchema = z
+  .object({
+    assetType: z.enum(['logo', 'favicon', 'banner', 'general']),
+    fileName: z.string().min(1).max(255),
+    fileData: z.string().min(1),
+  })
+  .strict();
+
 @Controller({ version: '1' })
 export class ThemeAccessController {
   constructor(private readonly access: ThemeAccessService) {}
@@ -53,6 +83,29 @@ export class ThemeAccessController {
   @Validate(themeCustomizationSchema)
   updateCustomization(@Param('companyId') id: string, @Body() body: z.infer<typeof themeCustomizationSchema>) {
     return this.access.updateCustomization(id, body);
+  }
+
+  @Get('platform/themes/:companyId/branding')
+  @PlatformOnly()
+  @Permissions('platform.tenant:read')
+  getBranding(@Param('companyId') id: string) {
+    return this.access.getBranding(id);
+  }
+
+  @Put('platform/themes/:companyId/branding')
+  @PlatformOnly()
+  @Permissions('platform.tenant:update')
+  @Validate(brandingSchema)
+  updateBranding(@Param('companyId') id: string, @Body() body: z.infer<typeof brandingSchema>) {
+    return this.access.updateBranding(id, body);
+  }
+
+  @Post('platform/themes/:companyId/assets/upload')
+  @PlatformOnly()
+  @Permissions('platform.tenant:update')
+  @Validate(assetUploadSchema)
+  uploadAsset(@Param('companyId') id: string, @Body() body: z.infer<typeof assetUploadSchema>) {
+    return this.access.uploadAsset(id, body);
   }
 
   @Get('storefront/theme-assignment')

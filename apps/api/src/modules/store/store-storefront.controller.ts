@@ -43,6 +43,8 @@ export class StoreStorefrontController {
       name: store.name,
       slug: store.slug,
       currency: store.currency,
+      logoUrl: store.logoUrl ?? null,
+      faviconUrl: store.faviconUrl ?? null,
     };
   }
 }

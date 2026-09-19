@@ -64,6 +64,8 @@ export default async function RootLayout({
             storeId: store.id,
             name: store.name,
             currency: store.currency,
+            logoUrl: store.logoUrl,
+            faviconUrl: store.faviconUrl,
             tenantSlug: tenant.slug ?? '',
           }}
         >

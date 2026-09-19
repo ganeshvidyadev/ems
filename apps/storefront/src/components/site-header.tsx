@@ -21,20 +21,33 @@ import type { StorefrontTheme } from '@/lib/theme';
  * The persistent shop chrome: store name, search, cart, wishlist, customer account.
  */
 export function SiteHeader({ theme = 'default' }: { theme?: StorefrontTheme }) {
-  const { name, tenantSlug } = useStore();
+  const { name, tenantSlug, logoUrl } = useStore();
   const { customer, isAuthenticated } = useCustomer();
   const { wishlistItems } = useWishlist();
 
   // Mounted on every page, so this is where the stored cart id gets loaded
   useHydrateCartId(tenantSlug);
 
+  const defaultThemeLogo = theme === 'organic'
+    ? '/themes/organic/images/logo.svg'
+    : theme === 'famms'
+    ? '/themes/famms/images/logo.png'
+    : null;
+
   if (theme !== 'default') return (
     <header className={`theme-header ${theme}-header`}>
       <AnnouncementBar />
       <div className="theme-container theme-header-inner">
-        <Link href="/" className="theme-logo" aria-label={`${name} home`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={theme === 'organic' ? '/themes/organic/images/logo.svg' : '/themes/famms/images/logo.png'} alt={theme === 'organic' ? 'Organic' : 'Famms'} width={220} height={60} />
+        <Link href="/" className="theme-logo flex items-center gap-2" aria-label={`${name} home`}>
+          {logoUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={logoUrl} alt={name} className="max-h-[52px] w-auto max-w-[220px] object-contain" />
+          ) : defaultThemeLogo ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={defaultThemeLogo} alt={name} width={220} height={60} className="max-h-[52px] w-auto object-contain" />
+          ) : (
+            <span className="font-heading text-xl font-bold tracking-tight text-ink">{name}</span>
+          )}
           <span>{name}</span>
         </Link>
         <nav aria-label="Main navigation"><Link href="/">Home</Link><Link href="/products">Products</Link></nav>
@@ -58,9 +71,14 @@ export function SiteHeader({ theme = 'default' }: { theme?: StorefrontTheme }) {
       <div className="mx-auto flex max-w-content flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3">
         <Link
           href="/"
-          className="font-heading text-lg font-semibold tracking-tight text-ink hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          className="font-heading text-lg font-semibold tracking-tight text-ink hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand flex items-center gap-2"
         >
-          {name}
+          {logoUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={logoUrl} alt={name} className="h-9 w-auto max-h-10 max-w-[180px] object-contain" />
+          ) : (
+            <span>{name}</span>
+          )}
         </Link>
 
         <nav className="hidden items-center gap-4 text-sm text-ink-muted sm:flex">

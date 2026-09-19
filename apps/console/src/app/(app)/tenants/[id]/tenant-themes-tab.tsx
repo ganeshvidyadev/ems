@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Palette,
@@ -15,6 +15,15 @@ import {
   Sparkles,
   ShieldCheck,
   Layers,
+  Image as ImageIcon,
+  Upload,
+  Plus,
+  Trash2,
+  Eye,
+  Globe,
+  Tag,
+  Link as LinkIcon,
+  ArrowRight,
 } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '@/lib/api-client';
 import { Button, Badge, Alert, Input, Textarea, Card, CardHeader, CardBody } from '@/components/ui/primitives';
@@ -24,6 +33,23 @@ interface Theme {
   code: string;
   name: string;
   description: string;
+}
+
+interface BannerSlide {
+  id: string;
+  title: string;
+  subtitle?: string;
+  imageUrl: string;
+  ctaLabel?: string;
+  linkUrl?: string;
+  badgeTag?: string;
+  isActive: boolean;
+}
+
+interface BrandingSettings {
+  logoUrl: string | null;
+  faviconUrl: string | null;
+  banners: BannerSlide[];
 }
 
 interface CompanyThemeData {
@@ -37,6 +63,8 @@ interface CompanyThemeData {
   customizationStatus?: 'STANDARD_FREE' | 'MODIFIED_PAID' | 'BESPOKE_CUSTOM';
   customNotes?: string | null;
   workspacePath?: string;
+  logoUrl?: string | null;
+  faviconUrl?: string | null;
 }
 
 interface PlatformThemeSettings {
@@ -116,16 +144,45 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
     (c) => c.id === tenantId || c.slug === tenantId,
   );
 
+  const { data: brandingData } = useQuery<BrandingSettings>({
+    queryKey: ['platform-theme-branding', company?.id ?? tenantId],
+    queryFn: () => apiGet<BrandingSettings>(`/platform/themes/${company?.id ?? tenantId}/branding`),
+    enabled: !!(company?.id ?? tenantId),
+  });
+
   const [selectedTheme, setSelectedTheme] = useState<string>('');
   const [allowedThemes, setAllowedThemes] = useState<string[]>([]);
   
   // Customization & Monetization local states
-  const [isCustomized, setIsCustomized] = useState<boolean>(company?.isCustomized ?? false);
-  const [customizationFee, setCustomizationFee] = useState<string>(String(company?.customizationFeeINR ?? '0'));
-  const [customizationStatus, setCustomizationStatus] = useState<'STANDARD_FREE' | 'MODIFIED_PAID' | 'BESPOKE_CUSTOM'>(
-    company?.customizationStatus ?? 'STANDARD_FREE'
-  );
-  const [customNotes, setCustomNotes] = useState<string>(company?.customNotes ?? '');
+  const [isCustomized, setIsCustomized] = useState<boolean>(false);
+  const [customizationFee, setCustomizationFee] = useState<string>('0');
+  const [customizationStatus, setCustomizationStatus] = useState<'STANDARD_FREE' | 'MODIFIED_PAID' | 'BESPOKE_CUSTOM'>('STANDARD_FREE');
+  const [customNotes, setCustomNotes] = useState<string>('');
+
+  // Branding local states
+  const [logoUrl, setLogoUrl] = useState<string>('');
+  const [faviconUrl, setFaviconUrl] = useState<string>('');
+  const [banners, setBanners] = useState<BannerSlide[]>([]);
+  const [uploadingType, setUploadingType] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (company) {
+      setIsCustomized(company.isCustomized ?? false);
+      setCustomizationFee(String(company.customizationFeeINR ?? '0'));
+      setCustomizationStatus(company.customizationStatus ?? 'STANDARD_FREE');
+      setCustomNotes(company.customNotes ?? '');
+      if (company.logoUrl && !logoUrl) setLogoUrl(company.logoUrl);
+      if (company.faviconUrl && !faviconUrl) setFaviconUrl(company.faviconUrl);
+    }
+  }, [company]);
+
+  useEffect(() => {
+    if (brandingData) {
+      if (brandingData.logoUrl !== undefined) setLogoUrl(brandingData.logoUrl || '');
+      if (brandingData.faviconUrl !== undefined) setFaviconUrl(brandingData.faviconUrl || '');
+      if (brandingData.banners) setBanners(brandingData.banners);
+    }
+  }, [brandingData]);
 
   const currentTheme = company?.selectedTheme || 'default';
   const effectiveSelected = selectedTheme || currentTheme;
@@ -183,6 +240,68 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
     },
   });
 
+  const saveBrandingMutation = useMutation({
+    mutationFn: (payload: { logoUrl?: string | null; faviconUrl?: string | null; banners?: BannerSlide[] }) =>
+      apiPut<BrandingSettings>(`/platform/themes/${company?.id ?? tenantId}/branding`, payload),
+    onSuccess: () => {
+      setSuccessMessage('Custom brand logo, favicon, and promotional hero banners saved & deployed to storefront.');
+      setErrorMessage(null);
+      void queryClient.invalidateQueries({ queryKey: ['platform-theme-branding'] });
+      void queryClient.invalidateQueries({ queryKey: ['platform-themes'] });
+      setTimeout(() => setSuccessMessage(null), 4000);
+    },
+    onError: (err: any) => {
+      setErrorMessage(err?.message ?? 'Failed to save branding assets.');
+    },
+  });
+
+  async function handleFileUpload(file: File, assetType: 'logo' | 'favicon' | 'banner', targetBannerIndex?: number) {
+    try {
+      setUploadingType(assetType + (targetBannerIndex !== undefined ? `-${targetBannerIndex}` : ''));
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64Data = (reader.result as string).split(',')[1];
+          const uploadRes = await apiPost<{ url: string; assetType: string; fileName: string }>(
+            `/platform/themes/${company?.id ?? tenantId}/assets/upload`,
+            {
+              assetType,
+              fileName: file.name,
+              fileData: base64Data,
+              mimeType: file.type || 'image/png',
+            },
+          );
+          if (uploadRes?.url) {
+            if (assetType === 'logo') {
+              setLogoUrl(uploadRes.url);
+            } else if (assetType === 'favicon') {
+              setFaviconUrl(uploadRes.url);
+            } else if (assetType === 'banner' && targetBannerIndex !== undefined) {
+              const next = [...banners];
+              if (next[targetBannerIndex]) {
+                next[targetBannerIndex] = {
+                  ...next[targetBannerIndex],
+                  imageUrl: uploadRes.url,
+                };
+                setBanners(next);
+              }
+            }
+            setSuccessMessage(`Asset "${file.name}" uploaded to company isolated folder storage/tenants/${company?.slug}/assets/ successfully.`);
+            setTimeout(() => setSuccessMessage(null), 4000);
+          }
+        } catch (err: any) {
+          setErrorMessage(err?.message ?? 'Failed to upload asset file.');
+        } finally {
+          setUploadingType(null);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      setErrorMessage(err?.message ?? 'Error reading file.');
+      setUploadingType(null);
+    }
+  }
+
   function handleActivate(themeCode: string) {
     const updatedAllowed = Array.from(new Set([...effectiveAllowed, themeCode]));
     setSelectedTheme(themeCode);
@@ -194,7 +313,7 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
   }
 
   function toggleAllowed(themeCode: string) {
-    if (themeCode === 'default') return; // Default is always allowed
+    if (themeCode === 'default') return;
     let next: string[];
     if (effectiveAllowed.includes(themeCode)) {
       next = effectiveAllowed.filter((c) => c !== themeCode);
@@ -206,6 +325,35 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
       selectedTheme: effectiveSelected === themeCode && !next.includes(themeCode) ? 'default' : effectiveSelected,
       allowedThemes: next,
     });
+  }
+
+  function addBannerSlide() {
+    const newSlide: BannerSlide = {
+      id: 'banner-' + Date.now(),
+      title: 'Exciting Seasonal Sale',
+      subtitle: 'Exclusive discounts on handpicked bestsellers for a limited time',
+      imageUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop&q=80',
+      ctaLabel: 'Shop Collection',
+      linkUrl: '/products',
+      badgeTag: 'Limited Offer',
+      isActive: true,
+    };
+    setBanners([...banners, newSlide]);
+  }
+
+  function removeBannerSlide(index: number) {
+    setBanners(banners.filter((_, i) => i !== index));
+  }
+
+  function updateBannerField<K extends keyof BannerSlide>(index: number, field: K, value: BannerSlide[K]) {
+    const next = [...banners];
+    if (next[index]) {
+      next[index] = {
+        ...next[index],
+        [field]: value,
+      };
+      setBanners(next);
+    }
   }
 
   function handleExportThemeFolder() {
@@ -227,6 +375,12 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
         customizationStatus,
         folderPath: `storage/tenants/${company.slug}/themes/${effectiveSelected}/`,
       },
+      branding: {
+        logoUrl: logoUrl || null,
+        faviconUrl: faviconUrl || null,
+        banners: banners,
+        assetsFolderPath: `storage/tenants/${company.slug}/assets/`,
+      },
       fileStructure: {
         'manifest.json': {
           version: '1.0.0',
@@ -246,6 +400,11 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
             headingFont: meta.font,
           },
           sections: meta.previewFeatures,
+        },
+        'overrides.json': {
+          logoUrl: logoUrl || null,
+          faviconUrl: faviconUrl || null,
+          banners: banners,
         },
         'theme.css': `:root { --brand-primary: ${meta.brandColor}; --brand-accent: ${meta.accentColor}; --font-heading: '${meta.font}'; }`,
       },
@@ -286,7 +445,7 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
             <Palette className="h-5 w-5 text-primary" /> Storefront Themes & Design System
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage 5 free standard templates, configure custom paid modifications, and sync dedicated company folders for {company?.name ?? 'this tenant'}.
+            Manage 5 free standard templates, upload custom brand assets & hero banners, and isolate company files for {company?.name ?? 'this tenant'}.
           </p>
         </div>
 
@@ -365,6 +524,367 @@ export function TenantThemesTab({ tenantId }: { tenantId: string }) {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Brand Assets & Media Uploader Card */}
+      <div className="rounded-xl border border-border bg-card p-5 space-y-6">
+        <div className="flex items-center justify-between border-b border-border pb-3">
+          <div className="space-y-0.5">
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <ImageIcon className="size-4 text-primary" />
+              Company Brand Logo, Favicon & Media Assets
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Upload custom brand visuals. Files are saved directly in this company's isolated folder: <code className="font-mono text-foreground">storage/tenants/{company?.slug ?? 'tenant'}/assets/</code>.
+            </p>
+          </div>
+          <Badge variant="outline" className="text-xs font-mono">
+            storage/tenants/{company?.slug ?? 'tenant'}/assets/
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Logo Section */}
+          <div className="space-y-3 rounded-lg border border-border p-4 bg-muted/20">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Globe className="size-3.5 text-primary" /> Store Brand Logo
+              </span>
+              <span className="text-[11px] text-muted-foreground">PNG, SVG, JPG, WebP</span>
+            </div>
+
+            <div className="space-y-2">
+              <Input
+                placeholder="https://example.com/logo.png or /storage/tenants/..."
+                value={logoUrl}
+                onChange={(e) => setLogoUrl(e.target.value)}
+                className="h-8 text-xs font-mono"
+              />
+
+              <div className="flex items-center gap-2">
+                <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-input bg-background hover:bg-muted text-xs font-semibold shadow-xs">
+                  <Upload className="size-3 text-muted-foreground" />
+                  <span>{uploadingType === 'logo' ? 'Uploading…' : 'Upload Logo File'}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingType === 'logo'}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) void handleFileUpload(file, 'logo');
+                    }}
+                  />
+                </label>
+                {logoUrl && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setLogoUrl('')}
+                    className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Live Preview on Light & Dark */}
+            <div className="space-y-1.5 pt-2">
+              <span className="text-[10px] font-semibold uppercase text-muted-foreground">Live Header Preview:</span>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-lg border bg-white p-3 flex flex-col items-center justify-center min-h-[70px]">
+                  <span className="text-[9px] text-slate-400 mb-1">Light Header</span>
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="Logo Light" className="max-h-8 max-w-full object-contain" />
+                  ) : (
+                    <span className="text-xs font-bold text-slate-900">{company?.name ?? 'Storefront'}</span>
+                  )}
+                </div>
+                <div className="rounded-lg border bg-slate-950 p-3 flex flex-col items-center justify-center min-h-[70px]">
+                  <span className="text-[9px] text-slate-400 mb-1">Dark Header</span>
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="Logo Dark" className="max-h-8 max-w-full object-contain filter brightness-110" />
+                  ) : (
+                    <span className="text-xs font-bold text-white">{company?.name ?? 'Storefront'}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Favicon Section */}
+          <div className="space-y-3 rounded-lg border border-border p-4 bg-muted/20">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Sparkles className="size-3.5 text-primary" /> Browser Favicon Icon
+              </span>
+              <span className="text-[11px] text-muted-foreground">ICO, PNG, SVG (32x32)</span>
+            </div>
+
+            <div className="space-y-2">
+              <Input
+                placeholder="https://example.com/favicon.ico or /storage/tenants/..."
+                value={faviconUrl}
+                onChange={(e) => setFaviconUrl(e.target.value)}
+                className="h-8 text-xs font-mono"
+              />
+
+              <div className="flex items-center gap-2">
+                <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-input bg-background hover:bg-muted text-xs font-semibold shadow-xs">
+                  <Upload className="size-3 text-muted-foreground" />
+                  <span>{uploadingType === 'favicon' ? 'Uploading…' : 'Upload Favicon File'}</span>
+                  <input
+                    type="file"
+                    accept="image/*,.ico"
+                    className="hidden"
+                    disabled={uploadingType === 'favicon'}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) void handleFileUpload(file, 'favicon');
+                    }}
+                  />
+                </label>
+                {faviconUrl && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFaviconUrl('')}
+                    className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Browser Tab Mockup */}
+            <div className="space-y-1.5 pt-2">
+              <span className="text-[10px] font-semibold uppercase text-muted-foreground">Browser Tab Mockup:</span>
+              <div className="rounded-t-lg border border-b-0 bg-slate-200 dark:bg-slate-800 p-2 flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                </div>
+                <div className="flex items-center gap-2 bg-background px-3 py-1 rounded-md text-xs font-medium text-foreground shadow-xs max-w-[200px] truncate border border-border">
+                  {faviconUrl ? (
+                    <img src={faviconUrl} alt="Favicon" className="size-3.5 object-contain" />
+                  ) : (
+                    <div className="size-3.5 rounded-full bg-primary/20 flex items-center justify-center text-[9px] font-bold text-primary">S</div>
+                  )}
+                  <span className="truncate">{company?.name ?? 'Store'} | Official Store</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Promotional Hero Banners Manager */}
+        <div className="space-y-4 pt-4 border-t border-border">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                <Layers className="size-4 text-primary" /> Storefront Hero Banner Slides ({banners.length})
+              </h4>
+              <p className="text-[11px] text-muted-foreground">
+                Display high-impact marketing banners with custom CTA links on your active theme homepage.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={addBannerSlide}
+              className="gap-1.5 text-xs font-semibold"
+            >
+              <Plus className="size-3.5" />
+              <span>Add Banner Slide</span>
+            </Button>
+          </div>
+
+          {banners.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border p-6 text-center space-y-2 bg-muted/10">
+              <ImageIcon className="size-8 text-muted-foreground mx-auto opacity-50" />
+              <p className="text-xs text-muted-foreground">No custom hero banner slides created yet.</p>
+              <Button size="sm" variant="outline" onClick={addBannerSlide} className="text-xs font-semibold">
+                Create First Hero Banner
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {banners.map((banner, index) => (
+                <div
+                  key={banner.id || index}
+                  className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-xs"
+                >
+                  <div className="flex items-center justify-between border-b border-border pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center justify-center size-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                        {index + 1}
+                      </span>
+                      <span className="text-xs font-bold text-foreground">Slide #{index + 1}: {banner.title || 'Untitled Banner'}</span>
+                      <Badge variant={banner.isActive ? 'default' : 'outline'} className="text-[10px]">
+                        {banner.isActive ? 'Active' : 'Hidden'}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={banner.isActive}
+                          onChange={(e) => updateBannerField(index, 'isActive', e.target.checked)}
+                          className="rounded border-input text-primary h-3.5 w-3.5"
+                        />
+                        <span>Active</span>
+                      </label>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeBannerSlide(index)}
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-medium text-foreground">Headline Title</label>
+                      <Input
+                        value={banner.title}
+                        onChange={(e) => updateBannerField(index, 'title', e.target.value)}
+                        placeholder="e.g. Organic Herbal Collection"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-medium text-foreground">Subtitle / Pitch</label>
+                      <Input
+                        value={banner.subtitle || ''}
+                        onChange={(e) => updateBannerField(index, 'subtitle', e.target.value)}
+                        placeholder="e.g. 100% natural certified wellness ingredients"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-medium text-foreground">Badge Tag</label>
+                      <Input
+                        value={banner.badgeTag || ''}
+                        onChange={(e) => updateBannerField(index, 'badgeTag', e.target.value)}
+                        placeholder="e.g. 30% OFF • NEW ARRIVAL"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="space-y-1 md:col-span-2">
+                      <label className="text-[11px] font-medium text-foreground">Banner Background Image URL</label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={banner.imageUrl}
+                          onChange={(e) => updateBannerField(index, 'imageUrl', e.target.value)}
+                          placeholder="https://... or /storage/tenants/..."
+                          className="h-8 text-xs font-mono"
+                        />
+                        <label className="cursor-pointer shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-input bg-background hover:bg-muted text-xs font-semibold shadow-xs">
+                          <Upload className="size-3 text-muted-foreground" />
+                          <span>{uploadingType === `banner-${index}` ? 'Uploading…' : 'Upload'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={uploadingType === `banner-${index}`}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) void handleFileUpload(file, 'banner', index);
+                            }}
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-medium text-foreground">CTA Label</label>
+                        <Input
+                          value={banner.ctaLabel || ''}
+                          onChange={(e) => updateBannerField(index, 'ctaLabel', e.target.value)}
+                          placeholder="Shop Now"
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-medium text-foreground">CTA Target URL</label>
+                        <Input
+                          value={banner.linkUrl || ''}
+                          onChange={(e) => updateBannerField(index, 'linkUrl', e.target.value)}
+                          placeholder="/products"
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Rendered Live Banner Preview */}
+                  {banner.imageUrl && (
+                    <div className="relative rounded-lg overflow-hidden h-28 border border-border shadow-inner mt-2">
+                      <img
+                        src={banner.imageUrl}
+                        alt={banner.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/40 to-transparent p-4 flex flex-col justify-center text-white">
+                        {banner.badgeTag && (
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-amber-300 w-fit">
+                            {banner.badgeTag}
+                          </span>
+                        )}
+                        <h5 className="text-sm font-bold truncate max-w-sm">{banner.title}</h5>
+                        {banner.subtitle && (
+                          <p className="text-[11px] text-slate-200 truncate max-w-xs">{banner.subtitle}</p>
+                        )}
+                        {banner.ctaLabel && (
+                          <div className="mt-1">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-white text-slate-900 px-2 py-0.5 rounded shadow-xs">
+                              {banner.ctaLabel} <ArrowRight className="size-2.5" />
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Save & Deploy Branding Assets Button */}
+        <div className="flex items-center justify-between pt-3 border-t border-border">
+          <span className="text-xs text-muted-foreground">
+            Saves logo & favicon to store database and writes branding overrides to <code className="font-mono text-foreground">storage/tenants/{company?.slug}/themes/{currentTheme}/overrides.json</code>.
+          </span>
+          <Button
+            size="sm"
+            onClick={() =>
+              saveBrandingMutation.mutate({
+                logoUrl: logoUrl.trim() || null,
+                faviconUrl: faviconUrl.trim() || null,
+                banners,
+              })
+            }
+            loading={saveBrandingMutation.isPending}
+            className="text-xs font-semibold gap-1.5"
+          >
+            <Sparkles className="size-3.5" />
+            <span>Save & Deploy Branding Assets</span>
+          </Button>
         </div>
       </div>
 

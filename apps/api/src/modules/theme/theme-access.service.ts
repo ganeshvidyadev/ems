@@ -9,7 +9,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { EntityManager } from 'typeorm';
 import { RequestContextService } from '../../common/services/request-context.service';
-import { TenantEntity } from '../../database/entities';
+import { BannerEntity, StoreEntity, TenantEntity } from '../../database/entities';
 
 export interface StorefrontThemeDefinition {
   code: string;
@@ -340,6 +340,170 @@ export class ThemeAccessService {
       customizationFeeINR: input.customizationFeeINR,
       customizationStatus: input.customizationStatus,
       notes: input.notes,
+    };
+  }
+
+  async getBranding(publicId: string) {
+    this.requireSuperAdmin();
+    const repo = this.manager.getRepository(TenantEntity);
+    const tenant = await repo.findOne({ where: { publicId } });
+    if (!tenant || tenant.deletedAt || tenant.status === 'DELETED') {
+      throw new NotFoundException('Company not found');
+    }
+
+    const storeRepo = this.manager.getRepository(StoreEntity);
+    const store = await storeRepo.findOne({ where: { tenantId: tenant.id } });
+
+    const bannerRepo = this.manager.getRepository(BannerEntity);
+    const banners = store
+      ? await bannerRepo.find({ where: { tenantId: tenant.id, storeId: store.id }, order: { sortOrder: 'ASC' } })
+      : [];
+
+    return {
+      tenantSlug: tenant.slug,
+      businessName: tenant.businessName,
+      logoUrl: store?.logoUrl ?? null,
+      faviconUrl: store?.faviconUrl ?? null,
+      banners: banners.map((b) => ({
+        id: String(b.id),
+        title: b.title,
+        subtitle: b.subtitle,
+        imageUrl: b.imageUrl,
+        mobileImageUrl: b.mobileImageUrl,
+        linkUrl: b.linkUrl,
+        ctaLabel: b.ctaLabel,
+        isActive: b.isActive,
+        sortOrder: b.sortOrder,
+      })),
+    };
+  }
+
+  async updateBranding(
+    publicId: string,
+    input: {
+      logoUrl?: string | null;
+      faviconUrl?: string | null;
+      banners?: Array<{
+        title?: string | null;
+        subtitle?: string | null;
+        imageUrl?: string | null;
+        mobileImageUrl?: string | null;
+        linkUrl?: string | null;
+        ctaLabel?: string | null;
+        badgeTag?: string | null;
+        isActive?: boolean;
+      }>;
+    },
+  ) {
+    this.requireSuperAdmin();
+    const repo = this.manager.getRepository(TenantEntity);
+    const tenant = await repo.findOne({ where: { publicId } });
+    if (!tenant || tenant.deletedAt || tenant.status === 'DELETED') {
+      throw new NotFoundException('Company not found');
+    }
+
+    const storeRepo = this.manager.getRepository(StoreEntity);
+    let store = await storeRepo.findOne({ where: { tenantId: tenant.id } });
+    if (store) {
+      if (input.logoUrl !== undefined) store.logoUrl = input.logoUrl;
+      if (input.faviconUrl !== undefined) store.faviconUrl = input.faviconUrl;
+      await storeRepo.save(store);
+    }
+
+    // Update overrides.json in company storage
+    const currentTheme = tenant.storefrontTheme ?? 'default';
+    const targetThemeDir = path.resolve(process.cwd(), 'storage', 'tenants', tenant.slug, 'themes', currentTheme);
+    const assetsDir = path.resolve(process.cwd(), 'storage', 'tenants', tenant.slug, 'assets');
+
+    try {
+      fs.mkdirSync(targetThemeDir, { recursive: true });
+      fs.mkdirSync(assetsDir, { recursive: true });
+
+      const overridesPath = path.join(targetThemeDir, 'overrides.json');
+      const overrides = {
+        logoUrl: input.logoUrl ?? store?.logoUrl ?? null,
+        faviconUrl: input.faviconUrl ?? store?.faviconUrl ?? null,
+        customHeaderNotice: null,
+        customFooterCopyright: `© ${new Date().getFullYear()} ${tenant.businessName}. All rights reserved.`,
+        customBanners: input.banners ?? [],
+        updatedAt: new Date().toISOString(),
+      };
+      fs.writeFileSync(overridesPath, JSON.stringify(overrides, null, 2), 'utf8');
+
+      // Also write branding.json in assets folder
+      fs.writeFileSync(
+        path.join(assetsDir, 'branding.json'),
+        JSON.stringify(overrides, null, 2),
+        'utf8',
+      );
+    } catch {
+      // Non-blocking
+    }
+
+    return {
+      logoUrl: input.logoUrl ?? store?.logoUrl ?? null,
+      faviconUrl: input.faviconUrl ?? store?.faviconUrl ?? null,
+      bannersCount: input.banners?.length ?? 0,
+      message: 'Branding & hero banners updated successfully.',
+    };
+  }
+
+  async uploadAsset(
+    publicId: string,
+    input: {
+      assetType: 'logo' | 'favicon' | 'banner' | 'general';
+      fileName: string;
+      fileData: string;
+    },
+  ) {
+    this.requireSuperAdmin();
+    const repo = this.manager.getRepository(TenantEntity);
+    const tenant = await repo.findOne({ where: { publicId } });
+    if (!tenant || tenant.deletedAt || tenant.status === 'DELETED') {
+      throw new NotFoundException('Company not found');
+    }
+
+    const assetsDir = path.resolve(process.cwd(), 'storage', 'tenants', tenant.slug, 'assets');
+    fs.mkdirSync(assetsDir, { recursive: true });
+
+    // Clean filename
+    const cleanName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const targetFileName = `${input.assetType}-${cleanName}`;
+    const targetFilePath = path.join(assetsDir, targetFileName);
+
+    // If data URL, extract base64 part
+    let base64Data = input.fileData;
+    if (base64Data.includes('base64,')) {
+      base64Data = base64Data.split('base64,')[1]!;
+    }
+
+    try {
+      const buffer = Buffer.from(base64Data, 'base64');
+      fs.writeFileSync(targetFilePath, buffer);
+    } catch {
+      // If plain text / url, write directly
+      fs.writeFileSync(targetFilePath, input.fileData, 'utf8');
+    }
+
+    const assetUrl = `/storage/tenants/${tenant.slug}/assets/${targetFileName}`;
+
+    // Auto-update store logo/favicon if assetType is logo or favicon
+    if (input.assetType === 'logo' || input.assetType === 'favicon') {
+      const storeRepo = this.manager.getRepository(StoreEntity);
+      const store = await storeRepo.findOne({ where: { tenantId: tenant.id } });
+      if (store) {
+        if (input.assetType === 'logo') store.logoUrl = input.fileData.startsWith('data:') ? assetUrl : input.fileData;
+        if (input.assetType === 'favicon') store.faviconUrl = input.fileData.startsWith('data:') ? assetUrl : input.fileData;
+        await storeRepo.save(store);
+      }
+    }
+
+    return {
+      assetType: input.assetType,
+      fileName: targetFileName,
+      url: input.fileData.startsWith('data:') ? assetUrl : input.fileData,
+      storagePath: `storage/tenants/${tenant.slug}/assets/${targetFileName}`,
+      message: `${input.assetType} uploaded successfully to company assets folder.`,
     };
   }
 
