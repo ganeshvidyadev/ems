@@ -4,6 +4,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AddToCart } from '@/components/add-to-cart';
+import { PincodeChecker } from '@/components/pincode-checker';
+import { ProductGrid } from '@/components/product-card';
 import { ProductReviews } from '@/components/product-reviews';
 import { ProductShare } from '@/components/product-share';
 import { RecentlyViewedShelf, RecentlyViewedTracker } from '@/components/recently-viewed';
@@ -11,7 +13,7 @@ import { ProductThumb } from '@/components/product-thumb';
 import { StarRating } from '@/components/star-rating';
 import { Badge } from '@/components/ui';
 import { discountPercent, formatMinor } from '@/lib/money';
-import { StorefrontApiError, storefrontFetch } from '@/lib/tenant';
+import { StorefrontApiError, storefrontFetch, storefrontFetchPage } from '@/lib/tenant';
 
 type Params = { slug: string };
 
@@ -39,6 +41,18 @@ async function loadProduct(slug: string): Promise<ProductResponse | null> {
   }
 }
 
+async function loadRelatedProducts(currentProductId: string): Promise<ProductResponse[]> {
+  try {
+    const page = await storefrontFetchPage<ProductResponse>('/products?limit=6', {
+      tags: ['products'],
+      revalidate: 60,
+    });
+    return (page?.items ?? []).filter((p) => p.id !== currentProductId).slice(0, 4);
+  } catch {
+    return [];
+  }
+}
+
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { slug } = await params;
   const product = await loadProduct(slug);
@@ -59,6 +73,8 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
   const product = await loadProduct(slug);
 
   if (!product) notFound();
+
+  const relatedProducts = await loadRelatedProducts(product.id);
 
   const saving = discountPercent(product.priceMinor, product.comparePriceMinor);
   const rating = Number(product.ratingAverage);
@@ -149,6 +165,9 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
             )}
           </dl>
 
+          {/* Delivery & Pincode Estimator */}
+          <PincodeChecker requiresShipping={product.requiresShipping} />
+
           {/* Trust & Guarantee Badges */}
           <div className="grid grid-cols-2 gap-2.5 rounded-theme border border-line bg-surface-alt/40 p-3.5 text-xs text-ink">
             <div className="flex items-center gap-2">
@@ -200,6 +219,23 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
       <RecentlyViewedTracker product={product} />
 
       <ProductReviews productId={product.id} />
+
+      {relatedProducts.length > 0 && (
+        <section className="space-y-4 border-t border-line pt-10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-heading text-xl font-semibold tracking-tight text-ink">
+                You May Also Like
+              </h2>
+              <p className="text-xs text-ink-muted mt-0.5">Explore popular items recommended for you</p>
+            </div>
+            <Link href="/products" className="text-xs font-medium text-brand hover:underline">
+              View all products →
+            </Link>
+          </div>
+          <ProductGrid products={relatedProducts} />
+        </section>
+      )}
 
       <RecentlyViewedShelf currentProductId={product.id} />
     </div>
