@@ -12,6 +12,7 @@ import { useCart } from '@/lib/use-cart';
 import { useCustomer } from '@/lib/customer-context';
 import { useWishlist } from '@/lib/use-wishlist';
 import { ProductThumb } from '@/components/product-thumb';
+import { CurrencySwitcher } from '@/components/currency-switcher';
 import type { StorefrontTheme } from '@/lib/theme';
 
 function AnnouncementBar() {
@@ -92,6 +93,7 @@ export function SiteHeader({ theme = 'default' }: { theme?: StorefrontTheme }) {
         </div>
 
         <div className="flex items-center gap-2">
+          <CurrencySwitcher />
           <Link
             href="/account/wishlist"
             className="relative inline-flex h-10 items-center justify-center rounded-theme border border-line px-2.5 text-ink hover:border-brand hover:text-brand"

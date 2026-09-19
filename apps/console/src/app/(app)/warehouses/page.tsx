@@ -1,11 +1,26 @@
 'use client';
 
-import { Boxes, Building, CheckCircle2, Warehouse } from 'lucide-react';
+import { Boxes, Building, CheckCircle2, Download, Warehouse } from 'lucide-react';
 import Link from 'next/link';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
 import { useWarehouses } from '@/lib/queries/warehouses';
 
 export default function WarehousesPage() {
   const { data: warehouses, isLoading } = useWarehouses();
+
+  const handleExportWarehousesCsv = () => {
+    if (!warehouses || warehouses.length === 0) return;
+    const headers = ['Warehouse ID', 'Code', 'Name', 'Type', 'Is Default', 'Status'];
+    const rows = warehouses.map((w) => [
+      w.id,
+      w.code,
+      w.name,
+      w.type,
+      w.isDefault ? 'Yes' : 'No',
+      w.isActive ? 'Active' : 'Inactive',
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `warehouses-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
 
   return (
     <div className="space-y-6">
@@ -16,12 +31,23 @@ export default function WarehousesPage() {
             Storage locations and fulfillment centers where your store inventory is managed and dispatched
           </p>
         </div>
-        <Link
-          href="/inventory"
-          className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
-        >
-          <Boxes className="size-4 text-blue-600" /> View Inventory Levels
-        </Link>
+        <div className="flex items-center gap-2">
+          {warehouses && warehouses.length > 0 && (
+            <button
+              type="button"
+              onClick={handleExportWarehousesCsv}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              <Download className="size-4" /> Export CSV
+            </button>
+          )}
+          <Link
+            href="/inventory"
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+          >
+            <Boxes className="size-4 text-blue-600" /> View Inventory Levels
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-white shadow-sm">

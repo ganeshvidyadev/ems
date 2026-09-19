@@ -3,6 +3,7 @@
 import type { AuditActorType, AuditSeverity } from '@ems/contracts';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
+import { Download } from 'lucide-react';
 import {
   Alert,
   Badge,
@@ -19,6 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/primitives';
 import { formatDate } from '@/lib/utils';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
 import { usePlatformAuditLogs } from '@/lib/queries/platform-audit-log';
 
 const SEVERITY_BADGE: Record<AuditSeverity, 'default' | 'warning' | 'destructive'> = {
@@ -53,6 +55,23 @@ function AuditLogPageContent() {
     q,
   });
 
+  const handleExportAuditCsv = () => {
+    const list = logs.data?.data ?? [];
+    if (list.length === 0) return;
+    const headers = ['Action', 'Actor Type', 'Actor Email', 'Severity', 'Entity Type', 'Entity ID', 'Correlation ID', 'Timestamp'];
+    const rows = list.map((l) => [
+      l.action,
+      l.actorType,
+      l.actorEmail ?? '',
+      l.severity,
+      l.entityType,
+      l.entityId ?? '',
+      l.correlationId ?? '',
+      formatDate(l.createdAt),
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `audit-log-page-${page}-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
+
   function setPage(next: number) {
     const params = new URLSearchParams(searchParams);
     params.set('page', String(next));
@@ -61,9 +80,20 @@ function AuditLogPageContent() {
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Audit log</h1>
-        <p className="text-sm text-muted-foreground">Every privileged mutation across the platform, newest first.</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Audit log</h1>
+          <p className="text-sm text-muted-foreground">Every privileged mutation across the platform, newest first.</p>
+        </div>
+        {logs.data && logs.data.data.length > 0 && (
+          <button
+            type="button"
+            onClick={handleExportAuditCsv}
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+          >
+            <Download className="size-4" /> Export CSV
+          </button>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-3">
