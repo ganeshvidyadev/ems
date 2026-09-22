@@ -18,6 +18,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "apps/api", "run", "dev"],
       "port": 4000
+    },
+    {
+      "name": "marketing",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "apps/marketing", "run", "dev"],
+      "port": 3003
     }
   ]
 }

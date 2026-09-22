@@ -12,6 +12,7 @@
     "dev:api": "turbo run dev --filter=@ems/api",
     "dev:console": "turbo run dev --filter=@ems/console",
     "dev:storefront": "turbo run dev --filter=@ems/storefront",
+    "dev:marketing": "turbo run dev --filter=@ems/marketing",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",

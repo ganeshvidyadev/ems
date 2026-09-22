@@ -392,6 +392,58 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
+  apps/marketing:
+    dependencies:
+      lucide-react:
+        specifier: ^0.471.1
+        version: 0.471.2(react@19.2.8)
+      next:
+        specifier: ^15.1.4
+        version: 15.5.22(@opentelemetry/api@1.9.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.8(react@19.2.8)
+    devDependencies:
+      '@ems/config-typescript':
+        specifier: workspace:*
+        version: link:../../packages/config-typescript
+      '@eslint/eslintrc':
+        specifier: ^3.2.0
+        version: 3.3.6
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.20.1
+      '@types/react':
+        specifier: ^19.0.7
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.0.3
+        version: 19.2.4(@types/react@19.2.18)
+      autoprefixer:
+        specifier: ^10.4.20
+        version: 10.5.4(postcss@8.5.25)
+      eslint:
+        specifier: ^9.18.0
+        version: 9.39.5(jiti@1.21.7)
+      eslint-config-next:
+        specifier: ^15.1.4
+        version: 15.5.22(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3)
+      postcss:
+        specifier: ^8.5.1
+        version: 8.5.25
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.19(yaml@2.9.0)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
   apps/storefront:
     dependencies:
       '@ems/contracts':
