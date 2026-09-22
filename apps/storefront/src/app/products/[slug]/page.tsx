@@ -1,15 +1,28 @@
 import type { ProductResponse } from '@ems/contracts';
-import { ChevronRight, Package, Truck } from 'lucide-react';
+import { ChevronRight, Package, Truck, ShieldCheck, Lock, RotateCcw } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AddToCart } from '@/components/add-to-cart';
+import { BackInStockWidget } from '@/components/back-in-stock';
+import { DeliveryCountdown } from '@/components/delivery-countdown';
+import { StockUrgencyBar } from '@/components/stock-urgency-bar';
+import { ProductOffers } from '@/components/product-offers';
+import { SizeGuideModal } from '@/components/size-guide-modal';
+import { ProductBundle } from '@/components/product-bundle';
+import { ProductFaqAccordion } from '@/components/product-faq-accordion';
+import { PincodeChecker } from '@/components/pincode-checker';
+import { ProductGrid } from '@/components/product-card';
 import { ProductReviews } from '@/components/product-reviews';
+import { ProductShare } from '@/components/product-share';
+import { RecentlyViewedShelf, RecentlyViewedTracker } from '@/components/recently-viewed';
+import { ProductGallery } from '@/components/product-gallery';
+import { StickyPdpBar } from '@/components/sticky-pdp-bar';
 import { ProductThumb } from '@/components/product-thumb';
 import { StarRating } from '@/components/star-rating';
 import { Badge } from '@/components/ui';
 import { discountPercent, formatMinor } from '@/lib/money';
-import { StorefrontApiError, storefrontFetch } from '@/lib/tenant';
+import { StorefrontApiError, storefrontFetch, storefrontFetchPage } from '@/lib/tenant';
 
 type Params = { slug: string };
 
@@ -37,6 +50,18 @@ async function loadProduct(slug: string): Promise<ProductResponse | null> {
   }
 }
 
+async function loadRelatedProducts(currentProductId: string): Promise<ProductResponse[]> {
+  try {
+    const page = await storefrontFetchPage<ProductResponse>('/products?limit=6', {
+      tags: ['products'],
+      revalidate: 60,
+    });
+    return (page?.items ?? []).filter((p) => p.id !== currentProductId).slice(0, 4);
+  } catch {
+    return [];
+  }
+}
+
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { slug } = await params;
   const product = await loadProduct(slug);
@@ -58,6 +83,8 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
 
   if (!product) notFound();
 
+  const relatedProducts = await loadRelatedProducts(product.id);
+
   const saving = discountPercent(product.priceMinor, product.comparePriceMinor);
   const rating = Number(product.ratingAverage);
 
@@ -78,14 +105,10 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
       </nav>
 
       <div className="grid gap-10 lg:grid-cols-2">
-        <div className="relative">
-          <ProductThumb name={product.name} className="aspect-square w-full" textClassName="text-7xl" />
-          {saving !== null && (
-            <Badge tone="sale" className="absolute left-3 top-3 text-sm">
-              {saving}% off
-            </Badge>
-          )}
-        </div>
+        <ProductGallery
+          productName={product.name}
+          saving={saving}
+        />
 
         <div className="space-y-6">
           <div className="space-y-3">
@@ -124,7 +147,23 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
             )}
           </div>
 
+          {/* Fast Delivery Urgency Countdown */}
+          <DeliveryCountdown />
+
+          {/* Stock Level Urgency Indicator */}
+          <StockUrgencyBar stockCount={product.status === 'OUT_OF_STOCK' ? 0 : 4} />
+
+          {/* Size & Fit Reference Guide */}
+          <div className="flex justify-end">
+            <SizeGuideModal productName={product.name} />
+          </div>
+
           <AddToCart product={product} />
+
+          <BackInStockWidget product={product} />
+
+          {/* Available Coupons & Offers */}
+          <ProductOffers />
 
           <dl className="space-y-2 border-t border-line pt-5 text-sm">
             {product.sku && (
@@ -146,6 +185,32 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
               </div>
             )}
           </dl>
+
+          {/* Delivery & Pincode Estimator */}
+          <PincodeChecker requiresShipping={product.requiresShipping} />
+
+          {/* Trust & Guarantee Badges */}
+          <div className="grid grid-cols-2 gap-2.5 rounded-theme border border-line bg-surface-alt/40 p-3.5 text-xs text-ink">
+            <div className="flex items-center gap-2">
+              <Truck className="h-4 w-4 text-brand shrink-0" />
+              <span>Free Delivery ₹999+</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-brand shrink-0" />
+              <span>100% Genuine Item</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Lock className="h-4 w-4 text-brand shrink-0" />
+              <span>Secure SSL Checkout</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <RotateCcw className="h-4 w-4 text-brand shrink-0" />
+              <span>Easy Return Policy</span>
+            </div>
+          </div>
+
+          {/* Social Sharing */}
+          <ProductShare productName={product.name} />
         </div>
       </div>
 
@@ -172,7 +237,35 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
         </section>
       )}
 
+      {/* Frequently Bought Together Bundle */}
+      <ProductBundle mainProduct={product} relatedProducts={relatedProducts} />
+
+      <ProductFaqAccordion />
+
+      <RecentlyViewedTracker product={product} />
+
       <ProductReviews productId={product.id} />
+
+      {relatedProducts.length > 0 && (
+        <section className="space-y-4 border-t border-line pt-10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-heading text-xl font-semibold tracking-tight text-ink">
+                You May Also Like
+              </h2>
+              <p className="text-xs text-ink-muted mt-0.5">Explore popular items recommended for you</p>
+            </div>
+            <Link href="/products" className="text-xs font-medium text-brand hover:underline">
+              View all products →
+            </Link>
+          </div>
+          <ProductGrid products={relatedProducts} />
+        </section>
+      )}
+
+      <RecentlyViewedShelf currentProductId={product.id} />
+
+      <StickyPdpBar product={product} />
     </div>
   );
 }

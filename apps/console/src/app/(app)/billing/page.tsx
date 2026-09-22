@@ -4,6 +4,7 @@ import type { InvoiceStatus } from '@ems/contracts';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
+import { Download } from 'lucide-react';
 import {
   Alert,
   Badge,
@@ -19,6 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/primitives';
 import { formatDate, formatMoney } from '@/lib/utils';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
 import { usePlatformInvoices } from '@/lib/queries/platform-billing';
 
 const STATUS_BADGE: Record<InvoiceStatus, 'default' | 'success' | 'warning' | 'destructive' | 'info'> = {
@@ -47,6 +49,25 @@ function BillingPageContent() {
 
   const invoices = usePlatformInvoices({ page, limit: 20, status: status || undefined });
 
+  const handleExportInvoicesCsv = () => {
+    const list = invoices.data?.data ?? [];
+    if (list.length === 0) return;
+    const headers = ['Invoice ID', 'Invoice #', 'Tenant Name', 'Tenant ID', 'Period Start', 'Period End', 'Amount Due', 'Currency', 'Status', 'Due Date'];
+    const rows = list.map((inv) => [
+      inv.id,
+      inv.invoiceNumber,
+      inv.tenantName,
+      inv.tenantId,
+      formatDate(inv.periodStart),
+      formatDate(inv.periodEnd),
+      inv.amountDueMinor,
+      inv.currency,
+      inv.status,
+      inv.dueAt ? formatDate(inv.dueAt) : 'N/A',
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `invoices-page-${page}-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
+
   function setPage(next: number) {
     const params = new URLSearchParams(searchParams);
     params.set('page', String(next));
@@ -60,21 +81,32 @@ function BillingPageContent() {
           <h1 className="text-2xl font-semibold tracking-tight">Billing</h1>
           <p className="text-sm text-muted-foreground">Every tenant&apos;s subscription invoices.</p>
         </div>
-        <Select
-          aria-label="Filter by status"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as InvoiceStatus | '')}
-          className="w-auto"
-        >
-          <option value="">All statuses</option>
-          <option value="DRAFT">Draft</option>
-          <option value="OPEN">Open</option>
-          <option value="PAID">Paid</option>
-          <option value="PARTIALLY_PAID">Partially paid</option>
-          <option value="UNCOLLECTIBLE">Uncollectible</option>
-          <option value="VOID">Void</option>
-          <option value="REFUNDED">Refunded</option>
-        </Select>
+        <div className="flex items-center gap-2">
+          {invoices.data && invoices.data.data.length > 0 && (
+            <button
+              type="button"
+              onClick={handleExportInvoicesCsv}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              <Download className="size-4" /> Export CSV
+            </button>
+          )}
+          <Select
+            aria-label="Filter by status"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as InvoiceStatus | '')}
+            className="w-auto"
+          >
+            <option value="">All statuses</option>
+            <option value="DRAFT">Draft</option>
+            <option value="OPEN">Open</option>
+            <option value="PAID">Paid</option>
+            <option value="PARTIALLY_PAID">Partially paid</option>
+            <option value="UNCOLLECTIBLE">Uncollectible</option>
+            <option value="VOID">Void</option>
+            <option value="REFUNDED">Refunded</option>
+          </Select>
+        </div>
       </div>
 
       {invoices.isError && <Alert variant="error">Could not load invoices. Try refreshing the page.</Alert>}

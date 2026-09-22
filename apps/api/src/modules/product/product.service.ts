@@ -46,6 +46,8 @@ export class ProductService {
         brandId: brandId ?? undefined,
         categoryId: categoryId ?? undefined,
         isFeatured: query.isFeatured,
+        minPriceMinor: query.minPriceMinor,
+        maxPriceMinor: query.maxPriceMinor,
         q: query.q,
       },
       query.sort,
@@ -249,6 +251,10 @@ export class ProductService {
 
     if (input.attributeValues) {
       await this.attributes.setValuesForProduct(product.id, input.attributeValues);
+    }
+
+    if (product.type === 'VARIABLE' && input.variants !== undefined) {
+      await this.variants.replaceForProduct(product.id, input.variants);
     }
 
     await this.invalidate();

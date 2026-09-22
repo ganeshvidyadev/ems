@@ -99,6 +99,10 @@ export class RequestContextService {
     return this.get()?.userId ?? null;
   }
 
+  get customerId(): string | null {
+    return this.get()?.customerId ?? null;
+  }
+
   get surface(): RequestContext['surface'] {
     return this.get()?.surface ?? 'system';
   }

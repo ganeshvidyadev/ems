@@ -1,4 +1,4 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BOOLEAN_COLUMN, BaseEntity, DATETIME3 } from './base.entity';
 import { ProductEntity } from './product.entity';
 import { TenantScoped } from '../../common/decorators/tenant-scoped.decorator';
@@ -51,7 +51,7 @@ export class ProductVariantEntity extends BaseEntity {
   @Column({ name: 'is_active', ...BOOLEAN_COLUMN, default: 1 })
   isActive!: boolean;
 
-  @Column({ name: 'deleted_at', ...DATETIME3, nullable: true })
+  @DeleteDateColumn({ name: 'deleted_at', ...DATETIME3, nullable: true })
   deletedAt!: Date | null;
 
   @ManyToOne(() => ProductEntity, { onDelete: 'CASCADE' })

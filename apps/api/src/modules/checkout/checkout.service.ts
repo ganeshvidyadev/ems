@@ -374,7 +374,7 @@ export class CheckoutService {
       const order = await ordersRepo.insert({
         storeId,
         orderNumber,
-        customerId: null, // guest checkout — see CheckoutModule's doc comment for the auth follow-up
+        customerId: this.context.customerId ?? null,
         email: input.email ?? null,
         phoneE164: input.phone ?? null,
         status: 'PENDING',

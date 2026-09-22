@@ -3,6 +3,7 @@
 import type { PlatformAlertSeverity, PlatformAlertStatus } from '@ems/contracts';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
+import { Download } from 'lucide-react';
 import {
   Alert,
   Badge,
@@ -19,6 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/primitives';
 import { formatDate } from '@/lib/utils';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
 import { usePermission } from '@/hooks/use-auth';
 import {
   useAcknowledgeAlert,
@@ -78,6 +80,35 @@ function AlertCenterPageContent() {
     router.push(`/alerts?${params.toString()}`);
   }
 
+  const handleExportAlertsCsv = () => {
+    if (!alerts.data || alerts.data.data.length === 0) return;
+    const headers = [
+      'Alert ID',
+      'Title',
+      'Description',
+      'Type',
+      'Tenant ID',
+      'Tenant Name',
+      'Severity',
+      'Status',
+      'Last Seen At',
+      'Created At',
+    ];
+    const rows = alerts.data.data.map((a) => [
+      a.id,
+      a.title,
+      a.description || '—',
+      TYPE_LABEL[a.type] ?? a.type,
+      a.tenantId || '—',
+      a.tenantName || 'Platform',
+      a.severity,
+      a.status,
+      formatDate(a.lastSeenAt),
+      formatDate(a.createdAt),
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `platform-alerts-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
+
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -87,7 +118,13 @@ function AlertCenterPageContent() {
             Reconciled against live conditions on every load — infra, queues, payments, quotas, SLA, trials.
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
+          {alerts.data && alerts.data.data.length > 0 && (
+            <Button variant="secondary" onClick={handleExportAlertsCsv} className="gap-2">
+              <Download className="size-4" />
+              Export CSV
+            </Button>
+          )}
           <Select
             aria-label="Filter by status"
             value={status}

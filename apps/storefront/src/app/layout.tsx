@@ -7,6 +7,13 @@ import { getStoreSummary } from '@/lib/store';
 import { getTenantContext } from '@/lib/tenant';
 import { getStorefrontTheme } from '@/lib/theme';
 import { ThemeFooter } from '@/components/theme-footer';
+import { CookieBanner } from '@/components/cookie-banner';
+import { MobileNav } from '@/components/mobile-nav';
+import { FloatingCompareBar } from '@/components/compare-bar';
+import { CartDrawer } from '@/components/cart-drawer';
+import { SocialProofToast } from '@/components/social-proof-toast';
+import { LiveChatWidget } from '@/components/live-chat-widget';
+import { FirstOrderModal } from '@/components/first-order-modal';
 import './globals.css';
 import './themes.css';
 
@@ -42,10 +49,34 @@ export default async function RootLayout({
   const store = await getStoreSummary();
   const theme = await getStorefrontTheme();
 
+  const customization = store.themeCustomization;
+  const customCssBlock = customization
+    ? `
+    :root {
+      ${customization.primaryColor ? `--brand-primary: ${customization.primaryColor};` : ''}
+      ${customization.accentColor ? `--brand-accent: ${customization.accentColor};` : ''}
+      ${customization.surfaceColor ? `--brand-surface: ${customization.surfaceColor};` : ''}
+      ${customization.textColor ? `--brand-text: ${customization.textColor};` : ''}
+      ${customization.headingFont ? `--font-heading: '${customization.headingFont}', sans-serif;` : ''}
+      ${customization.bodyFont ? `--font-body: '${customization.bodyFont}', sans-serif;` : ''}
+    }
+    ${customization.customCss || ''}
+  `
+    : null;
+
   return (
     <html lang="en">
+      <head>
+        {customCssBlock && (
+          <style
+            id="tenant-custom-theme-css"
+            dangerouslySetInnerHTML={{ __html: customCssBlock }}
+          />
+        )}
+      </head>
       {/* The server resolves the company's permitted design for each request. */}
       <body data-tenant={tenant.slug ?? undefined} data-theme={theme} className="flex min-h-screen flex-col">
+
         {/*
           The store summary is resolved once here and handed to the client tree as a
           prop. Every client component that needs the store's public id — add to
@@ -57,14 +88,23 @@ export default async function RootLayout({
             storeId: store.id,
             name: store.name,
             currency: store.currency,
+            logoUrl: store.logoUrl,
+            faviconUrl: store.faviconUrl,
             tenantSlug: tenant.slug ?? '',
           }}
         >
           <SiteHeader theme={theme} />
-          <main className="flex-1">
+          <main className="flex-1 pb-16 sm:pb-0">
             <div className="storefront-content mx-auto max-w-content px-4 py-8">{children}</div>
           </main>
           {theme === 'default' ? <SiteFooter name={store.name} currency={store.currency} /> : <ThemeFooter theme={theme} name={store.name} currency={store.currency} />}
+          <CookieBanner />
+          <MobileNav />
+          <FloatingCompareBar />
+          <CartDrawer />
+          <SocialProofToast />
+          <LiveChatWidget />
+          <FirstOrderModal />
         </Providers>
       </body>
     </html>

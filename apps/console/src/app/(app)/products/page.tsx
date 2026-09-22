@@ -1,9 +1,13 @@
 'use client';
 
 import type { ProductListQuery, ProductResponse } from '@ems/contracts';
+import { Download, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
+import { ProductImportModal } from '@/components/products/product-import-modal';
+import { downloadCsvFile, generateCsvText } from '@/lib/csv-helper';
+import { apiGetPaginated, isForbidden } from '@/lib/api-client';
 import {
   Alert,
   Badge,
@@ -20,7 +24,6 @@ import {
   TableRow,
 } from '@/components/ui/primitives';
 import { usePermission } from '@/hooks/use-auth';
-import { isForbidden } from '@/lib/api-client';
 import { useDeleteProduct, useProducts, usePublishProduct } from '@/lib/queries/products';
 import { useCurrentStore } from '@/lib/queries/stores';
 import { cn, formatDate, formatMoney } from '@/lib/utils';
@@ -53,6 +56,8 @@ function ProductsPageContent() {
   const [q, setQ] = useState(searchParams.get('q') ?? '');
   const [status, setStatus] = useState<ProductListQuery['status'] | ''>('');
   const [deleteTarget, setDeleteTarget] = useState<ProductResponse | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const canCreate = usePermission('product:create');
   const canUpdate = usePermission('product:update');
@@ -105,10 +110,83 @@ function ProductsPageContent() {
   const canShowActions = canUpdate || canDelete || canPublish;
   const colSpan = canShowActions ? 5 : 4;
 
+  async function exportProductsCsv() {
+    if (!store?.id) return;
+    setIsExporting(true);
+    try {
+      const res = await apiGetPaginated<ProductResponse>('/console/products', {
+        params: {
+          page: 1,
+          limit: 500,
+          storeId: store.id,
+        },
+      });
+      const allProducts = res.data ?? products;
+      if (!allProducts || allProducts.length === 0) return;
+
+      const headers = [
+        'Product Name',
+        'SKU',
+        'Slug',
+        'Status',
+        'Type',
+        'Price (INR)',
+        'Compare Price (INR)',
+        'Barcode',
+        'Variants Count',
+        'Created At',
+      ];
+
+      const rows = allProducts.map((p) => [
+        p.name,
+        p.sku ?? '',
+        p.slug,
+        p.status,
+        p.type,
+        (Number(p.priceMinor) / 100).toFixed(2),
+        p.comparePriceMinor ? (Number(p.comparePriceMinor) / 100).toFixed(2) : '',
+        p.barcode ?? '',
+        p.variants?.length ?? 0,
+        formatDate(p.createdAt),
+      ]);
+
+      const csvContent = generateCsvText(headers, rows);
+      const safeStoreName = store.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      downloadCsvFile(`products-catalog-${safeStoreName}-${new Date().toISOString().slice(0, 10)}.csv`, csvContent);
+    } catch (err) {
+      console.error('Failed to export catalog:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <PageShell
       action={
-        canCreate && <Button onClick={() => router.push('/products/new')}>New product</Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isExporting || (products.length === 0 && !productsQuery.isLoading)}
+            onClick={() => void exportProductsCsv()}
+            className="inline-flex items-center gap-1.5"
+          >
+            <Download className="size-3.5 text-slate-600" />
+            {isExporting ? 'Exporting...' : 'Export Catalog CSV'}
+          </Button>
+          {canCreate && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setImportOpen(true)}
+              className="inline-flex items-center gap-1.5"
+            >
+              <Upload className="size-3.5 text-slate-600" />
+              Import CSV
+            </Button>
+          )}
+          {canCreate && <Button onClick={() => router.push('/products/new')}>New product</Button>}
+        </div>
       }
     >
       <form onSubmit={onSearchSubmit} className="mb-4 flex flex-wrap gap-3">
@@ -164,9 +242,16 @@ function ProductsPageContent() {
             products.map((product) => (
               <TableRow key={product.id}>
                 <TableCell>
-                  <Link href={`/products/${product.id}`} className="font-medium hover:underline">
-                    {product.name}
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link href={`/products/${product.id}`} className="font-medium hover:underline">
+                      {product.name}
+                    </Link>
+                    {product.type === 'VARIABLE' && (
+                      <Badge variant="outline" className="text-[10px] py-0 font-normal">
+                        Variable {product.variants?.length ? `(${product.variants.length})` : ''}
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">{product.sku ?? '—'}</p>
                 </TableCell>
                 <TableCell>
@@ -233,6 +318,17 @@ function ProductsPageContent() {
           </Button>
         </div>
       </Dialog>
+
+      {store && (
+        <ProductImportModal
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          storeId={store.id}
+          onSuccess={() => {
+            void productsQuery.refetch();
+          }}
+        />
+      )}
     </PageShell>
   );
 }

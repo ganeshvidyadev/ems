@@ -1,6 +1,7 @@
 'use client';
 
-import type { CustomerListQuery } from '@ems/contracts';
+import type { CustomerListQuery, CustomerResponse } from '@ems/contracts';
+import { Download, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
@@ -19,7 +20,8 @@ import {
   TableRow,
 } from '@/components/ui/primitives';
 import { usePermission } from '@/hooks/use-auth';
-import { isForbidden } from '@/lib/api-client';
+import { apiGetPaginated, isForbidden } from '@/lib/api-client';
+import { downloadCsvFile, generateCsvText } from '@/lib/csv-helper';
 import { useCustomers } from '@/lib/queries/customers';
 import { formatDate, formatMoney } from '@/lib/utils';
 
@@ -50,9 +52,63 @@ function CustomersPageContent() {
   const customers = customersQuery.data?.data ?? [];
   const pagination = customersQuery.data?.meta.pagination;
 
+  const [isExporting, setIsExporting] = useState(false);
+
+  async function exportCustomersCsv() {
+    setIsExporting(true);
+    try {
+      const res = await apiGetPaginated<CustomerResponse>('/console/customers', {
+        params: {
+          page: 1,
+          limit: 500,
+          status: status || undefined,
+        },
+      });
+
+      const exportList = res.data?.length ? res.data : customers;
+      if (!exportList || exportList.length === 0) return;
+
+      const headers = [
+        'Customer ID',
+        'Name',
+        'Email',
+        'Phone',
+        'Status',
+        'Accepts Marketing',
+        'Is Guest',
+        'Total Orders',
+        'Total Spent (INR)',
+        'Average Order Value (INR)',
+        'Joined Date',
+      ];
+
+      const rows = exportList.map((c) => [
+        c.id,
+        c.displayName || [c.firstName, c.lastName].filter(Boolean).join(' ') || 'Customer',
+        c.email ?? '',
+        c.phone ?? '',
+        c.status,
+        c.acceptsMarketing ? 'YES' : 'NO',
+        c.isGuest ? 'YES' : 'NO',
+        c.totalOrders ?? 0,
+        (Number(c.totalSpentMinor || 0) / 100).toFixed(2),
+        (Number(c.averageOrderMinor || 0) / 100).toFixed(2),
+        formatDate(c.createdAt),
+      ]);
+
+      const csvContent = generateCsvText(headers, rows);
+      const filename = `customers-export-${new Date().toISOString().slice(0, 10)}.csv`;
+      downloadCsvFile(filename, csvContent);
+    } catch (err) {
+      console.error('Failed to export customers CSV:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <PageShell>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Select
           value={status}
           onChange={(e) => { setStatus(e.target.value as CustomerListQuery['status'] | ''); setPage(1); }}
@@ -63,11 +119,28 @@ function CustomersPageContent() {
           <option value="BLOCKED">Blocked</option>
           <option value="DEACTIVATED">Deactivated</option>
         </Select>
-        {canCreate && (
-          <Link href="/customers/new">
-            <Button>New customer</Button>
-          </Link>
-        )}
+
+        <div className="flex items-center gap-2.5">
+          <Button
+            variant="outline"
+            disabled={customers.length === 0 || isExporting}
+            onClick={() => void exportCustomersCsv()}
+            className="inline-flex items-center gap-1.5"
+          >
+            {isExporting ? (
+              <Loader2 className="size-3.5 animate-spin text-slate-600" />
+            ) : (
+              <Download className="size-3.5 text-slate-600" />
+            )}
+            {isExporting ? 'Exporting…' : 'Export Customers CSV'}
+          </Button>
+
+          {canCreate && (
+            <Link href="/customers/new">
+              <Button>New customer</Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       {customersQuery.isError && (

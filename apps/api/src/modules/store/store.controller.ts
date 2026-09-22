@@ -39,5 +39,7 @@ function toResponse(store: StoreEntity): StoreResponse {
     slug: store.slug,
     status: store.status,
     currency: store.currency,
+    logoUrl: store.logoUrl ?? null,
+    faviconUrl: store.faviconUrl ?? null,
   };
 }

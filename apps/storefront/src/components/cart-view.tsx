@@ -1,7 +1,7 @@
 'use client';
 
 import type { CartLineItem, CartResponse } from '@ems/contracts';
-import { Minus, Plus, ShoppingBag, Tag, Trash2, X } from 'lucide-react';
+import { Minus, Plus, ShoppingBag, Tag, Trash2, X, Truck, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 import { OrderSummary } from '@/components/order-summary';
@@ -9,11 +9,11 @@ import { ProductThumb } from '@/components/product-thumb';
 import { Alert, Button, Card, EmptyState, Input, Spinner } from '@/components/ui';
 import { ApiError } from '@/lib/api-client';
 import { formatMinor } from '@/lib/money';
+import { CouponBox } from '@/components/coupon-box';
+import { CartReservationTimer } from '@/components/cart-reservation-timer';
 import {
-  useApplyCoupon,
   useCart,
   useRemoveCartItem,
-  useRemoveCoupon,
   useUpdateCartItem,
 } from '@/lib/use-cart';
 
@@ -58,13 +58,59 @@ export function CartView() {
     );
   }
 
+  const FREE_SHIPPING_THRESHOLD_MINOR = 99900; // ₹999.00
+  const subtotalAmount = Number(cart.subtotal.amountMinor || 0);
+  const isFreeShipping = subtotalAmount >= FREE_SHIPPING_THRESHOLD_MINOR || cart.shippingEstimate.amountMinor === '0';
+  const remainingMinor = Math.max(0, FREE_SHIPPING_THRESHOLD_MINOR - subtotalAmount);
+  const progressPercent = Math.min(100, Math.round((subtotalAmount / FREE_SHIPPING_THRESHOLD_MINOR) * 100));
+
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_22rem] lg:items-start">
-      <ul className="divide-y divide-line rounded-theme border border-line">
-        {cart.items.map((item) => (
-          <CartLine key={`${item.productId}:${item.variantId ?? ''}`} item={item} currency={cart.currency} />
-        ))}
-      </ul>
+      <div className="space-y-4">
+        {/* Free Shipping Progress Indicator */}
+        <div className="rounded-theme border border-line bg-surface p-4 shadow-sm">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <div className="flex items-center gap-2">
+              <div
+                className={`flex h-7 w-7 items-center justify-center rounded-full shrink-0 ${
+                  isFreeShipping ? 'bg-success/15 text-success' : 'bg-brand/15 text-brand'
+                }`}
+              >
+                {isFreeShipping ? <CheckCircle2 className="h-4 w-4" /> : <Truck className="h-4 w-4" />}
+              </div>
+              {isFreeShipping ? (
+                <span className="font-semibold text-success">
+                  🎉 Congratulations! Your order qualifies for FREE Delivery!
+                </span>
+              ) : (
+                <span className="text-ink">
+                  Add <span className="font-bold text-brand">{formatMinor(String(remainingMinor), cart.currency)}</span> more to unlock <span className="font-semibold">FREE Delivery</span>!
+                </span>
+              )}
+            </div>
+            <span className="text-[11px] font-medium text-ink-muted hidden sm:inline">
+              Free at ₹999
+            </span>
+          </div>
+
+          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-surface-alt">
+            <div
+              className={`h-full transition-all duration-500 rounded-full ${
+                isFreeShipping ? 'bg-success' : 'bg-brand'
+              }`}
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+
+        <CartReservationTimer />
+
+        <ul className="divide-y divide-line rounded-theme border border-line">
+          {cart.items.map((item) => (
+            <CartLine key={`${item.productId}:${item.variantId ?? ''}`} item={item} currency={cart.currency} />
+          ))}
+        </ul>
+      </div>
 
       <Card className="space-y-5 p-5 lg:sticky lg:top-24">
         <h2 className="font-heading text-base font-semibold text-ink">Order summary</h2>
@@ -189,76 +235,5 @@ function CartLine({ item, currency }: { item: CartLineItem; currency: string }) 
         )}
       </div>
     </li>
-  );
-}
-
-function CouponBox({ cart }: { cart: CartResponse }) {
-  const [code, setCode] = useState('');
-  const applyCoupon = useApplyCoupon();
-  const removeCoupon = useRemoveCoupon();
-
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const trimmed = code.trim();
-    if (!trimmed) return;
-
-    applyCoupon.mutate(
-      { code: trimmed },
-      // Cleared only on success, so a rejected code stays in the box for the
-      // shopper to correct a typo rather than having to retype it.
-      { onSuccess: () => setCode('') },
-    );
-  }
-
-  if (cart.couponCode) {
-    return (
-      <div className="flex items-center justify-between gap-3 rounded-theme border border-brand bg-surface-alt px-3 py-2">
-        <span className="inline-flex min-w-0 items-center gap-2 text-sm text-ink">
-          <Tag className="h-4 w-4 shrink-0 text-brand" aria-hidden />
-          <span className="truncate font-medium">{cart.couponCode}</span>
-          <span className="shrink-0 text-ink-muted">applied</span>
-        </span>
-        <button
-          type="button"
-          onClick={() => removeCoupon.mutate()}
-          disabled={removeCoupon.isPending}
-          aria-label={`Remove coupon ${cart.couponCode}`}
-          className="shrink-0 rounded p-1 text-ink-muted transition hover:text-sale disabled:opacity-40"
-        >
-          <X className="h-4 w-4" aria-hidden />
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <form onSubmit={onSubmit} className="space-y-2">
-      <label htmlFor="coupon" className="block text-sm font-medium text-ink">
-        Coupon code
-      </label>
-      <div className="flex gap-2">
-        <Input
-          id="coupon"
-          value={code}
-          maxLength={64}
-          // Coupon codes are matched case-insensitively server-side, but showing
-          // them uppercase matches how they are printed and advertised.
-          onChange={(event) => setCode(event.target.value.toUpperCase())}
-          placeholder="Enter a code"
-          aria-invalid={applyCoupon.isError || undefined}
-        />
-        <Button type="submit" variant="secondary" loading={applyCoupon.isPending} disabled={!code.trim()}>
-          Apply
-        </Button>
-      </div>
-
-      {applyCoupon.isError && (
-        <p className="text-xs text-sale" role="alert">
-          {applyCoupon.error instanceof ApiError
-            ? applyCoupon.error.message
-            : 'That code could not be applied.'}
-        </p>
-      )}
-    </form>
   );
 }

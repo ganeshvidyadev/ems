@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import type { EntityManager } from 'typeorm';
-import { StoreEntity } from '../../database/entities';
+import { StoreEntity, TenantEntity } from '../../database/entities';
 import { RequestContextService } from '../../common/services/request-context.service';
 import { TenantScopedRepository } from '../../database/repositories/tenant-scoped.repository';
 
@@ -18,4 +18,9 @@ export class StoreRepository extends TenantScopedRepository<StoreEntity> {
   async listAll(): Promise<StoreEntity[]> {
     return this.find({ order: { status: 'ASC', createdAt: 'ASC' } as never });
   }
+
+  async findTenantById(tenantId: string): Promise<TenantEntity | null> {
+    return this.manager.getRepository(TenantEntity).findOne({ where: { id: tenantId } });
+  }
 }
+

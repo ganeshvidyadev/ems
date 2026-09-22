@@ -93,7 +93,7 @@ export class CartService {
     const cart = (await this.read(cartId)) ?? (await this.getOrCreate(cartId, storeId));
 
     const product = await this.products.getProduct(productPublicId);
-    if (!product || product.storeId !== storeId || product.status !== 'ACTIVE') {
+    if (!product || (product.storeId !== storeId && !product.supplierTenantId) || product.status !== 'ACTIVE') {
       throw new CartEmptyError(); // TODO(Phase 5 follow-up): a dedicated PRODUCT_NOT_AVAILABLE code
     }
 

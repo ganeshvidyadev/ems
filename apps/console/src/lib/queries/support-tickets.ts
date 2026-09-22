@@ -1,5 +1,6 @@
 import type {
   AddSupportTicketMessageRequest,
+  CreateSupportTicketRequest,
   SupportTicketMessageResponse,
   SupportTicketResponse,
   SupportTicketStatus,
@@ -8,6 +9,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPost } from '@/lib/api-client';
 
 const TICKETS_KEY = 'support-tickets';
+
+export function useCreateSupportTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CreateSupportTicketRequest) =>
+      apiPost<SupportTicketResponse>('/console/support-tickets', body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [TICKETS_KEY] });
+    },
+  });
+}
 
 export function useSupportTickets(status?: SupportTicketStatus, tenantId?: string) {
   return useQuery({

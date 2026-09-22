@@ -1,10 +1,10 @@
 'use client';
 
 import type { PlaceOrderResponse } from '@ems/contracts';
-import { CheckCircle2, Mail, Package } from 'lucide-react';
+import { CheckCircle2, FileText, Mail, Package, Printer } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Card, Spinner } from '@/components/ui';
+import { Button, Card, Spinner } from '@/components/ui';
 import { readStoredOrder } from '@/lib/confirmation';
 import { formatMoney } from '@/lib/money';
 
@@ -64,8 +64,9 @@ export function ConfirmationView() {
         </p>
       </div>
 
-      <Card className="divide-y divide-line">
+      <Card className="divide-y divide-line print:border-line">
         <Row label="Order number" value={order.orderNumber} mono />
+        <Row label="Date" value={new Date().toLocaleDateString(undefined, { dateStyle: 'medium' })} />
         <Row label="Total" value={formatMoney(order.total)} />
         <Row label="Payment" value={describePaymentStatus(order.paymentStatus)} />
       </Card>
@@ -83,11 +84,29 @@ export function ConfirmationView() {
       )}
 
       <div className="flex flex-col items-center gap-3">
-        <p className="flex items-center gap-2 text-sm text-ink-muted">
+        <p className="flex items-center gap-2 text-sm text-ink-muted print:hidden">
           <Package className="h-4 w-4" aria-hidden />
           You will get a note when it ships.
         </p>
-        <ContinueLink />
+        <div className="flex flex-wrap items-center justify-center gap-3 w-full print:hidden">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => window.print()}
+            className="flex-1 sm:flex-none"
+          >
+            <Printer className="h-4 w-4" aria-hidden />
+            Print Receipt
+          </Button>
+          <Link
+            href="/account/orders"
+            className="inline-flex h-10 flex-1 sm:flex-none items-center justify-center gap-2 rounded-theme border border-line bg-surface px-4 text-sm font-medium text-ink hover:border-brand hover:text-brand transition-colors"
+          >
+            <FileText className="h-4 w-4" aria-hidden />
+            Track in Account
+          </Link>
+          <ContinueLink />
+        </div>
       </div>
     </div>
   );

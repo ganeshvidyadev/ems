@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { Download } from 'lucide-react';
 import {
   Alert,
   Badge,
@@ -16,8 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/primitives';
-import { usePermission } from '@/hooks/use-auth';
-import { formatRelative } from '@/lib/utils';
+import { formatRelative, formatDate } from '@/lib/utils';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
 import {
   useDeletePlatformUser,
   usePlatformUsers,
@@ -25,7 +26,7 @@ import {
   useRevokePlatformUserSessions,
   useSuspendPlatformUser,
 } from '@/lib/queries/platform-users';
-
+import { usePermission } from '@/hooks/use-auth';
 
 const STATUS_BADGE: Record<string, 'default' | 'success' | 'warning' | 'destructive'> = {
   PENDING_VERIFICATION: 'default',
@@ -55,6 +56,21 @@ export default function PlatformStaffPage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [revokedMessage, setRevokedMessage] = useState<string | null>(null);
 
+  const handleExportPlatformStaffCsv = () => {
+    if (!users.data || users.data.length === 0) return;
+    const headers = ['User ID', 'Name', 'Email', 'Roles', 'Status', 'Last Login At', 'Created At'];
+    const rows = users.data.map((u) => [
+      u.id,
+      [u.firstName, u.lastName].filter(Boolean).join(' ') || '—',
+      u.email,
+      (u.roles ?? []).map((r) => ROLE_LABEL[r] ?? r).join('; '),
+      u.status,
+      u.lastLoginAt ? formatDate(u.lastLoginAt) : 'Never',
+      formatDate(u.createdAt),
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `platform-staff-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
+
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -62,11 +78,22 @@ export default function PlatformStaffPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Platform staff</h1>
           <p className="text-sm text-muted-foreground">Other people with access to this Super Admin panel.</p>
         </div>
-        {canCreate && (
-          <Button asChild>
-            <Link href="/platform-staff/new">New staff account</Link>
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {users.data && users.data.length > 0 && (
+            <button
+              type="button"
+              onClick={handleExportPlatformStaffCsv}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              <Download className="size-4" /> Export CSV
+            </button>
+          )}
+          {canCreate && (
+            <Button asChild>
+              <Link href="/platform-staff/new">New staff account</Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       {users.isError && <Alert variant="error">Could not load staff accounts. Try refreshing the page.</Alert>}

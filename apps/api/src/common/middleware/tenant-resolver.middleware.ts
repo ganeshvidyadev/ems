@@ -109,10 +109,13 @@ export class TenantResolverMiddleware implements NestMiddleware {
    * — so it grants no read the tenant's own hostname would not already give.
    */
   private async resolveFromHost(req: Request): Promise<void> {
-    const candidates = [
-      this.normalizeHost(req.headers.host ?? ''),
-      this.normalizeHost(this.forwardedHostname(req)),
-    ].filter((value): value is string => value !== null);
+    const hostHeader = this.normalizeHost(req.headers.host ?? '');
+    const forwarded = this.normalizeHost(this.forwardedHostname(req));
+    const isDevHost = hostHeader === 'localhost' || hostHeader === '127.0.0.1' || hostHeader === 'ems.localhost';
+    const candidates = (isDevHost && forwarded
+      ? [forwarded, hostHeader]
+      : [hostHeader, forwarded]
+    ).filter((value): value is string => value !== null);
 
     for (const hostname of candidates) {
       const resolution = await this.lookupDomain(hostname);
@@ -144,7 +147,44 @@ export class TenantResolverMiddleware implements NestMiddleware {
       [hostname],
     )) as DomainResolution[];
 
-    const resolution = rows[0] ?? null;
+    let resolution = rows[0] ?? null;
+
+    // Fallback 1: match tenant slug directly (e.g. 'lyconi-pvt-llt' or 'northwind' or 'lyconi-pvt-llt.ems.localhost')
+    if (!resolution) {
+      const slugCandidate = hostname.replace(/\.(ems\.localhost|localhost)$/, '');
+      const slugRows = (await this.dataSource.query(
+        `SELECT t.id AS tenantId, s.id AS storeId,
+                t.slug AS tenantSlug, t.status AS status
+           FROM tenants t
+           LEFT JOIN stores s ON s.tenant_id = t.id AND s.deleted_at IS NULL
+          WHERE t.slug = ?
+            AND t.deleted_at IS NULL
+          ORDER BY s.id ASC
+          LIMIT 1`,
+        [slugCandidate],
+      )) as DomainResolution[];
+      if (slugRows.length > 0) {
+        resolution = slugRows[0];
+      }
+    }
+
+    // Fallback 2: localhost / 127.0.0.1 in local development — resolve default active tenant
+    if (!resolution && (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === 'ems.localhost')) {
+      const devRows = (await this.dataSource.query(
+        `SELECT d.tenant_id AS tenantId, COALESCE(d.store_id, s.id) AS storeId,
+                t.slug AS tenantSlug, t.status AS status
+           FROM tenants t
+           LEFT JOIN tenant_domains d ON d.tenant_id = t.id
+           LEFT JOIN stores s ON s.tenant_id = t.id AND s.deleted_at IS NULL
+          WHERE t.status = 'ACTIVE'
+            AND t.deleted_at IS NULL
+          ORDER BY d.is_primary DESC, t.id ASC, s.id ASC
+          LIMIT 1`,
+      )) as DomainResolution[];
+      if (devRows.length > 0) {
+        resolution = devRows[0];
+      }
+    }
 
     // Negative results are cached too, briefly. Without that, traffic to an
     // unknown host — a stale DNS record, a scanner — hits MySQL on every request.

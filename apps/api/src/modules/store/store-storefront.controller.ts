@@ -1,3 +1,5 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { StorefrontStoreResponse } from '@ems/contracts';
@@ -38,11 +40,40 @@ export class StoreStorefrontController {
     const [store] = await this.stores.listAll();
     if (!store) throw new NotFoundError('Store', 'current');
 
+    let themeCustomization: any = undefined;
+    try {
+      const tenant = await this.stores.findTenantById(store.tenantId);
+      if (tenant) {
+        const currentTheme = tenant.storefrontTheme || 'default';
+        const overridesPath = path.resolve(
+          process.cwd(),
+          'storage',
+          'tenants',
+          tenant.slug,
+          'themes',
+          currentTheme,
+          'overrides.json',
+        );
+        if (fs.existsSync(overridesPath)) {
+          const parsed = JSON.parse(fs.readFileSync(overridesPath, 'utf8'));
+          if (parsed.customizer) {
+            themeCustomization = parsed.customizer;
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
+
     return {
       id: store.publicId,
       name: store.name,
       slug: store.slug,
       currency: store.currency,
+      logoUrl: store.logoUrl ?? null,
+      faviconUrl: store.faviconUrl ?? null,
+      themeCustomization,
     };
   }
 }
+

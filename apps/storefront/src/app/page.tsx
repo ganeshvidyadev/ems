@@ -3,6 +3,7 @@ import { PackageOpen } from 'lucide-react';
 import Link from 'next/link';
 import { ProductGrid } from '@/components/product-card';
 import { Alert, EmptyState } from '@/components/ui';
+import { BrandStrip } from '@/components/brand-strip';
 import { getStoreSummary } from '@/lib/store';
 import { storefrontFetchPage } from '@/lib/tenant';
 import { getStorefrontTheme } from '@/lib/theme';
@@ -93,6 +94,9 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
+
+      {/* Brand Certifications & Trust Signals */}
+      <BrandStrip />
 
       {featured.length > 0 && (
         <section className="space-y-5">

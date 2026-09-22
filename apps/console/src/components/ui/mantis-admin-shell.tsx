@@ -5,43 +5,57 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import {
   Activity,
+  Award,
+  BarChart3,
+  Bell,
   Boxes,
+  Building2,
   Cable,
   ChevronDown,
   ChevronRight,
   CircleUserRound,
   DatabaseBackup,
+  FileText,
   Gauge,
-  Bell,
-  Building2,
-  Landmark,
-  Receipt,
+  Globe,
   HeartPulse,
   History,
   Hourglass,
-  BarChart3,
-  Settings,
-  UserCog,
+  Image as ImageIcon,
+  Landmark,
   LayoutDashboard,
   LayoutList,
-  Paintbrush,
   LifeBuoy,
+  ListTodo,
   LogOut,
   Menu,
   Monitor,
+  Navigation,
   Package,
+  Paintbrush,
   Palette,
   PanelLeftClose,
+  Percent,
+  Receipt,
+  RotateCcw,
   ScrollText,
+  Settings,
   ShoppingBag,
-  ListTodo,
+  Sparkles,
+  Star,
+  Store,
   Tag,
+  Truck,
+  UserCheck,
+  UserCog,
   Users,
+  Warehouse,
   X,
   type LucideIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
+import { useLowStock } from '@/lib/queries/inventory';
 import { AdminThemeContext } from './admin-theme';
 import { GlobalSearchPalette } from './global-search-palette';
 
@@ -76,6 +90,23 @@ const icons: Record<string, LucideIcon> = {
   '/coupons': Tag,
   '/sessions': Monitor,
   '/system': Activity,
+  '/settings': Settings,
+  '/domains': Globe,
+  '/taxes': Percent,
+  '/team': UserCheck,
+  '/subscription': Sparkles,
+  '/support-tickets': LifeBuoy,
+  '/shipments': Truck,
+  '/returns': RotateCcw,
+  '/warehouses': Warehouse,
+  '/theme-editor': Paintbrush,
+  '/cms': FileText,
+  '/banners': ImageIcon,
+  '/menus': Navigation,
+  '/reviews': Star,
+  '/channels': Cable,
+  '/marketplace': Store,
+  '/loyalty': Award,
 };
 
 /** All state here controls presentation. Navigation and account actions are supplied by the app. */
@@ -84,6 +115,9 @@ export function MantisAdminShell({
   pathname,
   items,
   homeHref = '/',
+  badge,
+  impersonating,
+  onExitImpersonation,
   logout,
   children,
 }: {
@@ -96,6 +130,9 @@ export function MantisAdminShell({
    * 403s for them — callers in that mode pass their own landing page instead.
    */
   homeHref?: string;
+  badge?: string;
+  impersonating?: boolean;
+  onExitImpersonation?: () => void | Promise<unknown>;
   logout: () => Promise<void>;
   children: ReactNode;
 }) {
@@ -107,6 +144,22 @@ export function MantisAdminShell({
   );
   return (
     <AdminThemeContext.Provider value>
+      {impersonating && (
+        <div className="mantis-impersonation-banner flex flex-wrap items-center justify-between gap-2 bg-amber-400 px-6 py-2 text-sm font-semibold text-slate-950 sticky top-0 z-50 shadow-sm">
+          <span>
+            Viewing as {user.firstName} · {user.tenant?.businessName ?? 'this tenant'} (impersonating)
+          </span>
+          {onExitImpersonation && (
+            <button
+              type="button"
+              className="rounded border border-black/30 bg-black/10 px-3 py-1 text-xs font-bold text-slate-950 hover:bg-black/20 transition-colors"
+              onClick={() => void onExitImpersonation()}
+            >
+              Exit impersonation
+            </button>
+          )}
+        </div>
+      )}
       <div className="mantis-admin mantis-shell" data-collapsed={collapsed}>
         <a className="mantis-skip" href="#main">
           Skip to content
@@ -115,7 +168,7 @@ export function MantisAdminShell({
           <Brand homeHref={homeHref} />
           <Sidebar items={items} pathname={pathname} />
           <div className="mantis-sidebar-footer">
-            EMS Console<span>Super Admin</span>
+            EMS Console<span>{badge ?? (user.userType === 'PLATFORM' ? 'Super Admin' : (user.tenant?.businessName ?? 'Merchant'))}</span>
           </div>
         </aside>
         <header className="mantis-topbar">
@@ -158,8 +211,11 @@ export function MantisAdminShell({
               </Dialog.Content>
             </Dialog.Portal>
           </Dialog.Root>
-          <span className="mantis-topbar-title">EMS Console</span>
+          <span className="mantis-topbar-title">
+            {user.userType === 'PLATFORM' ? 'EMS Platform' : (user.tenant?.businessName ?? 'EMS Console')}
+          </span>
           <GlobalSearchPalette />
+          <NotificationsBell />
           <div className="mantis-account">
             <Dropdown.Root>
               <Dropdown.Trigger asChild>
@@ -268,3 +324,76 @@ function Sidebar({
     </nav>
   );
 }
+
+function NotificationsBell() {
+  const lowStock = useLowStock();
+  const lowStockItems = lowStock.data ?? [];
+  const [cleared, setCleared] = useState(false);
+
+  const unreadCount = cleared ? 0 : lowStockItems.length;
+
+  return (
+    <Dropdown.Root>
+      <Dropdown.Trigger asChild>
+        <button
+          type="button"
+          className="relative inline-flex items-center justify-center rounded-lg p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+          aria-label="View notifications"
+        >
+          <Bell className="size-4" />
+          {unreadCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+            </span>
+          )}
+        </button>
+      </Dropdown.Trigger>
+      <Dropdown.Portal>
+        <Dropdown.Content
+          align="end"
+          sideOffset={8}
+          className="mantis-admin z-50 w-80 rounded-xl border border-slate-200 bg-white p-2 shadow-xl animate-in fade-in-50"
+        >
+          <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2 text-xs">
+            <span className="font-bold text-slate-900">Activity & Alerts</span>
+            {unreadCount > 0 ? (
+              <button
+                type="button"
+                onClick={() => setCleared(true)}
+                className="text-[11px] font-semibold text-blue-600 hover:text-blue-700"
+              >
+                Mark all as read
+              </button>
+            ) : (
+              <span className="text-[10px] text-emerald-600 font-semibold">All Clear ✓</span>
+            )}
+          </div>
+          <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto">
+            {lowStockItems.length > 0 ? (
+              lowStockItems.slice(0, 5).map((item) => (
+                <div key={`${item.productId}-${item.warehouseId}`} className="p-2.5 hover:bg-slate-50 rounded-lg text-xs space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-amber-700">Low Stock Alert</span>
+                    <span className="text-[10px] text-rose-600 font-bold">{item.quantityAvailable} left</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    Product <span className="font-mono text-[10px]">{item.productId.slice(0, 12)}…</span> in {item.warehouseName} is at/below reorder point.
+                  </p>
+                  <Link href={`/inventory/${item.productId}`} className="text-[10px] font-semibold text-blue-600 hover:underline inline-block">
+                    Quick Restock →
+                  </Link>
+                </div>
+              ))
+            ) : (
+              <div className="p-4 text-center text-xs text-slate-400">
+                No active critical stock or platform warnings.
+              </div>
+            )}
+          </div>
+        </Dropdown.Content>
+      </Dropdown.Portal>
+    </Dropdown.Root>
+  );
+}
+

@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { CouponBox } from '@/components/coupon-box';
 import { OrderSummary } from '@/components/order-summary';
 import { ProductThumb } from '@/components/product-thumb';
 import { Alert, Button, Card, EmptyState, Field, Input, Spinner, Textarea } from '@/components/ui';
@@ -22,42 +23,65 @@ import {
 import { CONFIRMATION_STORAGE_KEY } from '@/lib/confirmation';
 import { formatMinor } from '@/lib/money';
 import { useCart, useClearCartId } from '@/lib/use-cart';
+import { useCustomer } from '@/lib/customer-context';
+import type { AddressResponse } from '@ems/contracts';
 
 /**
- * Guest checkout: address, contact, payment, place order.
- *
- * Guest-only because that is what the API supports — `placeOrderRequestSchema`
- * has no `customerId` field at all, and there is no storefront customer auth to
- * derive one from. So there is no sign-in step to build, and pretending otherwise
- * would mean a login form with nothing behind it.
+ * Checkout view: supports both authenticated customer checkout and guest checkout.
  */
 export function CheckoutView() {
   const router = useRouter();
   const { cart, isLoading } = useCart();
+  const { customer, isAuthenticated } = useCustomer();
   const clearCartId = useClearCartId();
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutFormSchema),
     defaultValues: CHECKOUT_FORM_DEFAULTS,
-    // Validate as fields are left rather than on every keystroke: an email is
-    // "invalid" for most of the time it takes to type one.
     mode: 'onBlur',
   });
 
-  /**
-   * One key per checkout attempt, generated once and held for the life of this
-   * component.
-   *
-   * That is exactly the semantics the header needs: a network retry of the *same*
-   * submit must be deduplicated by the server, while a shopper who lands back here
-   * to order again must get a genuinely new order. A key generated per request
-   * would deduplicate nothing; a key stored globally would refuse the second order.
-   */
+  useEffect(() => {
+    if (customer) {
+      if (customer.email && !form.getValues('email')) {
+        form.setValue('email', customer.email);
+      }
+      if (customer.phone && !form.getValues('phone')) {
+        form.setValue('phone', customer.phone);
+      }
+      if (customer.displayName && !form.getValues('recipientName')) {
+        form.setValue('recipientName', customer.displayName);
+      }
+    }
+  }, [customer, form]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      void api.request<AddressResponse[]>('account/addresses').then((addresses) => {
+        const def = addresses.find((a) => a.isDefaultShipping) ?? addresses[0];
+        if (def && !form.getValues('addressLine1')) {
+          if (def.recipientName) form.setValue('recipientName', def.recipientName);
+          if (def.phone) form.setValue('phone', def.phone);
+          form.setValue('addressLine1', def.addressLine1);
+          if (def.addressLine2) form.setValue('addressLine2', def.addressLine2);
+          if (def.landmark) form.setValue('landmark', def.landmark);
+          form.setValue('city', def.city);
+          if (def.stateName) form.setValue('stateName', def.stateName);
+          if (def.stateCode) form.setValue('stateCode', def.stateCode);
+          form.setValue('postalCode', def.postalCode);
+          form.setValue('countryCode', def.countryCode || 'IN');
+        }
+      }).catch(() => {
+        /* ignore */
+      });
+    }
+  }, [isAuthenticated, form]);
+
   const idempotencyKey = useRef<string>('');
   if (!idempotencyKey.current) idempotencyKey.current = newIdempotencyKey();
 
   const values = useWatch({ control: form.control });
-  const pricing = useLivePricing(cart?.id ?? null, values as CheckoutFormValues);
+  const pricing = useLivePricing(cart?.id ?? null, values as CheckoutFormValues, cart?.couponCode);
 
   const placeOrder = useMutation<PlaceOrderResponse, Error, CheckoutFormValues>({
     mutationFn: (formValues) =>
@@ -339,6 +363,10 @@ export function CheckoutView() {
         </ul>
 
         <div className="border-t border-line pt-4">
+          <CouponBox cart={cart} />
+        </div>
+
+        <div className="border-t border-line pt-4">
           <OrderSummary figures={figures} couponCode={cart.couponCode} pending={pricing.isFetching} />
         </div>
 
@@ -386,7 +414,7 @@ export function CheckoutView() {
  * from the address: the address is a nine-field object, so a query key would
  * change identity on every keystroke and defeat the debounce it was meant to feed.
  */
-function useLivePricing(cartId: string | null, values: CheckoutFormValues) {
+function useLivePricing(cartId: string | null, values: CheckoutFormValues, couponCode?: string | null) {
   const [state, setState] = useState<{
     data: CheckoutPricingResponse | null;
     isFetching: boolean;
@@ -437,7 +465,7 @@ function useLivePricing(cartId: string | null, values: CheckoutFormValues) {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [cartId, addressKey, values.paymentGateway]);
+  }, [cartId, addressKey, values.paymentGateway, couponCode]);
 
   return state;
 }

@@ -3,10 +3,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PRODUCT_STATUSES, PRODUCT_VISIBILITIES, updateProductRequestSchema } from '@ems/contracts';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Alert, Button, Card, CardBody, CardHeader, Field, Input, Select, Textarea } from '@/components/ui/primitives';
+import { Alert, Badge, Button, Card, CardBody, CardHeader, Field, Input, Select, Textarea } from '@/components/ui/primitives';
+import { VariantMatrixGenerator, type FormVariant } from '@/components/products/variant-matrix-generator';
 import { usePermission } from '@/hooks/use-auth';
 import { ApiError } from '@/lib/api-client';
 import { minorStringToRupees, rupeesToMinorString } from '@/lib/money';
@@ -36,6 +37,9 @@ export default function EditProductPage() {
   const { data: categories } = useCategories();
   const updateProduct = useUpdateProduct(params.id);
 
+  const [variants, setVariants] = useState<FormVariant[]>([]);
+  const [variantError, setVariantError] = useState<string | null>(null);
+
   const form = useForm<FormValues>({ resolver: zodResolver(formSchema) });
 
   // Reset with server data once it arrives — `useForm`'s `defaultValues`
@@ -55,13 +59,61 @@ export default function EditProductPage() {
       description: product.description ?? '',
       trackInventory: product.trackInventory,
     });
+
+    if (product.variants && product.variants.length > 0) {
+      setVariants(
+        product.variants.map((v) => ({
+          id: v.id,
+          sku: v.sku,
+          title: v.title ?? undefined,
+          barcode: v.barcode ?? undefined,
+          optionValues: v.optionValues,
+          price: minorStringToRupees(v.priceMinor),
+          comparePrice: v.comparePriceMinor ? minorStringToRupees(v.comparePriceMinor) : undefined,
+          isActive: v.isActive,
+        })),
+      );
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product]);
 
   async function onSubmit(values: FormValues) {
+    if (product?.type === 'VARIABLE') {
+      if (variants.length === 0) {
+        setVariantError('A variable product requires at least one variant.');
+        return;
+      }
+      for (const v of variants) {
+        if (!v.sku || !v.sku.trim()) {
+          setVariantError(`Every variant must have a valid SKU. Check variant "${v.title || 'Untitled'}".`);
+          return;
+        }
+        if (!v.price || isNaN(Number(v.price)) || Number(v.price) < 0) {
+          setVariantError('Every variant must have a valid non-negative price.');
+          return;
+        }
+      }
+    }
+    setVariantError(null);
+
+    const variantsPayload =
+      product?.type === 'VARIABLE'
+        ? variants.map((v, idx) => ({
+            sku: v.sku.trim(),
+            title: v.title || Object.values(v.optionValues).join(' / '),
+            barcode: v.barcode?.trim() || undefined,
+            optionValues: v.optionValues,
+            priceMinor: rupeesToMinorString(v.price),
+            comparePriceMinor: v.comparePrice?.trim() ? rupeesToMinorString(v.comparePrice) : undefined,
+            position: idx,
+            isActive: v.isActive,
+          }))
+        : undefined;
+
     try {
       await updateProduct.mutateAsync({
         ...values,
+        variants: variantsPayload,
         priceMinor: rupeesToMinorString(values.price),
         comparePriceMinor: values.comparePrice ? rupeesToMinorString(values.comparePrice) : undefined,
         categoryIds: values.categoryId ? [values.categoryId] : undefined,
@@ -82,21 +134,29 @@ export default function EditProductPage() {
   }
 
   if (isLoading) {
-    return <div className="mx-auto max-w-2xl px-6 py-8 text-sm text-muted-foreground">Loading…</div>;
+    return <div className="mx-auto max-w-4xl px-6 py-8 text-sm text-muted-foreground">Loading…</div>;
   }
 
   if (isError || !product) {
     return (
-      <div className="mx-auto max-w-2xl px-6 py-8">
+      <div className="mx-auto max-w-4xl px-6 py-8">
         <Alert variant="error">This product could not be found.</Alert>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-8">
+    <div className="mx-auto max-w-4xl px-6 py-8">
       <Card>
-        <CardHeader title={product.name} description={`SKU ${product.sku ?? '—'}`} />
+        <CardHeader
+          title={product.name}
+          description={`SKU ${product.sku ?? '—'}`}
+          action={
+            <Badge variant={product.type === 'VARIABLE' ? 'default' : 'outline'}>
+              {product.type === 'VARIABLE' ? `Variable (${variants.length} variants)` : 'Simple'}
+            </Badge>
+          }
+        />
         <CardBody>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
             {form.formState.errors.root && <Alert variant="error">{form.formState.errors.root.message}</Alert>}
@@ -105,16 +165,25 @@ export default function EditProductPage() {
               <Input id="name" disabled={!canUpdate} {...form.register('name')} />
             </Field>
 
-            <Field label="SKU" htmlFor="sku" error={form.formState.errors.sku?.message}>
+            <Field
+              label={product.type === 'VARIABLE' ? 'Base SKU (Prefix)' : 'SKU'}
+              htmlFor="sku"
+              hint={product.type === 'VARIABLE' ? 'Prefix used for variant SKU generation' : undefined}
+              error={form.formState.errors.sku?.message}
+            >
               <Input id="sku" disabled={!canUpdate} {...form.register('sku')} />
             </Field>
 
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Price (₹)" htmlFor="price" error={form.formState.errors.price?.message}>
+              <Field
+                label={product.type === 'VARIABLE' ? 'Default Base Price (₹)' : 'Price (₹)'}
+                htmlFor="price"
+                error={form.formState.errors.price?.message}
+              >
                 <Input id="price" inputMode="decimal" disabled={!canUpdate} {...form.register('price')} />
               </Field>
               <Field
-                label="Compare-at price (₹)"
+                label={product.type === 'VARIABLE' ? 'Default Compare-at price (₹)' : 'Compare-at price (₹)'}
                 htmlFor="comparePrice"
                 hint="Optional"
                 error={form.formState.errors.comparePrice?.message}
@@ -195,6 +264,27 @@ export default function EditProductPage() {
               <input type="checkbox" className="size-4" disabled={!canUpdate} {...form.register('trackInventory')} />
               Track inventory for this product
             </label>
+
+            {product.type === 'VARIABLE' && (
+              <div className="pt-4 border-t border-border/80">
+                {variantError && (
+                  <Alert variant="error" className="mb-4">
+                    {variantError}
+                  </Alert>
+                )}
+                <VariantMatrixGenerator
+                  baseSku={form.watch('sku') || product.sku || ''}
+                  basePrice={form.watch('price')}
+                  baseComparePrice={form.watch('comparePrice')}
+                  initialVariants={variants}
+                  disabled={!canUpdate}
+                  onChange={(v) => {
+                    setVariants(v);
+                    setVariantError(null);
+                  }}
+                />
+              </div>
+            )}
 
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => router.push('/products')}>

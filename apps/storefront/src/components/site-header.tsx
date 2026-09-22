@@ -1,59 +1,95 @@
 'use client';
 
-import { Search, ShoppingBag } from 'lucide-react';
+import { Search, ShoppingBag, Heart, User, Loader2, ArrowRight, Package, X, Sparkles, History, Flame } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import type { ProductResponse } from '@ems/contracts';
+import { formatMinor } from '@/lib/money';
 import { useHydrateCartId } from '@/lib/cart-id';
 import { useStore } from '@/lib/store-context';
 import { useCart } from '@/lib/use-cart';
+import { useCustomer } from '@/lib/customer-context';
+import { useWishlist } from '@/lib/use-wishlist';
+import { useCartDrawer } from '@/lib/use-cart-drawer';
+import { ProductThumb } from '@/components/product-thumb';
+import { CurrencySwitcher } from '@/components/currency-switcher';
+import { AnnouncementBar } from '@/components/announcement-bar';
 import type { StorefrontTheme } from '@/lib/theme';
 
 /**
- * The persistent shop chrome: store name, search, cart.
- *
- * A client component because all three of those need browser state — the item
- * count comes from the cart query, and search has to survive typing without a
- * round-trip per keystroke. The store *name* is passed down from the server
- * layout rather than fetched here, so the header renders complete in the first
- * HTML instead of flashing a placeholder.
+ * The persistent shop chrome: store name, search, cart, wishlist, customer account.
  */
 export function SiteHeader({ theme = 'default' }: { theme?: StorefrontTheme }) {
-  const { name, tenantSlug } = useStore();
+  const { name, tenantSlug, logoUrl } = useStore();
+  const { customer, isAuthenticated } = useCustomer();
+  const { wishlistItems } = useWishlist();
 
-  // Mounted on every page, so this is where the stored cart id gets loaded — one
-  // place, rather than each page remembering to hydrate it.
+  // Mounted on every page, so this is where the stored cart id gets loaded
   useHydrateCartId(tenantSlug);
+
+  const defaultThemeLogo = theme === 'organic'
+    ? '/themes/organic/images/logo.svg'
+    : theme === 'famms'
+    ? '/themes/famms/images/logo.png'
+    : null;
 
   if (theme !== 'default') return (
     <header className={`theme-header ${theme}-header`}>
+      <AnnouncementBar />
       <div className="theme-container theme-header-inner">
-        <Link href="/" className="theme-logo" aria-label={`${name} home`}>
-          {/* eslint-disable-next-line @next/next/no-img-element -- plain <img>, not next/image,
-              matches this file's other theme-logo usages (see theme-footer.tsx). */}
-          <img src={theme === 'organic' ? '/themes/organic/images/logo.svg' : '/themes/famms/images/logo.png'} alt={theme === 'organic' ? 'Organic' : 'Famms'} width={220} height={60} />
+        <Link href="/" className="theme-logo flex items-center gap-2" aria-label={`${name} home`}>
+          {logoUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={logoUrl} alt={name} className="max-h-[52px] w-auto max-w-[220px] object-contain" />
+          ) : defaultThemeLogo ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={defaultThemeLogo} alt={name} width={220} height={60} className="max-h-[52px] w-auto object-contain" />
+          ) : (
+            <span className="font-heading text-xl font-bold tracking-tight text-ink">{name}</span>
+          )}
           <span>{name}</span>
         </Link>
         <nav aria-label="Main navigation"><Link href="/">Home</Link><Link href="/products">Products</Link></nav>
         <div className="theme-header-search"><HeaderSearch /></div>
-        <CartLink />
+        <div className="flex items-center gap-2">
+          <Link href="/account/wishlist" className="p-2 text-ink hover:text-brand" title="Wishlist">
+            <Heart className="h-5 w-5" />
+          </Link>
+          <CartLink />
+          <Link href={isAuthenticated ? '/account' : '/account/login'} className="p-2 text-ink hover:text-brand" title="Account">
+            <User className="h-5 w-5" />
+          </Link>
+        </div>
       </div>
     </header>
   );
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-content flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+      <AnnouncementBar />
+      <div className="mx-auto flex max-w-content flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3">
         <Link
           href="/"
-          className="font-heading text-lg font-semibold tracking-tight text-ink hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          className="font-heading text-lg font-semibold tracking-tight text-ink hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand flex items-center gap-2"
         >
-          {name}
+          {logoUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={logoUrl} alt={name} className="h-9 w-auto max-h-10 max-w-[180px] object-contain" />
+          ) : (
+            <span>{name}</span>
+          )}
         </Link>
 
         <nav className="hidden items-center gap-4 text-sm text-ink-muted sm:flex">
           <Link href="/products" className="hover:text-ink">
             All products
+          </Link>
+          <Link href="/track-order" className="hover:text-ink">
+            Track Order
+          </Link>
+          <Link href="/contact" className="hover:text-ink">
+            Help
           </Link>
         </nav>
 
@@ -61,7 +97,34 @@ export function SiteHeader({ theme = 'default' }: { theme?: StorefrontTheme }) {
           <HeaderSearch />
         </div>
 
-        <CartLink />
+        <div className="flex items-center gap-2">
+          <CurrencySwitcher />
+          <Link
+            href="/account/wishlist"
+            className="relative inline-flex h-10 items-center justify-center rounded-theme border border-line px-2.5 text-ink hover:border-brand hover:text-brand"
+            aria-label="Wishlist"
+            title="Wishlist"
+          >
+            <Heart className="h-4 w-4" />
+            {wishlistItems.length > 0 && (
+              <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-semibold text-brand-foreground">
+                {wishlistItems.length}
+              </span>
+            )}
+          </Link>
+
+          <CartLink />
+
+          <Link
+            href={isAuthenticated ? '/account' : '/account/login'}
+            className="inline-flex h-10 items-center gap-1.5 rounded-theme border border-line px-3 text-sm font-medium text-ink hover:border-brand hover:text-brand"
+          >
+            <User className="h-4 w-4" />
+            <span className="hidden sm:inline">
+              {isAuthenticated ? customer?.firstName || 'Account' : 'Sign In'}
+            </span>
+          </Link>
+        </div>
       </div>
     </header>
   );
@@ -71,39 +134,255 @@ function HeaderSearch() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [value, setValue] = useState(searchParams.get('q') ?? '');
+  const [results, setResults] = useState<ProductResponse[]>([]);
+  const [totalResults, setTotalResults] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const TRENDING_SEARCHES = ['Honey', 'Cotton T-Shirt', 'Water Bottle', 'Wireless Earbuds', 'Backpack'];
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('ems_recent_searches');
+      if (stored) {
+        setRecentSearches(JSON.parse(stored).slice(0, 5));
+      }
+    } catch {}
+  }, []);
+
+  const saveRecentSearch = (term: string) => {
+    const trimmed = term.trim();
+    if (!trimmed) return;
+    try {
+      const existing: string[] = JSON.parse(localStorage.getItem('ems_recent_searches') || '[]');
+      const updated = [trimmed, ...existing.filter((item) => item.toLowerCase() !== trimmed.toLowerCase())].slice(0, 5);
+      localStorage.setItem('ems_recent_searches', JSON.stringify(updated));
+      setRecentSearches(updated);
+    } catch {}
+  };
+
+  const clearRecentSearches = () => {
+    try {
+      localStorage.removeItem('ems_recent_searches');
+      setRecentSearches([]);
+    } catch {}
+  };
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const trimmed = value.trim();
+    if (trimmed.length < 2) {
+      setResults([]);
+      setTotalResults(0);
+      setIsLoading(false);
+      return;
+    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setIsLoading(true);
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/storefront/products?q=${encodeURIComponent(trimmed)}&limit=5`);
+        if (res.ok) {
+          const data = await res.json();
+          setResults(data.data ?? []);
+          setTotalResults(data.meta?.pagination?.total ?? 0);
+          setIsOpen(true);
+        }
+      } catch (err) {
+        console.error('Failed to fetch search suggestions:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [value]);
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
+    setIsOpen(false);
     const trimmed = value.trim();
-    // Navigating rather than filtering in place keeps the result set server-rendered
-    // and the query in the URL, so a search is a shareable, back-button-able page.
+    if (trimmed) saveRecentSearch(trimmed);
     router.push(trimmed ? `/products?q=${encodeURIComponent(trimmed)}` : '/products');
   }
 
+  function onSelectKeyword(keyword: string) {
+    setValue(keyword);
+    saveRecentSearch(keyword);
+    setIsOpen(false);
+    router.push(`/products?q=${encodeURIComponent(keyword)}`);
+  }
+
+  function onSelectProduct(slug: string) {
+    setIsOpen(false);
+    if (value.trim()) saveRecentSearch(value.trim());
+    router.push(`/products/${slug}`);
+  }
+
   return (
-    <form onSubmit={onSubmit} role="search" className="relative">
-      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" aria-hidden />
-      <input
-        type="search"
-        name="q"
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        placeholder="Search products"
-        aria-label="Search products"
-        className="h-10 w-full rounded-theme border border-line bg-surface-alt pl-9 pr-3 text-sm text-ink placeholder:text-ink-muted focus:border-brand focus:bg-surface focus:outline-none focus:ring-1 focus:ring-brand"
-      />
-    </form>
+    <div ref={containerRef} className="relative w-full">
+      <form onSubmit={onSubmit} role="search" className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" aria-hidden />
+        <input
+          type="search"
+          name="q"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          onFocus={() => setIsOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setIsOpen(false);
+          }}
+          placeholder="Search products..."
+          aria-label="Search products"
+          autoComplete="off"
+          className="h-10 w-full rounded-theme border border-line bg-surface-alt pl-9 pr-9 text-sm text-ink placeholder:text-ink-muted focus:border-brand focus:bg-surface focus:outline-none focus:ring-1 focus:ring-brand"
+        />
+        {isLoading && (
+          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-ink-muted" />
+        )}
+      </form>
+
+      {/* Floating Instant Search Dropdown */}
+      {isOpen && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-1.5 overflow-hidden rounded-theme border border-line bg-surface shadow-lg">
+          {value.trim().length < 2 ? (
+            <div className="p-4 space-y-4">
+              {/* Recent Searches */}
+              {recentSearches.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-ink-muted">
+                    <span className="flex items-center gap-1 font-semibold uppercase tracking-wider text-[11px]">
+                      <History className="h-3 w-3 text-brand" /> Recent Searches
+                    </span>
+                    <button
+                      type="button"
+                      onClick={clearRecentSearches}
+                      className="hover:text-danger hover:underline text-[11px]"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {recentSearches.map((kw) => (
+                      <button
+                        key={kw}
+                        type="button"
+                        onClick={() => onSelectKeyword(kw)}
+                        className="rounded-theme border border-line bg-surface-alt px-2.5 py-1 text-xs text-ink hover:border-brand hover:text-brand transition-colors"
+                      >
+                        {kw}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Trending Searches */}
+              <div className="space-y-2">
+                <span className="flex items-center gap-1 font-semibold uppercase tracking-wider text-[11px] text-ink-muted">
+                  <Flame className="h-3 w-3 text-brand" /> Popular Searches
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {TRENDING_SEARCHES.map((kw) => (
+                    <button
+                      key={kw}
+                      type="button"
+                      onClick={() => onSelectKeyword(kw)}
+                      className="rounded-theme border border-line bg-surface-alt/70 px-2.5 py-1 text-xs text-ink hover:border-brand hover:text-brand transition-colors"
+                    >
+                      {kw}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : results.length > 0 ? (
+            <div>
+              <div className="border-b border-line bg-surface-alt px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
+                Products ({totalResults})
+              </div>
+              <ul className="divide-y divide-line max-h-72 overflow-y-auto">
+                {results.map((product) => (
+                  <li key={product.id}>
+                    <button
+                      type="button"
+                      onClick={() => onSelectProduct(product.slug)}
+                      className="flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-surface-alt focus:bg-surface-alt focus:outline-none"
+                    >
+                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded border border-line bg-surface-alt">
+                        <ProductThumb name={product.name} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-ink">{product.name}</p>
+                        {product.shortDescription && (
+                          <p className="truncate text-xs text-ink-muted">{product.shortDescription}</p>
+                        )}
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <span className="text-xs font-semibold text-ink">
+                          {formatMinor(product.priceMinor, product.currency)}
+                        </span>
+                        {product.comparePriceMinor && (
+                          <span className="ml-1.5 text-[11px] text-ink-muted line-through">
+                            {formatMinor(product.comparePriceMinor, product.currency)}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="border-t border-line bg-surface-alt p-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    if (value.trim()) saveRecentSearch(value.trim());
+                    router.push(`/products?q=${encodeURIComponent(value.trim())}`);
+                  }}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-brand hover:underline"
+                >
+                  View all {totalResults} results for &ldquo;{value.trim()}&rdquo;
+                  <ArrowRight className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 text-center text-xs text-ink-muted">
+              No products found for &ldquo;{value.trim()}&rdquo;
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
 function CartLink() {
   const { itemCount, isLoading } = useCart();
+  const openDrawer = useCartDrawer((state) => state.openDrawer);
 
   return (
-    <Link
-      href="/cart"
-      className="relative inline-flex h-10 items-center gap-2 rounded-theme border border-line px-3 text-sm font-medium text-ink hover:border-brand hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+    <button
+      type="button"
+      onClick={openDrawer}
+      className="relative inline-flex h-10 items-center gap-2 rounded-theme border border-line px-3 text-sm font-medium text-ink hover:border-brand hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand cursor-pointer"
       aria-label={isLoading ? 'Cart' : `Cart, ${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
     >
       <ShoppingBag className="h-4 w-4" aria-hidden />
@@ -118,6 +397,6 @@ function CartLink() {
           {itemCount > 99 ? '99+' : itemCount}
         </span>
       )}
-    </Link>
+    </button>
   );
 }

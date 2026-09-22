@@ -19,6 +19,8 @@ export interface StoreContextValue {
   storeId: string | null;
   name: string;
   currency: string;
+  logoUrl?: string | null;
+  faviconUrl?: string | null;
   /** Namespaces the cart in `localStorage`, so two tenant subdomains sharing a browser profile do not collide. */
   tenantSlug: string;
 }

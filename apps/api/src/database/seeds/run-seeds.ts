@@ -6,6 +6,7 @@ import { seedPlans } from './plans.seed';
 import { seedThemeTemplates } from './theme-templates.seed';
 import { seedNotificationTemplates } from './notification-templates.seed';
 import { seedDemoTenants } from './demo-tenant.seed';
+import { seedNorthwindRichData } from './seed-northwind-rich-data';
 
 /**
  * Seed runner.
@@ -55,9 +56,13 @@ async function main(): Promise<void> {
       const demo = await seedDemoTenants(dataSource);
       console.log(`  ✔ ${demo.tenants} tenants, ${demo.users} users`);
       for (const line of demo.credentials) console.log(`     ${line}`);
+
+      console.log('▶ Seeding Northwind rich organic dummy data…');
+      await seedNorthwindRichData(dataSource);
     } else {
       console.log('▷ Skipping demo data');
     }
+
 
     console.log('\n✅ Seeding complete');
   } finally {

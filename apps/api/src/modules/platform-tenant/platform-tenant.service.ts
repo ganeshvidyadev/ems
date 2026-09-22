@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+import { DataSource, IsNull } from 'typeorm';
 import { newPublicId, slugify, BusinessRuleError, NotFoundError } from '@ems/kernel';
 import type {
   CancelTenantSubscriptionRequest,
@@ -19,7 +20,8 @@ import { PermissionResolverService } from '../auth/services/permission-resolver.
 import { TokenService } from '../auth/services/token.service';
 import { SubscriptionService } from '../subscription/services/subscription.service';
 import { CacheService } from '../../common/services/cache.service';
-import { SubscriptionEntity, TenantEntity, TenantDomainEntity, UserEntity } from '../../database/entities';
+import { RoleEntity, StoreEntity, SubscriptionEntity, TenantEntity, TenantDomainEntity, UserEntity, UserRoleEntity } from '../../database/entities';
+import { provisionTenantThemeWorkspace } from '../theme/theme-access.service';
 
 export interface PlatformTenantList {
   items: TenantEntity[];
@@ -173,6 +175,9 @@ export class PlatformTenantService {
   }
 
   async create(input: CreateTenantRequest, actor: AuditActor): Promise<TenantEntity> {
+    const initialTheme = (input as any).initialTheme || 'default';
+    const allowedThemes = ['default', 'organic', 'famms', 'circuit', 'harvest'];
+
     const tenant = await this.dataSource.transaction(async (manager) => {
       const slug = input.slug ?? (await this.allocateSlug(manager, input.businessName));
       const created = await manager.save(
@@ -189,6 +194,8 @@ export class PlatformTenantService {
           timezone: input.timezone,
           taxRegistration: input.taxRegistration ?? null,
           status: 'PENDING',
+          storefrontTheme: initialTheme,
+          allowedStorefrontThemes: allowedThemes,
         }),
       );
       return created;
@@ -205,6 +212,99 @@ export class PlatformTenantService {
       // A platform admin assigning a plan directly, not a merchant's own trial choice.
       skipTrial: true,
     });
+
+    // Automatically provision store owner user if contactEmail does not already have an owner
+    try {
+      const emailNormalized = UserEntity.normalizeEmail(input.contactEmail);
+      let owner = await this.dataSource.getRepository(UserEntity).findOne({
+        where: { emailNormalized, tenantId: tenant.id },
+      });
+      if (!owner) {
+        const passwordHash = await bcrypt.hash('DemoPassword123!', Number(process.env.BCRYPT_ROUNDS ?? 12));
+        owner = await this.dataSource.getRepository(UserEntity).save(
+          this.dataSource.getRepository(UserEntity).create({
+            publicId: newPublicId(),
+            tenantId: tenant.id,
+            userType: 'TENANT',
+            email: input.contactEmail,
+            emailNormalized,
+            passwordHash,
+            passwordAlgo: 'bcrypt',
+            passwordChangedAt: new Date(),
+            firstName: input.businessName.split(' ')[0] || 'Store',
+            lastName: 'Owner',
+            status: 'ACTIVE',
+            emailVerifiedAt: new Date(),
+          }),
+        );
+
+        const ownerRole = await this.dataSource.getRepository(RoleEntity).findOne({
+          where: { code: 'STORE_OWNER', tenantId: IsNull() },
+        });
+        if (ownerRole) {
+          await this.dataSource.getRepository(UserRoleEntity).save(
+            this.dataSource.getRepository(UserRoleEntity).create({
+              userId: owner.id,
+              roleId: ownerRole.id,
+              storeId: null,
+            }),
+          );
+        }
+      }
+      tenant.ownerUserId = owner.id;
+      tenant.status = 'ACTIVE';
+      await this.dataSource.getRepository(TenantEntity).save(tenant);
+    } catch {
+      // Non-blocking: tenant creation proceeds even if auto-owner provisioning encounters existing user
+    }
+
+    // Ensure default store and primary subdomain exist for the new tenant
+    try {
+      const storeRepo = this.dataSource.getRepository(StoreEntity);
+      let store = await storeRepo.findOne({ where: { tenantId: tenant.id } });
+      if (!store) {
+        store = await storeRepo.save(
+          storeRepo.create({
+            publicId: newPublicId(),
+            tenantId: tenant.id,
+            name: `${tenant.businessName} Store`,
+            slug: `${tenant.slug}-store`,
+            status: 'ACTIVE',
+            currency: tenant.defaultCurrency,
+            locale: tenant.defaultLocale,
+            timezone: tenant.timezone,
+            supportEmail: tenant.contactEmail,
+          }),
+        );
+      }
+
+      const domainRepo = this.dataSource.getRepository(TenantDomainEntity);
+      const rootDomain = process.env.PLATFORM_ROOT_DOMAIN ?? 'ems.localhost';
+      const hostname = `${tenant.slug}.${rootDomain}`.toLowerCase();
+      let domain = await domainRepo.findOne({ where: { hostname } });
+      if (!domain) {
+        await domainRepo.save(
+          domainRepo.create({
+            tenantId: tenant.id,
+            storeId: store.id,
+            hostname,
+            type: 'SUBDOMAIN',
+            isPrimary: true,
+            verifiedAt: new Date(),
+            sslStatus: 'NONE',
+          }),
+        );
+      }
+    } catch {
+      // Non-blocking
+    }
+
+    // Provision isolated filesystem workspace directory for company's theme
+    try {
+      provisionTenantThemeWorkspace(tenant.slug, tenant.storefrontTheme ?? initialTheme, tenant.businessName);
+    } catch {
+      // Non-blocking
+    }
 
     await this.audit(actor, 'tenant.created', tenant.id, { severity: 'INFO', after: { slug: tenant.slug, planCode: input.planCode } });
 
@@ -355,6 +455,8 @@ export class PlatformTenantService {
       suspendedAt: tenant.suspendedAt?.toISOString() ?? null,
       suspensionReason: tenant.suspensionReason,
       primaryDomain,
+      storefrontTheme: tenant.storefrontTheme ?? 'default',
+      allowedStorefrontThemes: tenant.allowedStorefrontThemes ?? ['default', 'organic', 'famms', 'circuit', 'harvest'],
       createdAt: tenant.createdAt.toISOString(),
       updatedAt: tenant.updatedAt.toISOString(),
     };

@@ -3,9 +3,11 @@
 import type { PlatformDunningItem } from '@ems/contracts';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { Download } from 'lucide-react';
 import {
   Alert,
   Badge,
+  Button,
   Card,
   CardBody,
   CardHeader,
@@ -22,6 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/primitives';
 import { formatDate, formatMoney } from '@/lib/utils';
+import { generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
 import { usePlatformDunning } from '@/lib/queries/platform-dunning';
 
 const STATUS_BADGE: Record<string, 'success' | 'warning' | 'destructive' | 'info' | 'default'> = {
@@ -73,6 +76,37 @@ export default function PlatformDunningPage() {
   const expiringSoon = dunning.data?.expiringGracePeriodSoon ?? 0;
   const totalItems = dunning.data?.total ?? 0;
 
+  const handleExportDunningCsv = () => {
+    if (!filtered || filtered.length === 0) return;
+    const headers = [
+      'Tenant ID',
+      'Tenant Name',
+      'Plan Code',
+      'Plan Name',
+      'Status',
+      'Dunning Attempts',
+      'Grace Period Ends',
+      'Overdue Invoice',
+      'Amount Due',
+      'Currency',
+      'Last Failed At',
+    ];
+    const rows = filtered.map((item) => [
+      item.tenantId,
+      item.tenantName,
+      item.planCode,
+      item.planName,
+      item.status,
+      item.dunningAttempts,
+      item.gracePeriodEndsAt ? formatDate(item.gracePeriodEndsAt) : '—',
+      item.overdueInvoiceNumber || '—',
+      item.amountDueMinor != null ? (Number(item.amountDueMinor) / 100).toFixed(2) : '0.00',
+      item.currency || 'USD',
+      item.lastPaymentFailedAt ? formatDate(item.lastPaymentFailedAt) : '—',
+    ]);
+    downloadCsvFile(generateCsvText(headers, rows), `dunning-records-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
+
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -82,6 +116,12 @@ export default function PlatformDunningPage() {
             Subscriptions with failed collections, retry progressions, and impending grace period expirations.
           </p>
         </div>
+        {filtered.length > 0 && (
+          <Button variant="secondary" onClick={handleExportDunningCsv} className="gap-2">
+            <Download className="size-4" />
+            Export CSV
+          </Button>
+        )}
       </div>
 
       {/* KPI Cards */}

@@ -30,7 +30,14 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v
  * and forwarding hop-by-hop headers (`connection`, `content-length`) at a
  * protocol boundary produces requests that are subtly malformed.
  */
-const FORWARDED_REQUEST_HEADERS = ['content-type', 'accept', 'idempotency-key', 'accept-language'] as const;
+const FORWARDED_REQUEST_HEADERS = [
+  'content-type',
+  'accept',
+  'idempotency-key',
+  'accept-language',
+  'authorization',
+  'cookie',
+] as const;
 
 async function proxy(request: NextRequest, path: string[]): Promise<Response> {
   // The middleware has already normalised this off the incoming `Host`. Falling
@@ -75,8 +82,18 @@ async function proxy(request: NextRequest, path: string[]): Promise<Response> {
     );
   }
 
+  const responseHeaders = new Headers({
+    'content-type': upstream.headers.get('content-type') ?? 'application/json',
+  });
+  const setCookie = upstream.headers.get('set-cookie');
+  if (setCookie) {
+    responseHeaders.set('set-cookie', setCookie);
+  }
+
   // 204 has no body by definition, and constructing a Response with one throws.
-  if (upstream.status === 204) return new NextResponse(null, { status: 204 });
+  if (upstream.status === 204) {
+    return new NextResponse(null, { status: 204, headers: responseHeaders });
+  }
 
   const text = await upstream.text();
 
@@ -84,7 +101,7 @@ async function proxy(request: NextRequest, path: string[]): Promise<Response> {
   // codes. Re-shaping errors here would mean maintaining a second error contract.
   return new NextResponse(text, {
     status: upstream.status,
-    headers: { 'content-type': upstream.headers.get('content-type') ?? 'application/json' },
+    headers: responseHeaders,
   });
 }
 

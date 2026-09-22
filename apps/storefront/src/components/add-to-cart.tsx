@@ -1,14 +1,17 @@
 'use client';
 
 import type { ProductResponse, VariantResponse } from '@ems/contracts';
-import { Check, Minus, Plus, ShoppingBag } from 'lucide-react';
+import { Check, Minus, Plus, ShoppingBag, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Button } from '@/components/ui';
 import { ApiError } from '@/lib/api-client';
 import { formatMinor } from '@/lib/money';
 import { useStore } from '@/lib/store-context';
 import { useAddToCart } from '@/lib/use-cart';
+import { useCartDrawer } from '@/lib/use-cart-drawer';
+import { WishlistButton } from '@/components/wishlist-button';
 import { cn } from '@/lib/utils';
 
 /**
@@ -49,14 +52,29 @@ export function AddToCart({ product }: { product: ProductResponse }) {
 
   const price = selectedVariant?.priceMinor ?? product.priceMinor;
 
+  const openDrawer = useCartDrawer((state) => state.openDrawer);
+  const router = useRouter();
+  const [buyingNow, setBuyingNow] = useState(false);
+
   async function onAdd() {
     setAdded(false);
     try {
       await addToCart.mutateAsync({ productId: product.id, variantId, quantity });
       setAdded(true);
+      openDrawer();
     } catch {
       // Rendered from the mutation's own error state below; swallowed here so an
       // unhandled rejection does not reach the console.
+    }
+  }
+
+  async function onBuyNow() {
+    setBuyingNow(true);
+    try {
+      await addToCart.mutateAsync({ productId: product.id, variantId, quantity });
+      router.push('/checkout');
+    } catch {
+      setBuyingNow(false);
     }
   }
 
@@ -81,6 +99,23 @@ export function AddToCart({ product }: { product: ProductResponse }) {
           {added ? <Check className="h-4 w-4" aria-hidden /> : <ShoppingBag className="h-4 w-4" aria-hidden />}
           {added ? 'Added to cart' : `Add to cart · ${formatMinor(price, product.currency)}`}
         </Button>
+
+        <Button
+          size="lg"
+          variant="secondary"
+          onClick={onBuyNow}
+          loading={buyingNow}
+          className="flex-1 sm:flex-none font-semibold border-brand text-brand hover:bg-brand hover:text-brand-foreground"
+        >
+          <Zap className="h-4 w-4 fill-current" aria-hidden />
+          Buy Now
+        </Button>
+
+        <WishlistButton
+          productId={product.id}
+          variantId={variantId}
+          className="h-12 w-12 rounded-theme border border-line hover:border-brand"
+        />
       </div>
 
       {added && (

@@ -104,6 +104,7 @@ export class JwtAuthGuard implements CanActivate {
       planCode: claims.planCode ?? null,
       ...(claims.tid ? { tenantId: claims.tid } : {}),
       ...(claims.sid ? { storeId: claims.sid } : {}),
+      ...(claims.typ === 'storefront' ? { customerId: claims.uid } : {}),
     });
   }
 }
@@ -111,7 +112,7 @@ export class JwtAuthGuard implements CanActivate {
 /**
  * Reads the bearer token.
  *
- * Header first, then an `access_token` cookie — the storefront authenticates
+ * Header first, then `customer_token` or `access_token` cookie — the storefront authenticates
  * customers with a cookie because a server-rendered page has no opportunity to attach
  * an Authorization header. The console always uses the header, since its token lives
  * in memory only.
@@ -128,5 +129,5 @@ export function extractBearerToken(request: Request): string | null {
   }
 
   const cookies = (request as Request & { cookies?: Record<string, string> }).cookies;
-  return cookies?.['access_token'] ?? null;
+  return cookies?.['customer_token'] ?? cookies?.['access_token'] ?? null;
 }

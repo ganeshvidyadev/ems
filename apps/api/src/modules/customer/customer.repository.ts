@@ -15,6 +15,16 @@ export class CustomerRepository extends TenantScopedRepository<CustomerEntity> {
   }
 
   async findByEmail(storeId: string, emailNormalized: string): Promise<CustomerEntity | null> {
+    let tenantId = this.context.tenantId;
+    if (!tenantId) {
+      const storeRows = await this.manager.query(`SELECT tenant_id FROM stores WHERE id = ? LIMIT 1`, [storeId]);
+      if (storeRows.length > 0 && storeRows[0].tenant_id) {
+        tenantId = String(storeRows[0].tenant_id);
+        this.context.patch({ tenantId, storeId });
+        return this.manager.findOne(CustomerEntity, { where: { tenantId, storeId, emailNormalized } as never });
+      }
+      return null;
+    }
     return this.findOne({ where: { storeId, emailNormalized } });
   }
 
@@ -25,17 +35,41 @@ export class CustomerRepository extends TenantScopedRepository<CustomerEntity> {
   }
 
   async resolveStoreId(storePublicId: string): Promise<string | null> {
+    let tenantId = this.context.tenantId;
+    if (!tenantId) {
+      const rows = await this.manager.query(
+        `SELECT id, tenant_id FROM stores WHERE public_id = ? LIMIT 1`,
+        [storePublicId],
+      );
+      if (rows.length > 0) {
+        this.context.patch({ tenantId: String(rows[0].tenant_id), storeId: String(rows[0].id) });
+        return String(rows[0].id);
+      }
+      return null;
+    }
     const rows = await this.manager.query(
       `SELECT id FROM stores WHERE public_id = ? AND tenant_id = ? LIMIT 1`,
-      [storePublicId, this.tenantId],
+      [storePublicId, tenantId],
     );
     return (rows as { id: string }[])[0]?.id ?? null;
   }
 
   /** The tenant's first store — used when a console request omits `storeId` (single-store tenants). */
   async defaultStoreId(): Promise<string | null> {
+    let tenantId = this.context.tenantId;
+    if (!tenantId) {
+      const rows = await this.manager.query(
+        `SELECT id, tenant_id FROM stores WHERE status = 'ACTIVE' ORDER BY id ASC LIMIT 1`,
+      );
+      if (rows.length > 0) {
+        tenantId = String(rows[0].tenant_id);
+        this.context.patch({ tenantId, storeId: String(rows[0].id) });
+        return String(rows[0].id);
+      }
+      return null;
+    }
     const rows = await this.manager.query(`SELECT id FROM stores WHERE tenant_id = ? ORDER BY id ASC LIMIT 1`, [
-      this.tenantId,
+      tenantId,
     ]);
     return (rows as { id: string }[])[0]?.id ?? null;
   }

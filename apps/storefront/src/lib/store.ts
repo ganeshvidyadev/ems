@@ -20,6 +20,17 @@ export interface StoreSummary {
   id: string | null;
   name: string;
   currency: string;
+  logoUrl?: string | null;
+  faviconUrl?: string | null;
+  themeCustomization?: {
+    primaryColor?: string;
+    accentColor?: string;
+    surfaceColor?: string;
+    textColor?: string;
+    headingFont?: string;
+    bodyFont?: string;
+    customCss?: string;
+  } | null;
   /** False when this came from the fallback rather than the API. */
   resolved: boolean;
 }
@@ -31,7 +42,15 @@ export async function getStoreSummary(): Promise<StoreSummary> {
       revalidate: 300,
     });
 
-    return { id: store.id, name: store.name, currency: store.currency, resolved: true };
+    return {
+      id: store.id,
+      name: store.name,
+      currency: store.currency,
+      logoUrl: store.logoUrl ?? null,
+      faviconUrl: store.faviconUrl ?? null,
+      themeCustomization: store.themeCustomization ?? null,
+      resolved: true,
+    };
   } catch {
     return fallbackSummary();
   }
@@ -52,9 +71,13 @@ async function fallbackSummary(): Promise<StoreSummary> {
     id: null,
     name: tenant.slug ? titleCase(tenant.slug) : 'Store',
     currency: 'INR',
+    logoUrl: null,
+    faviconUrl: null,
+    themeCustomization: null,
     resolved: false,
   };
 }
+
 
 /**
  * The catalogue currency, read off the products themselves.

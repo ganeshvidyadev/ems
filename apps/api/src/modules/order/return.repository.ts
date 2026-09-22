@@ -18,6 +18,10 @@ export class ReturnRepository extends TenantScopedRepository<ReturnEntity> {
     return this.find({ where: { orderId }, order: { createdAt: 'DESC' } });
   }
 
+  async findByCustomer(customerId: string): Promise<ReturnEntity[]> {
+    return this.find({ where: { customerId }, order: { createdAt: 'DESC' } });
+  }
+
   generateRmaNumber(): string {
     return `RMA-${Date.now().toString(36).toUpperCase()}`;
   }

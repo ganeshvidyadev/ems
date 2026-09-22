@@ -38,7 +38,7 @@ describe('Company storefront theme access', () => {
   });
 
   it('keeps Default allowed and only updates the requested company', async () => {
-    repo.findOne.mockResolvedValue({ id: '42', status: 'ACTIVE', deletedAt: null });
+    repo.findOne.mockResolvedValue({ id: '42', slug: 'northwind', businessName: 'Northwind', status: 'ACTIVE', deletedAt: null });
     await admin(() =>
       service.update('northwind-public-id', {
         selectedTheme: 'organic',

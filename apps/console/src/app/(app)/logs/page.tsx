@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Alert, Card, CardBody, EmptyState, Field, Input, Select } from '@/components/ui/primitives';
+import { Download, FileJson } from 'lucide-react';
+import { Alert, Button, Card, CardBody, EmptyState, Field, Input, Select } from '@/components/ui/primitives';
+import { downloadJsonFile, generateCsvText, downloadCsvFile } from '@/lib/csv-helper';
 import { LOG_COLLECTIONS, useLogCollection, type LogCollection } from '@/lib/queries/log-explorer';
 
 const COLLECTION_LABEL: Record<LogCollection, string> = {
@@ -90,9 +92,50 @@ export default function LogExplorerPage() {
 
       {logs.data && logs.data.documents.length > 0 && (
         <>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Showing {logs.data.count} recent documents</span>
-            <span>Collection: {COLLECTION_LABEL[collection]}</span>
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-4">
+              <span>Showing {logs.data.count} recent documents</span>
+              <span>Collection: <strong className="text-foreground">{COLLECTION_LABEL[collection]}</strong></span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => {
+                  downloadJsonFile(
+                    `logs-${collection}-${tenantId || 'all'}-${new Date().toISOString().slice(0, 10)}.json`,
+                    logs.data?.documents ?? []
+                  );
+                }}
+              >
+                <FileJson className="size-3.5" />
+                Download JSON
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => {
+                  const docs = logs.data?.documents ?? [];
+                  if (docs.length === 0) return;
+                  const keys = Array.from(new Set(docs.flatMap((d) => Object.keys(d))));
+                  const rows = docs.map((d) =>
+                    keys.map((k) => {
+                      const val = d[k];
+                      return typeof val === 'object' && val !== null ? JSON.stringify(val) : String(val ?? '');
+                    })
+                  );
+                  downloadCsvFile(
+                    generateCsvText(keys, rows),
+                    `logs-${collection}-${tenantId || 'all'}-${new Date().toISOString().slice(0, 10)}.csv`
+                  );
+                }}
+              >
+                <Download className="size-3.5" />
+                Export CSV
+              </Button>
+            </div>
           </div>
           <div className="space-y-3">
             {logs.data.documents.map((doc, index) => {
