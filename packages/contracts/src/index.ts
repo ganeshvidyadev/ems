@@ -19,6 +19,7 @@ export * from './platform-billing/platform-billing.contracts.js';
 export * from './platform-audit-log/platform-audit-log.contracts.js';
 export * from './platform-analytics/platform-analytics.contracts.js';
 export * from './platform-settings/platform-settings.contracts.js';
+export * from './website/website.contracts.js';
 export * from './platform-health/platform-health.contracts.js';
 export * from './platform-quota/platform-quota.contracts.js';
 export * from './platform-alert/platform-alert.contracts.js';

@@ -101,6 +101,7 @@ export const PERMISSION_SPECS: readonly PermissionSpec[] = [
   { resource: 'platform.support', actions: ['read', 'update', 'assign', 'close'], scope: 'PLATFORM', description: 'Support tickets' },
   { resource: 'platform.auditlog', actions: ['read'], scope: 'PLATFORM', description: 'Cross-tenant audit trail' },
   { resource: 'platform.settings', actions: ['read', 'update'], scope: 'PLATFORM', description: 'Platform configuration' },
+  { resource: 'platform.website', actions: ['read', 'update'], scope: 'PLATFORM', description: 'Public marketing website content' },
   // Phase 9: batching, approving and paying out marketplace settlements
   // across every tenant — a genuinely platform-wide operation, distinct
   // from the tenant-scoped `settlement:read/export` a supplier or reseller

@@ -1,11 +1,7 @@
 import Link from 'next/link';
+import type { WebsiteHeaderContent } from '@ems/contracts';
 
-const NAV_LINKS = [
-  { href: '#features', label: 'Features' },
-  { href: '#plans', label: 'Plans' },
-];
-
-export function SiteHeader() {
+export function SiteHeader({ content }: { content: WebsiteHeaderContent }) {
   return (
     <header className="border-b border-line bg-surface">
       <div className="mx-auto flex max-w-content items-center justify-between px-6 py-4">
@@ -13,19 +9,19 @@ export function SiteHeader() {
           href="/"
           className="bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-amber-500 bg-clip-text text-lg font-bold tracking-tight text-transparent"
         >
-          EMS
+          {content.logoText}
         </Link>
         <nav className="flex items-center gap-6">
-          {NAV_LINKS.map((link) => (
+          {content.navLinks.map((link) => (
             <a key={link.href} href={link.href} className="text-sm text-ink-muted hover:text-fuchsia-600">
               {link.label}
             </a>
           ))}
           <a
-            href="mailto:hello@ems.app"
+            href={content.ctaHref}
             className="rounded-md bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-4 py-2 text-sm font-medium text-white hover:from-indigo-500 hover:to-fuchsia-500"
           >
-            Get in touch
+            {content.ctaLabel}
           </a>
         </nav>
       </div>

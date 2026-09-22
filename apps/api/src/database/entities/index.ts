@@ -27,6 +27,7 @@ export * from './outbox-event.entity';
 export * from './processed-event.entity';
 export * from './audit-log.entity';
 export * from './platform-setting.entity';
+export * from './website-content.entity';
 export * from './platform-alert.entity';
 export * from './api-key.entity';
 export * from './job-run.entity';
@@ -87,6 +88,7 @@ import { OutboxEventEntity } from './outbox-event.entity';
 import { ProcessedEventEntity } from './processed-event.entity';
 import { AuditLogEntity } from './audit-log.entity';
 import { PlatformSettingEntity } from './platform-setting.entity';
+import { WebsiteContentEntity } from './website-content.entity';
 import { PlatformAlertEntity } from './platform-alert.entity';
 import { ApiKeyEntity } from './api-key.entity';
 import { JobRunEntity } from './job-run.entity';
@@ -149,6 +151,7 @@ export const ALL_ENTITIES = [
   ProcessedEventEntity,
   AuditLogEntity,
   PlatformSettingEntity,
+  WebsiteContentEntity,
   PlatformAlertEntity,
   ApiKeyEntity,
   JobRunEntity,

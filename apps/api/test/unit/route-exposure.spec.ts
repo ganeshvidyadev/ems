@@ -19,6 +19,7 @@ import {
 } from '../../src/modules/payment/payment.controller';
 import { PaymentWebhookController } from '../../src/modules/payment/payment-webhook.controller';
 import { ThemeAccessController } from '../../src/modules/theme/theme-access.controller';
+import { WebsitePublicController } from '../../src/modules/platform-website/website-public.controller';
 
 /**
  * The route-exposure gate (docs/05 Phase 2 exit criteria).
@@ -43,6 +44,11 @@ interface ExpectedPublicRoute {
 
 const EXPECTED_PUBLIC_ROUTES: ExpectedPublicRoute[] = [
   { controller: 'ThemeAccessController', handler: 'current', why: 'anonymous shoppers need their host-resolved storefront design' },
+  {
+    controller: 'WebsitePublicController',
+    handler: 'getContent',
+    why: 'the public pitch site is pre-signup and unauthenticated, same as PlanController.list',
+  },
   // --- Auth: the caller has no token yet, by definition ---------------------
   { controller: 'AuthController', handler: 'register', why: 'creating the first account' },
   { controller: 'AuthController', handler: 'verifyEmail', why: 'clicked from an email, pre-login' },
@@ -112,6 +118,7 @@ const EXPECTED_PUBLIC_ROUTES: ExpectedPublicRoute[] = [
 /** Controllers to scan. New controllers must be added here as they are built. */
 const CONTROLLERS = [
   ThemeAccessController,
+  WebsitePublicController,
   AuthController,
   SessionController,
   JwksController,

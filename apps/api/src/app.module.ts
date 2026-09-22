@@ -62,6 +62,7 @@ import { PlatformBillingModule } from './modules/platform-billing/platform-billi
 import { PlatformAuditLogModule } from './modules/platform-audit-log/platform-audit-log.module';
 import { PlatformAnalyticsModule } from './modules/platform-analytics/platform-analytics.module';
 import { PlatformSettingsModule } from './modules/platform-settings/platform-settings.module';
+import { PlatformWebsiteModule } from './modules/platform-website/platform-website.module';
 import { PlatformHealthModule } from './modules/platform-health/platform-health.module';
 import { PlatformQuotaModule } from './modules/platform-quota/platform-quota.module';
 import { PlatformAlertModule } from './modules/platform-alert/platform-alert.module';
@@ -182,6 +183,7 @@ import { RequestContextService } from './common/services/request-context.service
     PlatformAuditLogModule,
     PlatformAnalyticsModule,
     PlatformSettingsModule,
+    PlatformWebsiteModule,
     PlatformHealthModule,
     PlatformQuotaModule,
     PlatformAlertModule,

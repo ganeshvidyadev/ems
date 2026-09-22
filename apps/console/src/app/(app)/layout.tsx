@@ -126,6 +126,7 @@ const SUPER_ADMIN_NAV = [
   {
     label: 'Experience',
     items: [
+      { href: '/website', label: 'Website' },
       { href: '/themes', label: 'Company themes' },
       { href: '/theme-templates', label: 'Theme templates' },
       { href: '/seo', label: 'SEO & Social Cards' },

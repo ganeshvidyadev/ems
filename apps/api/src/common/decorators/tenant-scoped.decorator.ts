@@ -108,6 +108,10 @@ export const PLATFORM_GLOBAL_ENTITIES = [
   // configuration with no tenant to scope to, same reasoning as `PlanEntity`.
   'PlatformSettingEntity',
 
+  // The public marketing site's copy (hero/features/header/footer/pricing display) —
+  // platform-wide, same reasoning as `PlatformSettingEntity`.
+  'WebsiteContentEntity',
+
   // A platform admin's own operational record about a tenant (or about the
   // platform itself, for tenant-less alert types), not the tenant's own data —
   // same "entity_type/entity_id, not tenant_id" reasoning as `AuditLogEntity`'s
