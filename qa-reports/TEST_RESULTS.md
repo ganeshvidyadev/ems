@@ -1,17 +1,17 @@
 # EMS QA — Test Results
 
-Generated: 2026-10-09T16:40:36.753Z (local environment, API/console/storefront/marketing dev servers, MySQL 8.4 :3307, Mongo :27017, cache Redis cloud). Source of truth: `qa-reports/results.json` + raw spec output in `qa-reports/raw/`.
+Generated: 2026-10-09T17:24:58.482Z (local environment, API/console/storefront/marketing dev servers, MySQL 8.4 :3307, Mongo :27017, cache Redis cloud). Source of truth: `qa-reports/results.json` + raw spec output in `qa-reports/raw/`.
 
 ## Execution summary — black-box QA suite (`qa/`)
 
 | Metric | Result |
 |---|---|
 | Total Test Cases (counted) | 187 |
-| Passed | 171 |
-| Failed | 15 |
+| Passed | 168 |
+| Failed | 18 |
 | Blocked | 1 |
 | Not Tested | 0 |
-| Pass rate (PASS / (PASS + FAIL), executed only) | 91.9% |
+| Pass rate (PASS / (PASS + FAIL), executed only) | 90.3% |
 | Critical Bugs (confirmed) | 0 |
 | High Bugs (confirmed) | 3 |
 | Medium Bugs (confirmed) | 4 |
@@ -45,15 +45,16 @@ Blocked and Not Tested are shown separately and are **not** in the pass rate. 8 
 | Merchant -> order workflow | 12 | 0 | 0 | 0 | 100.0% |
 | API contract | 4 | 1 | 0 | 0 | 80.0% |
 | Security | 9 | 3 | 0 | 0 | 75.0% |
-| Database integrity | 8 | 1 | 0 | 0 | 88.9% |
+| Database integrity | 7 | 2 | 0 | 0 | 77.8% |
 | Marketing website (browser) | 21 | 4 | 0 | 0 | 84.0% |
-| Admin console (browser) | 13 | 1 | 0 | 0 | 92.9% |
-| Merchant storefront (browser) | 10 | 1 | 0 | 0 | 90.9% |
+| Admin console (browser) | 10 | 4 | 0 | 0 | 71.4% |
+| Merchant storefront (browser) | 11 | 0 | 0 | 0 | 100.0% |
 
 ## Failed tests (after one automatic re-run)
 
 | ID | Test | Re-run | Linked bug | Evidence |
 |---|---|---|---|---|
+| ENV-008 | Prometheus /metrics endpoint serves text (observability) | FAIL | BUG-006 |  |
 | TEN-011b | unknown x-ems-hostname must not resolve to another tenant (KNOWN DEFECT BUG-005) | FAIL | BUG-005 |  |
 | SF-017 | COD order placement succeeds, decrements/reserves stock, and is visible to the owning merchant only | FAIL | BUG-001 |  |
 | SF-019 | merchant can cancel the QA order and stock is released (cleanup/restore) | FAIL | BUG-001 |  |
@@ -61,21 +62,23 @@ Blocked and Not Tested are shown separately and are **not** in the pass rate. 8 
 | SEC-007 | internal entity names are not exposed in client-facing error messages | FAIL | BUG-009 |  |
 | SEC-012 | RATE LIMITING: 40 rapid unauthenticated gift-card lookups are throttled (HTTP 429) — enumeration protection | FAIL | BUG-002 |  |
 | SEC-013 | RATE LIMITING: repeated failed logins for one unknown account are throttled or locked | FAIL | BUG-002 |  |
+| DB-003 | cross-tenant referential consistency: child rows belong to the same tenant as their parent | **FLAKY** (passed on retry) | — |  |
+| DB-012 | seeded SIMPLE products must have inventory at the product level (variant_id NULL) so they can be purchased | FAIL | BUG-001 |  |
 | MKT-001 | desktop /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow | FAIL | BUG-010 |  |
 | MKT-001 | tablet /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow | FAIL | BUG-010 |  |
 | MKT-001 | mobile /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow | FAIL | BUG-010 |  |
 | MKT-006 | SEO: per-page meta descriptions differ (sub-pages should not all reuse the home description) | FAIL | BUG-011 |  |
+| CON-006 | Website module: 9 tabs; editing Hero in the UI saves, validates, persists, and reaches the public API | **FLAKY** (passed on retry) | — |  |
+| CON-007 | Plans page lists the real plans from the API | **FLAKY** (passed on retry) | — |  |
+| CON-008 | merchant (Northwind owner) gets the company shell, never the platform nav | **FLAKY** (passed on retry) | — |  |
 | CON-010 | company pages render for the merchant without JS errors/5xx (results saved) | FAIL | BUG-003 |  |
-| STO-003 | product detail page renders name, price and an add-to-cart control | FAIL | BUG-007 |  |
-| DB-012 | seeded SIMPLE products must have inventory at the product level (variant_id NULL) so they can be purchased | FAIL | BUG-001 |  |
-| ENV-008 | Prometheus /metrics endpoint serves text (observability) | FAIL | BUG-006 |  |
 
 ## Blocked / not tested
 
 | ID | Reason |
 |---|---|
-| SEC-014 NOT_TESTED | NOT_TESTED: would lock a shared demo account for 15 minutes; verified by reading auth.service.ts (5 failures / 15 min) |
 | ENV-005 BLOCKED | BLOCKED: BullMQ Redis on 127.0.0.1:6380 is unavailable; queue-dependent tests are BLOCKED, not FAILED |
+| SEC-014 NOT_TESTED | NOT_TESTED: would lock a shared demo account for 15 minutes; verified by reading auth.service.ts (5 failures / 15 min) |
 
 ## Informational probes (not counted)
 
@@ -83,15 +86,25 @@ Blocked and Not Tested are shown separately and are **not** in the pass rate. 8 
 - SF-025: GET /storefront/theme for the seeded tenant (INFO: 404 means no row in tenant_themes; theme-assignment still serves)
 - SEC-010: Swagger/metrics exposure on this (dev) instance is reported, must be disabled/protected in production
 - SEC-014: account lockout exists for a real account after repeated failures (uses a throwaway invite-free check: informational)
-- MKT-008: Contact page: mailto link matches configured email; there is no contact form (NOT_IMPLEMENTED)
 - DB-008: reservation ledger consistency: reserved quantity equals open allocations of non-cancelled, unfulfilled orders (informational drift check)
 - DB-009: soft deletion: soft-deleted products are absent from public API and live listings
 - DB-011: schema drift between TypeORM entities and live schema (informational; migrations are hand-written)
+- MKT-008: Contact page: mailto link matches configured email; there is no contact form (NOT_IMPLEMENTED)
 
 ## Full list
 
 | ID | Status | Test | File |
 |---|---|---|---|
+| ENV-001 | PASS | API liveness | api/00-environment.test.mjs |
+| ENV-002 | PASS | API readiness: MySQL, Mongo and cache Redis report up | api/00-environment.test.mjs |
+| ENV-003 | PASS | MySQL port 3307 reachable | api/00-environment.test.mjs |
+| ENV-004 | PASS | MongoDB port 27017 reachable | api/00-environment.test.mjs |
+| ENV-005 | BLOCKED | BullMQ Redis (6380) availability | api/00-environment.test.mjs |
+| ENV-006 | PASS | console frontend serves HTTP 200 | api/00-environment.test.mjs |
+| ENV-006 | PASS | marketing frontend serves HTTP 200 | api/00-environment.test.mjs |
+| ENV-006 | PASS | storefront(northwind) frontend serves HTTP 200 | api/00-environment.test.mjs |
+| ENV-007 | PASS | Swagger docs reachable | api/00-environment.test.mjs |
+| ENV-008 | FAIL | Prometheus /metrics endpoint serves text (observability) | api/00-environment.test.mjs |
 | AUTH-001 | PASS | superAdmin can log in and /auth/me returns own identity | api/01-auth.test.mjs |
 | AUTH-001 | PASS | nwOwner can log in and /auth/me returns own identity | api/01-auth.test.mjs |
 | AUTH-001 | PASS | nwOps can log in and /auth/me returns own identity | api/01-auth.test.mjs |
@@ -214,6 +227,18 @@ Blocked and Not Tested are shown separately and are **not** in the pass rate. 8 
 | SEC-012 | FAIL | RATE LIMITING: 40 rapid unauthenticated gift-card lookups are throttled (HTTP 429) — enumeration protection | api/07-security-contract.test.mjs |
 | SEC-013 | FAIL | RATE LIMITING: repeated failed logins for one unknown account are throttled or locked | api/07-security-contract.test.mjs |
 | SEC-014 | NOT_TESTED (info) | account lockout exists for a real account after repeated failures (uses a throwaway invite-free check: informational) | api/07-security-contract.test.mjs |
+| DB-001 | PASS | applied migrations match the migration files on disk (no pending / unknown) | api/08-db-integrity.test.mjs |
+| DB-002 | PASS | every tenant-scoped table has a NOT NULL tenant_id except the documented nullable ones | api/08-db-integrity.test.mjs |
+| DB-003 | FAIL (flaky) | cross-tenant referential consistency: child rows belong to the same tenant as their parent | api/08-db-integrity.test.mjs |
+| DB-004 | PASS | no orphan rows for key relations (FK integrity) | api/08-db-integrity.test.mjs |
+| DB-005 | PASS | unique constraints hold: no duplicate (tenant, SKU) among live products, no duplicate order numbers | api/08-db-integrity.test.mjs |
+| DB-006 | PASS | inventory invariants: on_hand >= 0, reserved >= 0, available = on_hand - reserved, reserved <= on_hand | api/08-db-integrity.test.mjs |
+| DB-007 | PASS | order money: total = subtotal - discount + shipping + tax + cod_fee (+ round_off) for every order | api/08-db-integrity.test.mjs |
+| DB-008 | PASS (info) | reservation ledger consistency: reserved quantity equals open allocations of non-cancelled, unfulfilled orders (informational drift check) | api/08-db-integrity.test.mjs |
+| DB-009 | PASS (info) | soft deletion: soft-deleted products are absent from public API and live listings | api/08-db-integrity.test.mjs |
+| DB-010 | PASS | passwords are stored hashed (bcrypt) and no plaintext demo password is in the users table | api/08-db-integrity.test.mjs |
+| DB-011 | PASS (info) | schema drift between TypeORM entities and live schema (informational; migrations are hand-written) | api/08-db-integrity.test.mjs |
+| DB-012 | FAIL | seeded SIMPLE products must have inventory at the product level (variant_id NULL) so they can be purchased | api/08-db-integrity.test.mjs |
 | MKT-001 | PASS | desktop /: loads, has title+h1, no JS errors/5xx, no horizontal overflow | e2e/01-marketing.test.mjs |
 | MKT-001 | PASS | desktop /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow | e2e/01-marketing.test.mjs |
 | MKT-001 | FAIL | desktop /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow | e2e/01-marketing.test.mjs |
@@ -245,9 +270,9 @@ Blocked and Not Tested are shown separately and are **not** in the pass rate. 8 
 | CON-003 | PASS | protected route redirects an unauthenticated visitor to /login?next= | e2e/02-console.test.mjs |
 | CON-004 | PASS | super admin lands in the Super Admin shell with the full platform nav | e2e/02-console.test.mjs |
 | CON-005 | PASS | every super-admin page renders without JS errors or 5xx (4xx/blocked recorded to console-routes.json) | e2e/02-console.test.mjs |
-| CON-006 | PASS | Website module: 9 tabs; editing Hero in the UI saves, validates, persists, and reaches the public API | e2e/02-console.test.mjs |
-| CON-007 | PASS | Plans page lists the real plans from the API | e2e/02-console.test.mjs |
-| CON-008 | PASS | merchant (Northwind owner) gets the company shell, never the platform nav | e2e/02-console.test.mjs |
+| CON-006 | FAIL (flaky) | Website module: 9 tabs; editing Hero in the UI saves, validates, persists, and reaches the public API | e2e/02-console.test.mjs |
+| CON-007 | FAIL (flaky) | Plans page lists the real plans from the API | e2e/02-console.test.mjs |
+| CON-008 | FAIL (flaky) | merchant (Northwind owner) gets the company shell, never the platform nav | e2e/02-console.test.mjs |
 | CON-009 | PASS | merchant typing a super-admin URL sees no platform data (API 403 enforced behind the UI) | e2e/02-console.test.mjs |
 | CON-010 | FAIL | company pages render for the merchant without JS errors/5xx (results saved) | e2e/02-console.test.mjs |
 | CON-011 | PASS | UI tenant isolation: Northwind products visible to Northwind owner, absent for Lakeside owner | e2e/02-console.test.mjs |
@@ -256,7 +281,7 @@ Blocked and Not Tested are shown separately and are **not** in the pass rate. 8 
 | CON-013 | PASS | logout from the UI ends the session and protected pages redirect again | e2e/02-console.test.mjs |
 | STO-001 | PASS | Northwind storefront home renders its brand, products and no JS errors/5xx | e2e/03-storefront.test.mjs |
 | STO-002 | PASS | product listing page shows the 12 seeded Northwind products | e2e/03-storefront.test.mjs |
-| STO-003 | FAIL | product detail page renders name, price and an add-to-cart control | e2e/03-storefront.test.mjs |
+| STO-003 | PASS | product detail page renders name, price and an add-to-cart control | e2e/03-storefront.test.mjs |
 | STO-004 | PASS | unknown product slug shows a not-found page (not a crash) | e2e/03-storefront.test.mjs |
 | STO-005 | PASS | cart page and checkout page load (empty cart state handled) | e2e/03-storefront.test.mjs |
 | STO-006 | PASS | customer auth pages render forms and validate empty submit | e2e/03-storefront.test.mjs |
@@ -265,25 +290,3 @@ Blocked and Not Tested are shown separately and are **not** in the pass rate. 8 
 | STO-009 | PASS | responsive: Northwind home and products have no horizontal overflow at tablet | e2e/03-storefront.test.mjs |
 | STO-009 | PASS | responsive: Northwind home and products have no horizontal overflow at mobile | e2e/03-storefront.test.mjs |
 | STO-010 | PASS | browser add-to-cart flow: product -> cart shows the item (BUY-flow UI) | e2e/03-storefront.test.mjs |
-| DB-001 | PASS | applied migrations match the migration files on disk (no pending / unknown) | api/08-db-integrity.test.mjs |
-| DB-002 | PASS | every tenant-scoped table has a NOT NULL tenant_id except the documented nullable ones | api/08-db-integrity.test.mjs |
-| DB-003 | PASS | cross-tenant referential consistency: child rows belong to the same tenant as their parent | api/08-db-integrity.test.mjs |
-| DB-004 | PASS | no orphan rows for key relations (FK integrity) | api/08-db-integrity.test.mjs |
-| DB-005 | PASS | unique constraints hold: no duplicate (tenant, SKU) among live products, no duplicate order numbers | api/08-db-integrity.test.mjs |
-| DB-006 | PASS | inventory invariants: on_hand >= 0, reserved >= 0, available = on_hand - reserved, reserved <= on_hand | api/08-db-integrity.test.mjs |
-| DB-007 | PASS | order money: total = subtotal - discount + shipping + tax + cod_fee (+ round_off) for every order | api/08-db-integrity.test.mjs |
-| DB-008 | PASS (info) | reservation ledger consistency: reserved quantity equals open allocations of non-cancelled, unfulfilled orders (informational drift check) | api/08-db-integrity.test.mjs |
-| DB-009 | PASS (info) | soft deletion: soft-deleted products are absent from public API and live listings | api/08-db-integrity.test.mjs |
-| DB-010 | PASS | passwords are stored hashed (bcrypt) and no plaintext demo password is in the users table | api/08-db-integrity.test.mjs |
-| DB-011 | PASS (info) | schema drift between TypeORM entities and live schema (informational; migrations are hand-written) | api/08-db-integrity.test.mjs |
-| DB-012 | FAIL | seeded SIMPLE products must have inventory at the product level (variant_id NULL) so they can be purchased | api/08-db-integrity.test.mjs |
-| ENV-001 | PASS | API liveness | api/00-environment.test.mjs |
-| ENV-002 | PASS | API readiness: MySQL, Mongo and cache Redis report up | api/00-environment.test.mjs |
-| ENV-003 | PASS | MySQL port 3307 reachable | api/00-environment.test.mjs |
-| ENV-004 | PASS | MongoDB port 27017 reachable | api/00-environment.test.mjs |
-| ENV-005 | BLOCKED | BullMQ Redis (6380) availability | api/00-environment.test.mjs |
-| ENV-006 | PASS | console frontend serves HTTP 200 | api/00-environment.test.mjs |
-| ENV-006 | PASS | marketing frontend serves HTTP 200 | api/00-environment.test.mjs |
-| ENV-006 | PASS | storefront(northwind) frontend serves HTTP 200 | api/00-environment.test.mjs |
-| ENV-007 | PASS | Swagger docs reachable | api/00-environment.test.mjs |
-| ENV-008 | FAIL | Prometheus /metrics endpoint serves text (observability) | api/00-environment.test.mjs |

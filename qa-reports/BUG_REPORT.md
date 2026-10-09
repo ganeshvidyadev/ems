@@ -10,7 +10,7 @@ Every bug below was reproduced by an executed test or probe in this run unless m
 | BUG-004 | Medium | CONFIRMED | Admin console / Subscription | Merchant Subscription page crashes (client-side exception) when the tenant has no subscription | CON-010 |
 | BUG-005 | Medium | CONFIRMED | Tenant resolution (storefront) | Unknown `x-ems-hostname` resolves to the first active tenant (Northwind) instead of 404 when the API is reached via a dev host | TEN-011b |
 | BUG-006 | Medium | CONFIRMED | Observability | GET /metrics returns HTTP 500 ("Value is not a valid number: 182") so Prometheus scraping is broken | ENV-008 |
-| BUG-007 | Medium | CONFIRMED | Storefront web | Storefront product detail page logs a React hydration mismatch error on every load | STO-003 |
+| BUG-007 | Medium | NOT REPRODUCED (intermittent or fixed) | Storefront web | Storefront product detail page logs a React hydration mismatch error on every load | STO-003 |
 | BUG-008 | Low | CONFIRMED | API error handling | Request body above the size limit returns 500 INTERNAL_ERROR instead of 413 | API-005 |
 | BUG-009 | Low | CONFIRMED | API error handling / info exposure | Client-facing error leaks internal class names ("Operation 'StoreEntity query' requires a tenant context") | SEC-007 |
 | BUG-010 | Low | CONFIRMED | Marketing website / SEO & a11y | /plans page has no <h1> (section heading is an <h2>) | MKT-001 |
@@ -131,14 +131,14 @@ Every bug below was reproduced by an executed test or probe in this run unless m
 
 - **Module:** Storefront web
 - **Severity:** Medium
-- **Status:** CONFIRMED
+- **Status:** NOT REPRODUCED (intermittent or fixed)
 - **API endpoint / UI route:** `http://northwind.ems.localhost:3001/products/<slug>`
 - **Preconditions:** Any product.
 - **Reproduction steps:**
   1. Open any product detail page with a fresh browser context; read the console.
 - **Expected result:** No hydration errors.
 - **Actual result:** pageerror 'Hydration failed because the server rendered HTML didn't match the client' (React regenerates the tree client-side; can cause flicker/lost state).
-- **Evidence / logs:** qa/e2e/03 STO-003 FAIL (reproduced twice); dev-mode stack not narrowed to a component.
+- **Evidence / logs:** qa/e2e/03 STO-003 FAIL (reproduced twice); dev-mode stack not narrowed to a component. | Re-run 2026-10-09 (22:2x-22:55 IST): STO-003 PASS in the full run and 3/3 isolated reruns; storefront source unchanged in git, so the earlier failure may have been dev-server/HMR state. Keep open until re-checked on a production build.
 - **Screenshot / trace:** see `qa-reports/screenshots/` and `qa-reports/raw/`
 - **Suspected root cause:** Suspected: client-only value (Date/locale formatting or window check) or invalid HTML nesting in the product detail tree.
 - **Suggested fix:** Reproduce with `next build && next start`, bisect the detail components, gate client-only values behind useEffect.
@@ -240,7 +240,7 @@ Every bug below was reproduced by an executed test or probe in this run unless m
   1. curl with Host northwind.ems.localhost.
 - **Expected result:** 200 or a documented fallback.
 - **Actual result:** 404 (theme-assignment endpoint returns `organic` correctly; the storefront renders, so a UI fallback exists).
-- **Evidence / logs:** qa/api/05 SF-025 INFO.
+- **Evidence / logs:** qa/api/05 SF-025 INFO. | Re-verified 2026-10-09: still 404 RESOURCE_NOT_FOUND on Host northwind.ems.localhost.
 - **Screenshot / trace:** see `qa-reports/screenshots/` and `qa-reports/raw/`
 - **Suspected root cause:** No published `tenant_themes` row for the seeded tenant; not confirmed to be user-visible.
 - **Suggested fix:** Seed a published theme row or return the assigned theme.
@@ -254,7 +254,7 @@ These come from reading the code (API inventory), not from execution. They are n
 
 | ID | Sev (est.) | Suspicion | Where |
 |---|---|---|---|
-| SUS-001 | High | `PlatformTenantService.create` provisions the owner with the fixed documented demo password (email pre-verified, ACTIVE). Not exercised because it would create a tenant. | apps/api/src/modules/platform-tenant/platform-tenant.service.ts (~l.225) |
+| SUS-001 | High | `PlatformTenantService.create` provisions the owner with the fixed password `DemoPassword123!` (email pre-verified, ACTIVE). Not exercised because it would create a tenant. | apps/api/src/modules/platform-tenant/platform-tenant.service.ts (~l.225) |
 | SUS-002 | Medium | `POST /platform/tenants/:id/subscription/change-plan` requires `platform.plan:assign`, a permission missing from the catalogue, so no role can call it. | platform-tenant.controller.ts:125, permissions.seed.ts |
 | SUS-003 | High | TenantStatusGuard skips @Public() routes, so a SUSPENDED/CANCELLED tenant's storefront and checkout keep serving. Not exercised (would suspend a demo tenant). | common/guards/tenant-status.guard.ts:49-56 |
 | SUS-004 | Medium | Loyalty earn/redeem and gift-card reversal are not wired into checkout/cancel; order cancel does not refund captured money. | loyalty.service.ts, order.service.ts:92-166 |
