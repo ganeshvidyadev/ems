@@ -1,0 +1,139 @@
+[
+  {
+    "id": "BUG-001", "severity": "High", "status": "CONFIRMED", "module": "Inventory / Seed data / Checkout", "tests": ["SF-017", "SF-019", "DB-012"],
+    "title": "Every seeded Northwind product is impossible to purchase (checkout returns INVENTORY_INSUFFICIENT with available=0 although 145 units are in stock)",
+    "route": "POST /api/v1/storefront/checkout/orders",
+    "preconditions": "Fresh `pnpm seed` data. Northwind storefront, any seeded product, COD, qty 1.",
+    "steps": ["GET /storefront/products on host northwind.ems.localhost; pick any product (all 12 are type SIMPLE).", "POST /storefront/cart?storeId=<store>, add the product (qty 1) — accepted.", "POST /storefront/checkout/orders with Idempotency-Key, COD, valid address."],
+    "expected": "201 with an order number; stock reserved.",
+    "actual": "409 INVENTORY_INSUFFICIENT {\"requested\":1,\"available\":0}. 12/12 products fail, qty 1 and 3. Merchant-created products (console create + inventory adjust) order fine (WF-001..012 PASS).",
+    "evidence": "qa/api/05-storefront-workflow SF-017; DB: `inventory_levels.variant_id` = 1..12 for all seeded rows while the products are SIMPLE with no variants (storefront returns `variants: []`) and the order line sends `variantId: null`; `InventoryRepository.findSlot` filters `variant_id IS NULL` so no slot is found.",
+    "root_cause": "`apps/api/src/database/seeds/seed-northwind-rich-data.ts` (~lines 390-425) creates a default ProductVariant per SIMPLE product and attaches the stock to `variantId: savedVariant.id`, but SIMPLE products are sold with `variantId = null`. Seed/data-model mismatch (not reproduced on merchant-created products).",
+    "fix": "Seed inventory for SIMPLE products with `variantId: null` (and do not create a default variant), or make cart/checkout resolve the sole default variant for SIMPLE products. Add a seed self-check that every ACTIVE product has a purchasable slot.",
+    "regression": "DB-012 + SF-017 (seeded product can be ordered end to end). Add a seed smoke test to CI."
+  },
+  {
+    "id": "BUG-002", "severity": "High", "status": "CONFIRMED", "module": "Security / Rate limiting", "tests": ["SEC-012", "SEC-013"],
+    "title": "No HTTP rate limiting exists: unauthenticated gift-card lookups and failed logins for unknown accounts are unthrottled",
+    "route": "POST /storefront/gift-cards/check-balance, POST /auth/login",
+    "preconditions": "None (anonymous).",
+    "steps": ["Send 40 rapid POST /storefront/gift-cards/check-balance with different codes.", "Send 12 wrong-password POST /auth/login for one non-existent email."],
+    "expected": "HTTP 429 (Retry-After) after a small burst; gift-card code enumeration is throttled.",
+    "actual": "All 40 return 201 (a `valid:true` + balance oracle for real codes, e.g. NW-GIFT-5000 -> ₹5,000.00); all 12 logins return 401, never 429/423.",
+    "evidence": "qa/api/07 SEC-012/013. Code review: `RATE_LIMIT_*` env vars are parsed but never consumed; `@nestjs/throttler` is a dependency that is never imported; only nginx (not active locally) rate limits. Account lockout (5 failures / 15 min) exists for real accounts (read in auth.service.ts; deliberately not exercised against shared demo accounts).",
+    "root_cause": "Throttling was configured but never wired (also listed as an open P0 in PRODUCTION_READINESS_REPORT.md).",
+    "fix": "Add a Redis-backed throttler guard (IP + tenant + route class), strict on auth/*, storefront/auth/*, gift-cards/check-balance, reviews, checkout.",
+    "regression": "SEC-012, SEC-013 must pass; add per-endpoint limits tests."
+  },
+  {
+    "id": "BUG-003", "severity": "High", "status": "CONFIRMED", "module": "Admin console / Orders", "tests": ["CON-010"],
+    "title": "Merchant Orders page crashes with \"Rendered more hooks than during the previous render\" on direct load (reproduced 4 of 6 loads)",
+    "route": "/orders (console, company shell)",
+    "preconditions": "Logged in as owner@northwind.test; hard-load /orders (not client navigation).",
+    "steps": ["Log in.", "Navigate directly to /orders (page.goto) and wait 3 s; repeat."],
+    "expected": "Order list renders.",
+    "actual": "\"Application error: a client-side exception has occurred\" in 4/6 loads; pageerror `Rendered more hooks than during the previous render.`",
+    "evidence": "qa-reports/console-company-routes.json; probe run 4/6. `apps/console/src/app/(app)/orders/page.tsx` lines 85-86 call `useState` after an early `return` (`if (!store) return ...`) — also reported by `next lint` (react-hooks/rules-of-hooks).",
+    "root_cause": "Conditional hooks: `useState` for isExporting/selectedOrderIds declared after the `if (!store)` early return; when `store` resolves between renders the hook count changes.",
+    "fix": "Move both `useState` calls above every early return (same fix pattern already applied to storefront MobileNav in commit 0da8c89).",
+    "regression": "CON-010 (/orders), plus enable the `react-hooks/rules-of-hooks` lint as a CI gate."
+  },
+  {
+    "id": "BUG-004", "severity": "Medium", "status": "CONFIRMED", "module": "Admin console / Subscription", "tests": ["CON-010"],
+    "title": "Merchant Subscription page crashes (client-side exception) when the tenant has no subscription",
+    "route": "/subscription (console, company shell); API GET /console/subscription -> 404",
+    "preconditions": "Tenant without a subscription row (both seeded demo tenants).",
+    "steps": ["Log in as owner@northwind.test.", "Open /subscription."],
+    "expected": "Empty state (\"no active plan\" with a plan chooser).",
+    "actual": "\"Application error: a client-side exception has occurred\"; page errors `Rendered more hooks than during the previous render` and `TypeError: Cannot read properties of undefined (reading 'replace')`. Deterministic.",
+    "evidence": "qa-reports/console-company-routes.json, probe screenshot. API 404 is returned for a missing subscription.",
+    "root_cause": "Unhandled 404/undefined subscription state plus conditional hooks in the subscription page (suspected: apps/console/src/app/(app)/subscription/page.tsx).",
+    "fix": "Treat 404 as 'no subscription', hoist hooks, guard `.replace` on undefined plan/status strings.",
+    "regression": "CON-010 (/subscription) with a tenant that has no subscription."
+  },
+  {
+    "id": "BUG-005", "severity": "Medium", "status": "CONFIRMED", "module": "Tenant resolution (storefront)", "tests": ["TEN-011b"],
+    "title": "Unknown `x-ems-hostname` resolves to the first active tenant (Northwind) instead of 404 when the API is reached via a dev host",
+    "route": "GET /api/v1/storefront/store and /storefront/products with header x-ems-hostname: qa-unknown-tenant.ems.localhost (Host: localhost)",
+    "preconditions": "API reached via localhost/127.0.0.1/ems.localhost (dev hosts).",
+    "steps": ["curl -H 'x-ems-hostname: qa-unknown-tenant.ems.localhost' http://localhost:4000/api/v1/storefront/store"],
+    "expected": "404/400 TENANT_CONTEXT_MISSING (same as a raw unknown Host header, which is correctly rejected: TEN-011a PASS).",
+    "actual": "200 with Northwind Traders store and catalogue; `Host: localhost` alone also resolves to Northwind.",
+    "evidence": "qa/api/03 TEN-011b FAIL; probe output. Code: `tenant-resolver.middleware.ts` Fallback 2 (lines ~172-187) is not gated by NODE_ENV and runs when the *Host* is a dev host even if the forwarded hostname is unknown.",
+    "root_cause": "Dev-convenience fallback 'first ACTIVE tenant' is reachable in any environment and also triggers for unknown forwarded hostnames.",
+    "fix": "Gate Fallback 2 behind NODE_ENV!=='production' and only when no forwarded hostname was supplied; return 404 for an unknown forwarded hostname.",
+    "regression": "TEN-011a/011b/013."
+  },
+  {
+    "id": "BUG-006", "severity": "Medium", "status": "CONFIRMED", "module": "Observability", "tests": ["ENV-008"],
+    "title": "GET /metrics returns HTTP 500 (\"Value is not a valid number: 182\") so Prometheus scraping is broken",
+    "route": "GET /metrics",
+    "preconditions": "METRICS_ENABLED=true.",
+    "steps": ["curl http://localhost:4000/metrics"],
+    "expected": "200 text/plain Prometheus exposition.",
+    "actual": "500 INTERNAL_ERROR; context.detail: 'Value is not a valid number: 182' (a gauge is being set with a string).",
+    "evidence": "qa/api/00 ENV-008; probe output.",
+    "root_cause": "A prom-client gauge/counter receives a numeric string (MySQL COUNT returned as string) instead of a number (suspected in the DB/queue gauge collectors).",
+    "fix": "Coerce with Number() before .set()/.inc(); add an e2e test hitting /metrics.",
+    "regression": "ENV-008."
+  },
+  {
+    "id": "BUG-007", "severity": "Medium", "status": "CONFIRMED", "module": "Storefront web", "tests": ["STO-003"],
+    "title": "Storefront product detail page logs a React hydration mismatch error on every load",
+    "route": "http://northwind.ems.localhost:3001/products/<slug>",
+    "preconditions": "Any product.",
+    "steps": ["Open any product detail page with a fresh browser context; read the console."],
+    "expected": "No hydration errors.",
+    "actual": "pageerror 'Hydration failed because the server rendered HTML didn't match the client' (React regenerates the tree client-side; can cause flicker/lost state).",
+    "evidence": "qa/e2e/03 STO-003 FAIL (reproduced twice); dev-mode stack not narrowed to a component.",
+    "root_cause": "Suspected: client-only value (Date/locale formatting or window check) or invalid HTML nesting in the product detail tree.",
+    "fix": "Reproduce with `next build && next start`, bisect the detail components, gate client-only values behind useEffect.",
+    "regression": "STO-003."
+  },
+  {
+    "id": "BUG-008", "severity": "Low", "status": "CONFIRMED", "module": "API error handling", "tests": ["API-005"],
+    "title": "Request body above the size limit returns 500 INTERNAL_ERROR instead of 413",
+    "route": "POST /api/v1/auth/login with a ~5 MB JSON body",
+    "preconditions": "None.", "steps": ["POST a 5 MB body."],
+    "expected": "413 Payload Too Large (or 400/422) in the standard envelope.",
+    "actual": "500 INTERNAL_ERROR (`context.detail: request entity too large`) with correlationId 'unknown'.",
+    "evidence": "qa/api/07 API-005.", "root_cause": "GlobalExceptionFilter does not map body-parser's PayloadTooLargeError (status 413) and treats it as unexpected; error occurs before the correlation middleware.",
+    "fix": "Map `err.status/ type==='entity.too.large'` to 413 in the filter.", "regression": "API-005."
+  },
+  {
+    "id": "BUG-009", "severity": "Low", "status": "CONFIRMED", "module": "API error handling / info exposure", "tests": ["SEC-007"],
+    "title": "Client-facing error leaks internal class names (\"Operation 'StoreEntity query' requires a tenant context\")",
+    "route": "GET /api/v1/storefront/store with an unknown Host header",
+    "preconditions": "None.", "steps": ["curl -H 'Host: evil.example.com' http://127.0.0.1:4000/api/v1/storefront/store"],
+    "expected": "Generic message without ORM entity names.", "actual": "400 TENANT_CONTEXT_MISSING with the entity name and a `context` object.",
+    "evidence": "qa/api/07 SEC-007.", "root_cause": "Error message built from the guarded repository operation.", "fix": "Use a generic public message; log details server-side.", "regression": "SEC-007."
+  },
+  {
+    "id": "BUG-010", "severity": "Low", "status": "CONFIRMED", "module": "Marketing website / SEO & a11y", "tests": ["MKT-001"],
+    "title": "/plans page has no <h1> (section heading is an <h2>)",
+    "route": "http://localhost:3003/plans", "preconditions": "None.", "steps": ["Open /plans; inspect headings."],
+    "expected": "Exactly one <h1> per page (every other marketing page has one).", "actual": "No <h1> (fails at desktop, tablet and mobile; reproduced on retry).",
+    "evidence": "qa/e2e/01 MKT-001 /plans x3.", "root_cause": "`apps/marketing/src/app/plans/page.tsx` renders `PlansSection` (h2) without a PageHero/h1.", "fix": "Render PageHero (or promote the section heading to h1) on the dedicated /plans route.", "regression": "MKT-001."
+  },
+  {
+    "id": "BUG-011", "severity": "Low", "status": "CONFIRMED", "module": "Marketing website / SEO", "tests": ["MKT-006"],
+    "title": "All six marketing pages share the same <meta name=description>",
+    "route": "/, /products, /plans, /about, /careers, /contact", "preconditions": "None.", "steps": ["Read the meta description on each route."],
+    "expected": "A page-specific description per route.", "actual": "One identical description everywhere (1 distinct value across 6 pages).",
+    "evidence": "qa/e2e/01 MKT-006.", "root_cause": "Only the root layout defines `metadata.description`; sub-pages only set `title`.", "fix": "Add `description` to each page's `metadata` (ideally from the website content).", "regression": "MKT-006."
+  },
+  {
+    "id": "BUG-012", "severity": "Low", "status": "CONFIRMED", "module": "Admin console / Super-admin shell", "tests": [],
+    "title": "Every super-admin page triggers a tenant-only API call that is always 403 (`GET /console/inventory/low-stock`)",
+    "route": "All 21 super-admin routes (shell/notification widget)", "preconditions": "Logged in as admin@ems.test.", "steps": ["Open any /analytics, /tenants, ... page and watch network."],
+    "expected": "Platform shell does not call company endpoints.", "actual": "403 on every page; on the landing page also 403 for /console/stores and /console/customers. Noise in logs/audit, wasted requests.",
+    "evidence": "qa-reports/console-routes.json (executed CON-005 data).", "root_cause": "Shared layout widget fetches low-stock regardless of user type.", "fix": "Skip tenant queries when userType==='PLATFORM'.", "regression": "Extend CON-005 to fail on unexpected 4xx."
+  },
+  {
+    "id": "BUG-013", "severity": "Low", "status": "SUSPECTED", "module": "Storefront theme", "tests": ["SF-025"],
+    "title": "GET /storefront/theme returns 404 'Published theme for this store not found' for the seeded Northwind store",
+    "route": "GET /api/v1/storefront/theme", "preconditions": "Seed data.", "steps": ["curl with Host northwind.ems.localhost."],
+    "expected": "200 or a documented fallback.", "actual": "404 (theme-assignment endpoint returns `organic` correctly; the storefront renders, so a UI fallback exists).",
+    "evidence": "qa/api/05 SF-025 INFO.", "root_cause": "No published `tenant_themes` row for the seeded tenant; not confirmed to be user-visible.", "fix": "Seed a published theme row or return the assigned theme.", "regression": "SF-025."
+  }
+]

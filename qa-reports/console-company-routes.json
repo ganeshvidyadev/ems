@@ -1,0 +1,136 @@
+[
+  {
+    "route": "/",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/orders",
+    "crashed": true,
+    "pageErrors": [
+      "Error: Rendered more hooks than during the previous render."
+    ],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/products",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/inventory",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/customers",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/coupons",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/gift-cards",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/shipments",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/returns",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/warehouses",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/cms",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/banners",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/menus",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "409 GET http://localhost:4000/api/v1/console/menus/MAIN"
+    ]
+  },
+  {
+    "route": "/reviews",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/settings",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/domains",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/taxes",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": []
+  },
+  {
+    "route": "/subscription",
+    "crashed": true,
+    "pageErrors": [
+      "TypeError: Cannot read properties of undefined (reading 'replace')"
+    ],
+    "http5xx": [],
+    "http4xx": [
+      "404 GET http://localhost:4000/api/v1/console/subscription"
+    ]
+  }
+]

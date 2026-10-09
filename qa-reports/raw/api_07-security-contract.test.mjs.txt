@@ -1,0 +1,184 @@
+✔ [API-001] every error response uses the {success:false,error:{code,message},meta} envelope with a correlation id (4064.2511ms)
+✔ [API-002] unknown route returns a JSON 404, not an HTML/stack page (9.18ms)
+✔ [API-003] list endpoints honour pagination limits and reject out-of-range values (3639.7304ms)
+✔ [API-004] malformed JSON body -> 4xx (not 500) (12.5534ms)
+✖ [API-005] oversized body is rejected (not accepted/500) (74.2097ms)
+✔ [SEC-001] security headers present on API responses (nosniff, no X-Powered-By) (5.2446ms)
+✔ [SEC-002] CORS: a hostile origin is not reflected / credentialed (640.2378ms)
+✔ [SEC-003] CORS preflight from hostile origin does not authorise credentials (421.3334ms)
+✔ [SEC-004] SQL injection in login email/password does not authenticate or 500 (18.4001ms)
+✔ [SEC-005] SQL injection in filter/sort params on console list is inert (3199.3029ms)
+✔ [SEC-006] error responses do not leak stack traces, SQL or file paths (4179.2372ms)
+✖ [SEC-007] internal entity names are not exposed in client-facing error messages (764.719ms)
+✔ [SEC-008] IDOR: one merchant cannot revoke another user's session (4687.2253ms)
+✔ [SEC-009] JWKS publishes only public key material (8.4801ms)
+# INFO swagger=200 metrics=500 (unauthenticated)
+✔ [SEC-010] Swagger/metrics exposure on this (dev) instance is reported, must be disabled/protected in production (43.7542ms)
+✔ [SEC-011] mass assignment: client-supplied tenantId / role fields are ignored on update (3486.3612ms)
+✖ [SEC-012] RATE LIMITING: 40 rapid unauthenticated gift-card lookups are throttled (HTTP 429) — enumeration protection (16562.1275ms)
+✖ [SEC-013] RATE LIMITING: repeated failed logins for one unknown account are throttled or locked (3797.5614ms)
+﹣ [SEC-014] account lockout exists for a real account after repeated failures (uses a throwaway invite-free check: informational) (0.408ms) # NOT_TESTED: would lock a shared demo account for 15 minutes; verified by reading auth.service.ts (5 failures / 15 min)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 14
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 45753.922
+
+✖ failing tests:
+
+test at api\07-security-contract.test.mjs:48:1
+✖ [API-005] oversized body is rejected (not accepted/500) (74.2097ms)
+  AssertionError [ERR_ASSERTION]: status 500
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/07-security-contract.test.mjs:50:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at api\07-security-contract.test.mjs:98:1
+✖ [SEC-007] internal entity names are not exposed in client-facing error messages (764.719ms)
+  AssertionError [ERR_ASSERTION]: leaks internal class name: {"success":false,"error":{"code":"TENANT_CONTEXT_MISSING","message":"Operation 'StoreEntity query' requires a tenant context but none was present","context":{"o
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/07-security-contract.test.mjs:109:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: `{"success":false,"error":{"code":"TENANT_CONTEXT_MISSING","message":"Operation 'StoreEntity query' requires a tenant context but none was present","context":{"operation":"StoreEntity query"},"docsUrl":"https://docs.ems.app/errors/TENANT_CONTEXT_MISSING"},"meta":{"correlationId":"01M4GSGX5AZBMHM3C7WGG2V1HZ","timestamp":"2026-10-09T16:56:42.638Z","durationMs":740}}`,
+    expected: /Entity/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+
+test at api\07-security-contract.test.mjs:148:1
+✖ [SEC-012] RATE LIMITING: 40 rapid unauthenticated gift-card lookups are throttled (HTTP 429) — enumeration protection (16562.1275ms)
+  AssertionError [ERR_ASSERTION]: no throttling observed: statuses 201
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/07-security-contract.test.mjs:154:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at api\07-security-contract.test.mjs:157:1
+✖ [SEC-013] RATE LIMITING: repeated failed logins for one unknown account are throttled or locked (3797.5614ms)
+  AssertionError [ERR_ASSERTION]: 12 failed attempts never throttled: 401
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/07-security-contract.test.mjs:161:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+
+----- RETRY RUN -----
+✔ [API-001] every error response uses the {success:false,error:{code,message},meta} envelope with a correlation id (4635.4899ms)
+✔ [API-002] unknown route returns a JSON 404, not an HTML/stack page (7.8149ms)
+✔ [API-003] list endpoints honour pagination limits and reject out-of-range values (4572.3379ms)
+✔ [API-004] malformed JSON body -> 4xx (not 500) (8.1554ms)
+✖ [API-005] oversized body is rejected (not accepted/500) (106.0201ms)
+✔ [SEC-001] security headers present on API responses (nosniff, no X-Powered-By) (4.0316ms)
+✔ [SEC-002] CORS: a hostile origin is not reflected / credentialed (1085.3473ms)
+✔ [SEC-003] CORS preflight from hostile origin does not authorise credentials (398.5368ms)
+✔ [SEC-004] SQL injection in login email/password does not authenticate or 500 (10.5777ms)
+✔ [SEC-005] SQL injection in filter/sort params on console list is inert (3042.9347ms)
+✔ [SEC-006] error responses do not leak stack traces, SQL or file paths (3226.2436ms)
+✖ [SEC-007] internal entity names are not exposed in client-facing error messages (762.2657ms)
+✔ [SEC-008] IDOR: one merchant cannot revoke another user's session (4283.5098ms)
+✔ [SEC-009] JWKS publishes only public key material (3.7362ms)
+# INFO swagger=200 metrics=500 (unauthenticated)
+✔ [SEC-010] Swagger/metrics exposure on this (dev) instance is reported, must be disabled/protected in production (33.5864ms)
+✔ [SEC-011] mass assignment: client-supplied tenantId / role fields are ignored on update (3205.8313ms)
+✖ [SEC-012] RATE LIMITING: 40 rapid unauthenticated gift-card lookups are throttled (HTTP 429) — enumeration protection (15753.0166ms)
+✖ [SEC-013] RATE LIMITING: repeated failed logins for one unknown account are throttled or locked (3348.2932ms)
+﹣ [SEC-014] account lockout exists for a real account after repeated failures (uses a throwaway invite-free check: informational) (0.849ms) # NOT_TESTED: would lock a shared demo account for 15 minutes; verified by reading auth.service.ts (5 failures / 15 min)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 14
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 44697.3623
+
+✖ failing tests:
+
+test at api\07-security-contract.test.mjs:48:1
+✖ [API-005] oversized body is rejected (not accepted/500) (106.0201ms)
+  AssertionError [ERR_ASSERTION]: status 500
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/07-security-contract.test.mjs:50:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at api\07-security-contract.test.mjs:98:1
+✖ [SEC-007] internal entity names are not exposed in client-facing error messages (762.2657ms)
+  AssertionError [ERR_ASSERTION]: leaks internal class name: {"success":false,"error":{"code":"TENANT_CONTEXT_MISSING","message":"Operation 'StoreEntity query' requires a tenant context but none was present","context":{"o
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/07-security-contract.test.mjs:109:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: `{"success":false,"error":{"code":"TENANT_CONTEXT_MISSING","message":"Operation 'StoreEntity query' requires a tenant context but none was present","context":{"operation":"StoreEntity query"},"docsUrl":"https://docs.ems.app/errors/TENANT_CONTEXT_MISSING"},"meta":{"correlationId":"01M4GSJARG8JYGVDGR57WGSF9M","timestamp":"2026-10-09T16:57:29.333Z","durationMs":741}}`,
+    expected: /Entity/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+
+test at api\07-security-contract.test.mjs:148:1
+✖ [SEC-012] RATE LIMITING: 40 rapid unauthenticated gift-card lookups are throttled (HTTP 429) — enumeration protection (15753.0166ms)
+  AssertionError [ERR_ASSERTION]: no throttling observed: statuses 201
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/07-security-contract.test.mjs:154:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at api\07-security-contract.test.mjs:157:1
+✖ [SEC-013] RATE LIMITING: repeated failed logins for one unknown account are throttled or locked (3348.2932ms)
+  AssertionError [ERR_ASSERTION]: 12 failed attempts never throttled: 401
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/07-security-contract.test.mjs:161:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+

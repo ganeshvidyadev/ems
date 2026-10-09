@@ -1,0 +1,214 @@
+[
+  {
+    "route": "/analytics",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock",
+      "403 GET http://localhost:4000/api/v1/console/stores",
+      "403 GET http://localhost:4000/api/v1/console/customers?page=1&limit=1",
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/alerts",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/platform-health",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/tenants",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/plans",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/billing",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [],
+    "emptyBody": true
+  },
+  {
+    "route": "/dunning",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock",
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/settlements",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/quota",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/support",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/queues",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/integrations",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/tenant-export",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/website",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/themes",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/theme-templates",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/seo",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/platform-staff",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/audit-log",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/logs",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  },
+  {
+    "route": "/platform-settings",
+    "crashed": false,
+    "pageErrors": [],
+    "http5xx": [],
+    "http4xx": [
+      "403 GET http://localhost:4000/api/v1/console/inventory/low-stock"
+    ],
+    "emptyBody": false
+  }
+]

@@ -1,0 +1,84 @@
+✔ [TEN-001] tokens carry different tenant ids (8201.4394ms)
+✔ [TEN-002] Northwind has data; Lakeside list endpoints show none of it (2067.8377ms)
+✔ [TEN-003] Lakeside cannot read Northwind records by id (404) (2175.1001ms)
+✔ [TEN-004] Lakeside cannot MODIFY or DELETE Northwind records (IDOR write) (4455.6232ms)
+✔ [TEN-005] Northwind cannot see or touch the Lakeside fixture coupon (5039.9785ms)
+✔ [TEN-006] tenant switching via request headers/query is ignored (token tenant wins) (6144.3173ms)
+✔ [TEN-007] foreign storeId in body is rejected when creating a product (3362.4178ms)
+✔ [TEN-008] merchant tokens cannot reach tenant data through /platform tenant routes (2970.2568ms)
+✔ [TEN-009] storefront resolves each hostname to its own tenant (1061.3266ms)
+✔ [TEN-010] storefront product list is tenant-scoped by host (4733.6707ms)
+✔ [TEN-011a] unknown real Host header is rejected (no tenant fall-through) (1426.3001ms)
+✖ [TEN-011b] unknown x-ems-hostname must not resolve to another tenant (KNOWN DEFECT BUG-005) (3223.0799ms)
+✔ [TEN-012] client-supplied tenant slug header cannot override the host (spoof) (1891.9821ms)
+# INFO dev-fallback host=localhost -> HTTP 200 (resolves to a tenant; must be disabled in production)
+✔ [TEN-013] bare localhost dev fallback (informational) (324.4486ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 13
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 48747.543
+
+✖ failing tests:
+
+test at api\03-tenant-isolation.test.mjs:146:1
+✖ [TEN-011b] unknown x-ems-hostname must not resolve to another tenant (KNOWN DEFECT BUG-005) (3223.0799ms)
+  AssertionError [ERR_ASSERTION]: unknown host exposed northwind catalogue (status 200)
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/03-tenant-isolation.test.mjs:150:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+
+----- RETRY RUN -----
+✔ [TEN-001] tokens carry different tenant ids (5257.7ms)
+✔ [TEN-002] Northwind has data; Lakeside list endpoints show none of it (2175.6035ms)
+✔ [TEN-003] Lakeside cannot read Northwind records by id (404) (2292.0205ms)
+✔ [TEN-004] Lakeside cannot MODIFY or DELETE Northwind records (IDOR write) (5549.5931ms)
+✔ [TEN-005] Northwind cannot see or touch the Lakeside fixture coupon (6367.8849ms)
+✔ [TEN-006] tenant switching via request headers/query is ignored (token tenant wins) (5068.5529ms)
+✔ [TEN-007] foreign storeId in body is rejected when creating a product (3356.0081ms)
+✔ [TEN-008] merchant tokens cannot reach tenant data through /platform tenant routes (2902.0955ms)
+✔ [TEN-009] storefront resolves each hostname to its own tenant (1365.3312ms)
+✔ [TEN-010] storefront product list is tenant-scoped by host (4693.5385ms)
+✔ [TEN-011a] unknown real Host header is rejected (no tenant fall-through) (1605.4839ms)
+✖ [TEN-011b] unknown x-ems-hostname must not resolve to another tenant (KNOWN DEFECT BUG-005) (2928.6723ms)
+✔ [TEN-012] client-supplied tenant slug header cannot override the host (spoof) (1082.6157ms)
+# INFO dev-fallback host=localhost -> HTTP 200 (resolves to a tenant; must be disabled in production)
+✔ [TEN-013] bare localhost dev fallback (informational) (323.9861ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 13
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 46676.3048
+
+✖ failing tests:
+
+test at api\03-tenant-isolation.test.mjs:146:1
+✖ [TEN-011b] unknown x-ems-hostname must not resolve to another tenant (KNOWN DEFECT BUG-005) (2928.6723ms)
+  AssertionError [ERR_ASSERTION]: unknown host exposed northwind catalogue (status 200)
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/03-tenant-isolation.test.mjs:150:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+

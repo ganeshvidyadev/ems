@@ -1,0 +1,15 @@
+{
+  "name": "@ems/qa",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Black-box QA suite for EMS (API + browser). Standalone: not part of the pnpm workspace; uses node:test and playwright-core with the system Chrome.",
+  "scripts": {
+    "test:env": "node --test api/00-environment.test.mjs",
+    "test:api": "node --test api/",
+    "test:e2e": "node --test e2e/",
+    "test": "node --test api/ e2e/"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.0"
+  }
+}

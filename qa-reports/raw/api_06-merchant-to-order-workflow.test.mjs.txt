@@ -1,0 +1,21 @@
+✔ [WF-001] merchant creates a SIMPLE product (draft) via console API (5734.4246ms)
+✔ [WF-002] duplicate SKU in the same tenant is rejected (409/422) (1459.969ms)
+✔ [WF-003] draft product is NOT visible on the public storefront (1510.749ms)
+✔ [WF-004] merchant adds stock (inventory adjust) and publishes the product (3067.2849ms)
+✔ [WF-005] published product is visible on the Northwind storefront with correct price (5279.1389ms)
+✔ [WF-006] customer cart -> pricing -> COD order succeeds for a merchant-created product (5873.0159ms)
+✔ [WF-007] order is consistent: stock reserved, totals add up, status COD pending/confirmed (792.7459ms)
+✔ [WF-008] order appears in merchant order list but never for Lakeside (3185.4825ms)
+✔ [WF-009] inventory movement is recorded for the reservation (audit trail) (733.7495ms)
+✔ [WF-010] cancelling releases stock (full restore) (1829.6124ms)
+✔ [WF-011] cannot cancel an already cancelled order twice (state machine) (1088.6147ms)
+✔ [WF-012] after the order is cancelled the same product can no longer exceed stock (11 > 10 rejected) (4411.3528ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 37062.0597
+

@@ -1,0 +1,20 @@
+✔ [RBAC-001] nwOwner is forbidden from every /platform/* read (5815.6815ms)
+✔ [RBAC-001] nwOps is forbidden from every /platform/* read (6885.7021ms)
+✔ [RBAC-001] lsOwner is forbidden from every /platform/* read (6243.753ms)
+✔ [RBAC-001] lsOps is forbidden from every /platform/* read (5804.1755ms)
+✔ [RBAC-002] merchant owner cannot write platform website content (1366.6768ms)
+✔ [RBAC-003] merchant owner cannot create/modify platform plans, tenants or staff (5973.9454ms)
+✔ [RBAC-004] super admin (platform user, no tenant) is not granted tenant /console/* data (2382.199ms)
+✔ [RBAC-005] ORDER_MANAGER / PRODUCT_MANAGER roles are least-privilege (5206.6792ms)
+✔ [RBAC-006] ORDER_MANAGER cannot create products or coupons (write separation) (2529.2309ms)
+✔ [RBAC-007] public endpoints stay public: /plans and /website/content need no token (731.6459ms)
+✔ [RBAC-008] impersonation is super-admin only (1040.6114ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 44164.2062
+

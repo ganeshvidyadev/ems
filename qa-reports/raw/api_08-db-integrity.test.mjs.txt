@@ -1,0 +1,110 @@
+# INFO total reserved=60; seeded baseline (5/slot)=60; open orders=0
+# INFO soft-deleted products: 4
+# INFO schema:log reports drift (index/FK names differ between entities and hand-written migrations); see qa-reports/BUG_REPORT.md OBS-001
+✔ [DB-001] applied migrations match the migration files on disk (no pending / unknown) (159.259ms)
+✔ [DB-002] every tenant-scoped table has a NOT NULL tenant_id except the documented nullable ones (108.1367ms)
+✖ [DB-003] cross-tenant referential consistency: child rows belong to the same tenant as their parent (570.9194ms)
+✔ [DB-004] no orphan rows for key relations (FK integrity) (314.9059ms)
+✔ [DB-005] unique constraints hold: no duplicate (tenant, SKU) among live products, no duplicate order numbers (224.9076ms)
+✔ [DB-006] inventory invariants: on_hand >= 0, reserved >= 0, available = on_hand - reserved, reserved <= on_hand (234.1329ms)
+✔ [DB-007] order money: total = subtotal - discount + shipping + tax + cod_fee (+ round_off) for every order (86.5228ms)
+✔ [DB-008] reservation ledger consistency: reserved quantity equals open allocations of non-cancelled, unfulfilled orders (informational drift check) (306.6196ms)
+✔ [DB-009] soft deletion: soft-deleted products are absent from public API and live listings (157.4634ms)
+✔ [DB-010] passwords are stored hashed (bcrypt) and no plaintext demo password is in the users table (125.0883ms)
+✔ [DB-011] schema drift between TypeORM entities and live schema (informational; migrations are hand-written) (0.375ms)
+✖ [DB-012] seeded SIMPLE products must have inventory at the product level (variant_id NULL) so they can be purchased (76.56ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 10
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2515.4616
+
+✖ failing tests:
+
+test at api\08-db-integrity.test.mjs:24:1
+✖ [DB-003] cross-tenant referential consistency: child rows belong to the same tenant as their parent (570.9194ms)
+  TypeError: Cannot read properties of undefined (reading '0')
+      at n (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/08-db-integrity.test.mjs:8:34)
+      at file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/08-db-integrity.test.mjs:35:56
+      at Array.filter (<anonymous>)
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/08-db-integrity.test.mjs:35:38)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7)
+
+test at api\08-db-integrity.test.mjs:91:1
+✖ [DB-012] seeded SIMPLE products must have inventory at the product level (variant_id NULL) so they can be purchased (76.56ms)
+  AssertionError [ERR_ASSERTION]: 12 seeded SIMPLE products have no variant-less stock slot (checkout looks up variant_id IS NULL) — BUG-001
+  
+  12 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/08-db-integrity.test.mjs:93:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 12,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+
+----- RETRY RUN -----
+# INFO total reserved=60; seeded baseline (5/slot)=60; open orders=0
+# INFO soft-deleted products: 4
+# INFO schema:log reports drift (index/FK names differ between entities and hand-written migrations); see qa-reports/BUG_REPORT.md OBS-001
+✔ [DB-001] applied migrations match the migration files on disk (no pending / unknown) (104.1088ms)
+✔ [DB-002] every tenant-scoped table has a NOT NULL tenant_id except the documented nullable ones (93.9587ms)
+✔ [DB-003] cross-tenant referential consistency: child rows belong to the same tenant as their parent (627.4164ms)
+✔ [DB-004] no orphan rows for key relations (FK integrity) (245.3114ms)
+✔ [DB-005] unique constraints hold: no duplicate (tenant, SKU) among live products, no duplicate order numbers (251.4946ms)
+✔ [DB-006] inventory invariants: on_hand >= 0, reserved >= 0, available = on_hand - reserved, reserved <= on_hand (207.398ms)
+✔ [DB-007] order money: total = subtotal - discount + shipping + tax + cod_fee (+ round_off) for every order (64.0515ms)
+✔ [DB-008] reservation ledger consistency: reserved quantity equals open allocations of non-cancelled, unfulfilled orders (informational drift check) (189.6344ms)
+✔ [DB-009] soft deletion: soft-deleted products are absent from public API and live listings (160.3494ms)
+✔ [DB-010] passwords are stored hashed (bcrypt) and no plaintext demo password is in the users table (140.0435ms)
+✔ [DB-011] schema drift between TypeORM entities and live schema (informational; migrations are hand-written) (0.3274ms)
+✖ [DB-012] seeded SIMPLE products must have inventory at the product level (variant_id NULL) so they can be purchased (72.1737ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 11
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2288.6827
+
+✖ failing tests:
+
+test at api\08-db-integrity.test.mjs:91:1
+✖ [DB-012] seeded SIMPLE products must have inventory at the product level (variant_id NULL) so they can be purchased (72.1737ms)
+  AssertionError [ERR_ASSERTION]: 12 seeded SIMPLE products have no variant-less stock slot (checkout looks up variant_id IS NULL) — BUG-001
+  
+  12 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/08-db-integrity.test.mjs:93:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 12,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+

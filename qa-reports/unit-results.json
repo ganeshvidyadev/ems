@@ -1,0 +1,4 @@
+[
+  { "name": "apps/api jest unit tier (`test/jest-unit.json`)", "status": "PASS", "passed": 206, "total": 206, "suites": 25 },
+  { "name": "packages/kernel Money spec", "status": "PASS", "passed": 33, "total": 33, "suites": 1 }
+]

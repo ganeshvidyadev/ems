@@ -1,0 +1,116 @@
+✔ [CON-001] login page renders form; empty submit is blocked by validation (4998.1493ms)
+✔ [CON-002] wrong password shows an error and does not authenticate (4608.597ms)
+✔ [CON-003] protected route redirects an unauthenticated visitor to /login?next= (17373.8031ms)
+✔ [CON-004] super admin lands in the Super Admin shell with the full platform nav (3830.3783ms)
+✔ [CON-005] every super-admin page renders without JS errors or 5xx (4xx/blocked recorded to console-routes.json) (215708.5528ms)
+✔ [CON-006] Website module: 9 tabs; editing Hero in the UI saves, validates, persists, and reaches the public API (33238.639ms)
+✔ [CON-007] Plans page lists the real plans from the API (6706.7545ms)
+✔ [CON-008] merchant (Northwind owner) gets the company shell, never the platform nav (3499.3149ms)
+✔ [CON-009] merchant typing a super-admin URL sees no platform data (API 403 enforced behind the UI) (24978.6661ms)
+✖ [CON-010] company pages render for the merchant without JS errors/5xx (results saved) (115405.6308ms)
+✔ [CON-011] UI tenant isolation: Northwind products visible to Northwind owner, absent for Lakeside owner (36525.3437ms)
+✔ [CON-012] responsive: login + super admin home usable at tablet (no horizontal overflow) (8831.2631ms)
+✔ [CON-012] responsive: login + super admin home usable at mobile (no horizontal overflow) (6086.7741ms)
+✔ [CON-013] logout from the UI ends the session and protected pages redirect again (7332.8098ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 13
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 491008.4276
+
+✖ failing tests:
+
+test at e2e\02-console.test.mjs:177:1
+✖ [CON-010] company pages render for the merchant without JS errors/5xx (results saved) (115405.6308ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   '/orders'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/02-console.test.mjs:190:12)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ '/orders' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+
+----- RETRY RUN -----
+✔ [CON-001] login page renders form; empty submit is blocked by validation (4451.9159ms)
+✔ [CON-002] wrong password shows an error and does not authenticate (4572.5543ms)
+✔ [CON-003] protected route redirects an unauthenticated visitor to /login?next= (3234.7441ms)
+✔ [CON-004] super admin lands in the Super Admin shell with the full platform nav (11638.4789ms)
+✖ [CON-005] every super-admin page renders without JS errors or 5xx (4xx/blocked recorded to console-routes.json) (246197.328ms)
+✔ [CON-006] Website module: 9 tabs; editing Hero in the UI saves, validates, persists, and reaches the public API (36383.6463ms)
+✔ [CON-007] Plans page lists the real plans from the API (6556.5233ms)
+✔ [CON-008] merchant (Northwind owner) gets the company shell, never the platform nav (3587.2773ms)
+✔ [CON-009] merchant typing a super-admin URL sees no platform data (API 403 enforced behind the UI) (22345.6469ms)
+✖ [CON-010] company pages render for the merchant without JS errors/5xx (results saved) (120176.9497ms)
+✔ [CON-011] UI tenant isolation: Northwind products visible to Northwind owner, absent for Lakeside owner (30008.3693ms)
+✔ [CON-012] responsive: login + super admin home usable at tablet (no horizontal overflow) (5941.5533ms)
+✔ [CON-012] responsive: login + super admin home usable at mobile (no horizontal overflow) (5639.6996ms)
+✔ [CON-013] logout from the UI ends the session and protected pages redirect again (5383.8588ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 12
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 507652.8793
+
+✖ failing tests:
+
+test at e2e\02-console.test.mjs:73:1
+✖ [CON-005] every super-admin page renders without JS errors or 5xx (4xx/blocked recorded to console-routes.json) (246197.328ms)
+  AssertionError [ERR_ASSERTION]: broken pages: [{"route":"/billing","crashed":false,"pageErrors":[],"http5xx":[],"http4xx":[],"emptyBody":true}]
+  + actual - expected
+  
+  + [
+  +   '/billing'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/02-console.test.mjs:95:12)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ '/billing' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at e2e\02-console.test.mjs:177:1
+✖ [CON-010] company pages render for the merchant without JS errors/5xx (results saved) (120176.9497ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   '/orders',
+  +   '/subscription'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/02-console.test.mjs:190:12)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ '/orders', '/subscription' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+

@@ -1,0 +1,1580 @@
+{
+  "generatedAt": "2026-10-09T16:40:36.753Z",
+  "tests": [
+    {
+      "id": "AUTH-001",
+      "title": "superAdmin can log in and /auth/me returns own identity",
+      "status": "PASS",
+      "ms": 2159.6588,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-001",
+      "title": "nwOwner can log in and /auth/me returns own identity",
+      "status": "PASS",
+      "ms": 2699.675,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-001",
+      "title": "nwOps can log in and /auth/me returns own identity",
+      "status": "PASS",
+      "ms": 3031.4246,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-001",
+      "title": "lsOwner can log in and /auth/me returns own identity",
+      "status": "PASS",
+      "ms": 2371.2196,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-001",
+      "title": "lsOps can log in and /auth/me returns own identity",
+      "status": "PASS",
+      "ms": 2472.6172,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-002",
+      "title": "login response never leaks password hash / secrets",
+      "status": "PASS",
+      "ms": 862.7811,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-003",
+      "title": "wrong password for unknown account is rejected with 401 and generic error",
+      "status": "PASS",
+      "ms": 267.5925,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-004",
+      "title": "wrong password for a real account (single attempt) is 401, same shape as unknown account",
+      "status": "PASS",
+      "ms": 1423.9565,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-005",
+      "title": "login with missing fields -> 422 validation envelope",
+      "status": "PASS",
+      "ms": 4.5027,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-006",
+      "title": "protected endpoint without token -> 401",
+      "status": "PASS",
+      "ms": 17.926,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-007",
+      "title": "malformed / garbage bearer token -> 401",
+      "status": "PASS",
+      "ms": 11.1541,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-008",
+      "title": "tampered JWT payload (privilege escalation attempt) -> 401",
+      "status": "PASS",
+      "ms": 4.7692,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-009",
+      "title": "alg=none JWT is rejected",
+      "status": "PASS",
+      "ms": 4.0267,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-010",
+      "title": "access token carries expected claims and a short TTL",
+      "status": "PASS",
+      "ms": 0.4297,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-011",
+      "title": "logout invalidates the access token (denylist)",
+      "status": "PASS",
+      "ms": 3091.3454,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-012",
+      "title": "refresh without a refresh cookie is rejected",
+      "status": "PASS",
+      "ms": 6.0941,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-013",
+      "title": "refresh cookie is HttpOnly (session security)",
+      "status": "PASS",
+      "ms": 906.0819,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-014",
+      "title": "register with invalid payload -> 422, not 500",
+      "status": "PASS",
+      "ms": 7.5483,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "AUTH-015",
+      "title": "forgot-password does not reveal whether an account exists",
+      "status": "PASS",
+      "ms": 42.358,
+      "file": "api/01-auth.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "RBAC-001",
+      "title": "nwOwner is forbidden from every /platform/* read",
+      "status": "PASS",
+      "ms": 5317.0704,
+      "file": "api/02-rbac.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "RBAC-001",
+      "title": "nwOps is forbidden from every /platform/* read",
+      "status": "PASS",
+      "ms": 6724.039,
+      "file": "api/02-rbac.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "RBAC-001",
+      "title": "lsOwner is forbidden from every /platform/* read",
+      "status": "PASS",
+      "ms": 5707.2676,
+      "file": "api/02-rbac.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "RBAC-001",
+      "title": "lsOps is forbidden from every /platform/* read",
+      "status": "PASS",
+      "ms": 5121.0486,
+      "file": "api/02-rbac.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "RBAC-002",
+      "title": "merchant owner cannot write platform website content",
+      "status": "PASS",
+      "ms": 1202.4337,
+      "file": "api/02-rbac.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "RBAC-003",
+      "title": "merchant owner cannot create/modify platform plans, tenants or staff",
+      "status": "PASS",
+      "ms": 3789.8255,
+      "file": "api/02-rbac.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "RBAC-004",
+      "title": "super admin (platform user, no tenant) is not granted tenant /console/* data",
+      "status": "PASS",
+      "ms": 3330.7941,
+      "file": "api/02-rbac.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "RBAC-005",
+      "title": "ORDER_MANAGER / PRODUCT_MANAGER roles are least-privilege",
+      "status": "PASS",
+      "ms": 4581.2726,
+      "file": "api/02-rbac.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "RBAC-006",
+      "title": "ORDER_MANAGER cannot create products or coupons (write separation)",
+      "status": "PASS",
+      "ms": 1940.5337,
+      "file": "api/02-rbac.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "RBAC-007",
+      "title": "public endpoints stay public: /plans and /website/content need no token",
+      "status": "PASS",
+      "ms": 996.4662,
+      "file": "api/02-rbac.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "RBAC-008",
+      "title": "impersonation is super-admin only",
+      "status": "PASS",
+      "ms": 960.9676,
+      "file": "api/02-rbac.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "TEN-001",
+      "title": "tokens carry different tenant ids",
+      "status": "PASS",
+      "ms": 5318.38,
+      "file": "api/03-tenant-isolation.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "TEN-002",
+      "title": "Northwind has data; Lakeside list endpoints show none of it",
+      "status": "PASS",
+      "ms": 1930.5901,
+      "file": "api/03-tenant-isolation.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "TEN-003",
+      "title": "Lakeside cannot read Northwind records by id (404)",
+      "status": "PASS",
+      "ms": 2042.2663,
+      "file": "api/03-tenant-isolation.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "TEN-004",
+      "title": "Lakeside cannot MODIFY or DELETE Northwind records (IDOR write)",
+      "status": "PASS",
+      "ms": 3696.7607,
+      "file": "api/03-tenant-isolation.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "TEN-005",
+      "title": "Northwind cannot see or touch the Lakeside fixture coupon",
+      "status": "PASS",
+      "ms": 5240.5368,
+      "file": "api/03-tenant-isolation.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "TEN-006",
+      "title": "tenant switching via request headers/query is ignored (token tenant wins)",
+      "status": "PASS",
+      "ms": 5901.9671,
+      "file": "api/03-tenant-isolation.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "TEN-007",
+      "title": "foreign storeId in body is rejected when creating a product",
+      "status": "PASS",
+      "ms": 3846.2214,
+      "file": "api/03-tenant-isolation.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "TEN-008",
+      "title": "merchant tokens cannot reach tenant data through /platform tenant routes",
+      "status": "PASS",
+      "ms": 3884.1132,
+      "file": "api/03-tenant-isolation.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "TEN-009",
+      "title": "storefront resolves each hostname to its own tenant",
+      "status": "PASS",
+      "ms": 621.4161,
+      "file": "api/03-tenant-isolation.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "TEN-010",
+      "title": "storefront product list is tenant-scoped by host",
+      "status": "PASS",
+      "ms": 5557.2241,
+      "file": "api/03-tenant-isolation.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "TEN-011a",
+      "title": "unknown real Host header is rejected (no tenant fall-through)",
+      "status": "PASS",
+      "ms": 27135.6706,
+      "file": "api/03-tenant-isolation.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "TEN-011b",
+      "title": "unknown x-ems-hostname must not resolve to another tenant (KNOWN DEFECT BUG-005)",
+      "status": "FAIL",
+      "ms": 2212.5756,
+      "file": "api/03-tenant-isolation.test.mjs",
+      "note": "",
+      "retry": "FAIL"
+    },
+    {
+      "id": "TEN-012",
+      "title": "client-supplied tenant slug header cannot override the host (spoof)",
+      "status": "PASS",
+      "ms": 1785.7043,
+      "file": "api/03-tenant-isolation.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "TEN-013",
+      "title": "bare localhost dev fallback (informational)",
+      "status": "PASS",
+      "ms": 325.646,
+      "file": "api/03-tenant-isolation.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-001",
+      "title": "admin can read all 9 editable sections",
+      "status": "PASS",
+      "ms": 3659.2705,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-002",
+      "title": "public endpoint needs no token and matches admin view",
+      "status": "PASS",
+      "ms": 999.0172,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-003",
+      "title": "hero update is validated, persisted to website_content, and served publicly",
+      "status": "PASS",
+      "ms": 2125.2476,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-004",
+      "title": "partial update leaves other sections untouched",
+      "status": "PASS",
+      "ms": 4658.01,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-005",
+      "title": "features.heading round-trips through admin PUT -> public GET",
+      "status": "PASS",
+      "ms": 1995.0163,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-005",
+      "title": "products.heading round-trips through admin PUT -> public GET",
+      "status": "PASS",
+      "ms": 2035.4706,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-005",
+      "title": "plansDisplay.heading round-trips through admin PUT -> public GET",
+      "status": "PASS",
+      "ms": 2662.957,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-005",
+      "title": "about.heading round-trips through admin PUT -> public GET",
+      "status": "PASS",
+      "ms": 2701.2602,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-005",
+      "title": "career.heading round-trips through admin PUT -> public GET",
+      "status": "PASS",
+      "ms": 1967.2957,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-005",
+      "title": "header.logoText round-trips through admin PUT -> public GET",
+      "status": "PASS",
+      "ms": 2344.4384,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-005",
+      "title": "footer.tagline round-trips through admin PUT -> public GET",
+      "status": "PASS",
+      "ms": 2390.3806,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-006",
+      "title": "invalid hero (empty CTA label) -> 422 and nothing saved",
+      "status": "PASS",
+      "ms": 1469.9406,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-007",
+      "title": "invalid feature icon / accent enum -> 422",
+      "status": "PASS",
+      "ms": 3314.3446,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-008",
+      "title": "length limits enforced (hero title > 120 chars)",
+      "status": "PASS",
+      "ms": 634.0067,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-009",
+      "title": "max-items limit enforced (13 feature cards)",
+      "status": "PASS",
+      "ms": 629.3645,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-010",
+      "title": "wrong types / non-object body rejected, never 500",
+      "status": "PASS",
+      "ms": 3447.4901,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-011",
+      "title": "unauthenticated and merchant users cannot modify content",
+      "status": "PASS",
+      "ms": 5080.0835,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-012",
+      "title": "unknown sections are not persisted as new rows",
+      "status": "PASS",
+      "ms": 1394.246,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-013",
+      "title": "stored XSS payload is returned as inert JSON text (rendering is checked in E2E)",
+      "status": "PASS",
+      "ms": 2796.2271,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-014",
+      "title": "pricing is sourced from /plans API, not duplicated static data",
+      "status": "PASS",
+      "ms": 1123.9756,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-015",
+      "title": "plan name/price shown by /plans match the plans table in MySQL",
+      "status": "PASS",
+      "ms": 84.21,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WEB-016",
+      "title": "restore: original content is back after the run (verified in after-hook, asserted here for current state)",
+      "status": "PASS",
+      "ms": 759.5709,
+      "file": "api/04-website-module.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-001",
+      "title": "product listing returns paginated envelope with meta.pagination",
+      "status": "PASS",
+      "ms": 5802.91,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-002",
+      "title": "pagination pages do not overlap",
+      "status": "PASS",
+      "ms": 6693.8845,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-003",
+      "title": "sorting by priceMinor orders ascending / descending correctly",
+      "status": "PASS",
+      "ms": 7265.9727,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-004",
+      "title": "invalid sort / limit / page -> 422 with validation details (not 500)",
+      "status": "PASS",
+      "ms": 2191.0497,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-005",
+      "title": "search finds products by name (incl. short queries) and is case-insensitive",
+      "status": "PASS",
+      "ms": 8294.496,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-006",
+      "title": "SQL-injection style search strings are inert (200, no 500, no data bleed)",
+      "status": "PASS",
+      "ms": 15145.0388,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-007",
+      "title": "product detail by slug; unknown slug -> 404 envelope",
+      "status": "PASS",
+      "ms": 3166.5495,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-008",
+      "title": "storefront never exposes unpublished/draft products or cost price",
+      "status": "PASS",
+      "ms": 2549.0943,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-009",
+      "title": "categories, banners, theme and menus endpoints serve for the tenant",
+      "status": "PASS",
+      "ms": 1256.6359,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-010",
+      "title": "cart: create requires storeId; unknown cart id -> 404/409, not 500",
+      "status": "PASS",
+      "ms": 1012.1312,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-011",
+      "title": "cart add / update / remove item round trip",
+      "status": "PASS",
+      "ms": 3783.5376,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-012",
+      "title": "cart rejects invalid quantities and foreign product ids",
+      "status": "PASS",
+      "ms": 1225.3786,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-013",
+      "title": "cart is isolated by tenant host (cannot be read through another tenant host)",
+      "status": "PASS",
+      "ms": 614.518,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-014",
+      "title": "checkout pricing returns consistent money breakdown (total = subtotal - discount + shipping + tax)",
+      "status": "PASS",
+      "ms": 630.6873,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-015",
+      "title": "order validation: missing address / bad gateway / empty cart rejected",
+      "status": "PASS",
+      "ms": 2426.8678,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-016",
+      "title": "placing an order without an Idempotency-Key is rejected (400)",
+      "status": "PASS",
+      "ms": 304.2631,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-017",
+      "title": "COD order placement succeeds, decrements/reserves stock, and is visible to the owning merchant only",
+      "status": "FAIL",
+      "ms": 970.384,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": "",
+      "retry": "FAIL"
+    },
+    {
+      "id": "SF-018",
+      "title": "cart is emptied/consumed after order and cannot be reused to double-order",
+      "status": "PASS",
+      "ms": 1615.132,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-019",
+      "title": "merchant can cancel the QA order and stock is released (cleanup/restore)",
+      "status": "FAIL",
+      "ms": 1.2454,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": "",
+      "retry": "FAIL"
+    },
+    {
+      "id": "SF-020",
+      "title": "coupon applies to cart and invalid coupon is rejected",
+      "status": "PASS",
+      "ms": 3270.2943,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-021",
+      "title": "gift card balance check returns balance for a valid code and valid:false otherwise",
+      "status": "PASS",
+      "ms": 622.2859,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-025",
+      "title": "GET /storefront/theme for the seeded tenant (INFO: 404 means no row in tenant_themes; theme-assignment still serves)",
+      "status": "PASS",
+      "ms": 937.3226,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-022",
+      "title": "cannot order more than available stock (oversell guard)",
+      "status": "PASS",
+      "ms": 2517.7489,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-023",
+      "title": "customer account endpoints require a storefront token",
+      "status": "PASS",
+      "ms": 1252.1812,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SF-024",
+      "title": "a merchant JWT is not accepted as a storefront customer token",
+      "status": "PASS",
+      "ms": 1253.0508,
+      "file": "api/05-storefront-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WF-001",
+      "title": "merchant creates a SIMPLE product (draft) via console API",
+      "status": "PASS",
+      "ms": 5547.1399,
+      "file": "api/06-merchant-to-order-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WF-002",
+      "title": "duplicate SKU in the same tenant is rejected (409/422)",
+      "status": "PASS",
+      "ms": 1277.7185,
+      "file": "api/06-merchant-to-order-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WF-003",
+      "title": "draft product is NOT visible on the public storefront",
+      "status": "PASS",
+      "ms": 1243.6152,
+      "file": "api/06-merchant-to-order-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WF-004",
+      "title": "merchant adds stock (inventory adjust) and publishes the product",
+      "status": "PASS",
+      "ms": 3067.2219,
+      "file": "api/06-merchant-to-order-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WF-005",
+      "title": "published product is visible on the Northwind storefront with correct price",
+      "status": "PASS",
+      "ms": 3195.9554,
+      "file": "api/06-merchant-to-order-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WF-006",
+      "title": "customer cart -> pricing -> COD order succeeds for a merchant-created product",
+      "status": "PASS",
+      "ms": 6397.432,
+      "file": "api/06-merchant-to-order-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WF-007",
+      "title": "order is consistent: stock reserved, totals add up, status COD pending/confirmed",
+      "status": "PASS",
+      "ms": 784.2884,
+      "file": "api/06-merchant-to-order-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WF-008",
+      "title": "order appears in merchant order list but never for Lakeside",
+      "status": "PASS",
+      "ms": 2884.0246,
+      "file": "api/06-merchant-to-order-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WF-009",
+      "title": "inventory movement is recorded for the reservation (audit trail)",
+      "status": "PASS",
+      "ms": 649.3714,
+      "file": "api/06-merchant-to-order-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WF-010",
+      "title": "cancelling releases stock (full restore)",
+      "status": "PASS",
+      "ms": 1839.3176,
+      "file": "api/06-merchant-to-order-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WF-011",
+      "title": "cannot cancel an already cancelled order twice (state machine)",
+      "status": "PASS",
+      "ms": 1227.2449,
+      "file": "api/06-merchant-to-order-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "WF-012",
+      "title": "after the order is cancelled the same product can no longer exceed stock (11 > 10 rejected)",
+      "status": "PASS",
+      "ms": 3420.2599,
+      "file": "api/06-merchant-to-order-workflow.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "API-001",
+      "title": "every error response uses the {success:false,error:{code,message},meta} envelope with a correlation id",
+      "status": "PASS",
+      "ms": 6478.7925,
+      "file": "api/07-security-contract.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "API-002",
+      "title": "unknown route returns a JSON 404, not an HTML/stack page",
+      "status": "PASS",
+      "ms": 5.0483,
+      "file": "api/07-security-contract.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "API-003",
+      "title": "list endpoints honour pagination limits and reject out-of-range values",
+      "status": "PASS",
+      "ms": 5519.4157,
+      "file": "api/07-security-contract.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "API-004",
+      "title": "malformed JSON body -> 4xx (not 500)",
+      "status": "PASS",
+      "ms": 8.0351,
+      "file": "api/07-security-contract.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "API-005",
+      "title": "oversized body is rejected (not accepted/500)",
+      "status": "FAIL",
+      "ms": 61.3839,
+      "file": "api/07-security-contract.test.mjs",
+      "note": "",
+      "retry": "FAIL"
+    },
+    {
+      "id": "SEC-001",
+      "title": "security headers present on API responses (nosniff, no X-Powered-By)",
+      "status": "PASS",
+      "ms": 3.4766,
+      "file": "api/07-security-contract.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SEC-002",
+      "title": "CORS: a hostile origin is not reflected / credentialed",
+      "status": "PASS",
+      "ms": 640.1402,
+      "file": "api/07-security-contract.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SEC-003",
+      "title": "CORS preflight from hostile origin does not authorise credentials",
+      "status": "PASS",
+      "ms": 305.9925,
+      "file": "api/07-security-contract.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SEC-004",
+      "title": "SQL injection in login email/password does not authenticate or 500",
+      "status": "PASS",
+      "ms": 10.485,
+      "file": "api/07-security-contract.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SEC-005",
+      "title": "SQL injection in filter/sort params on console list is inert",
+      "status": "PASS",
+      "ms": 2509.3165,
+      "file": "api/07-security-contract.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SEC-006",
+      "title": "error responses do not leak stack traces, SQL or file paths",
+      "status": "PASS",
+      "ms": 4050.4406,
+      "file": "api/07-security-contract.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SEC-007",
+      "title": "internal entity names are not exposed in client-facing error messages",
+      "status": "FAIL",
+      "ms": 631.451,
+      "file": "api/07-security-contract.test.mjs",
+      "note": "",
+      "retry": "FAIL"
+    },
+    {
+      "id": "SEC-008",
+      "title": "IDOR: one merchant cannot revoke another user's session",
+      "status": "PASS",
+      "ms": 5186.6988,
+      "file": "api/07-security-contract.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SEC-009",
+      "title": "JWKS publishes only public key material",
+      "status": "PASS",
+      "ms": 3.8026,
+      "file": "api/07-security-contract.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SEC-010",
+      "title": "Swagger/metrics exposure on this (dev) instance is reported, must be disabled/protected in production",
+      "status": "PASS",
+      "ms": 30.1091,
+      "file": "api/07-security-contract.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SEC-011",
+      "title": "mass assignment: client-supplied tenantId / role fields are ignored on update",
+      "status": "PASS",
+      "ms": 2895.2799,
+      "file": "api/07-security-contract.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "SEC-012",
+      "title": "RATE LIMITING: 40 rapid unauthenticated gift-card lookups are throttled (HTTP 429) — enumeration protection",
+      "status": "FAIL",
+      "ms": 13447.7618,
+      "file": "api/07-security-contract.test.mjs",
+      "note": "",
+      "retry": "FAIL"
+    },
+    {
+      "id": "SEC-013",
+      "title": "RATE LIMITING: repeated failed logins for one unknown account are throttled or locked",
+      "status": "FAIL",
+      "ms": 2971.4594,
+      "file": "api/07-security-contract.test.mjs",
+      "note": "",
+      "retry": "FAIL"
+    },
+    {
+      "id": "SEC-014",
+      "title": "account lockout exists for a real account after repeated failures (uses a throwaway invite-free check: informational)",
+      "status": "NOT_TESTED",
+      "ms": 0.3841,
+      "file": "api/07-security-contract.test.mjs",
+      "note": "NOT_TESTED: would lock a shared demo account for 15 minutes; verified by reading auth.service.ts (5 failures / 15 min)"
+    },
+    {
+      "id": "MKT-001",
+      "title": "desktop /: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "PASS",
+      "ms": 6804.3207,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-001",
+      "title": "desktop /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "PASS",
+      "ms": 2125.5015,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-001",
+      "title": "desktop /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "FAIL",
+      "ms": 3229.2885,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": "",
+      "retry": "FAIL"
+    },
+    {
+      "id": "MKT-001",
+      "title": "desktop /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "PASS",
+      "ms": 1599.1118,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-001",
+      "title": "desktop /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "PASS",
+      "ms": 1587.4495,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-001",
+      "title": "desktop /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "PASS",
+      "ms": 1726.7374,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-001",
+      "title": "tablet /: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "PASS",
+      "ms": 1863.8157,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-001",
+      "title": "tablet /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "PASS",
+      "ms": 2004.3504,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-001",
+      "title": "tablet /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "FAIL",
+      "ms": 3974.5012,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": "",
+      "retry": "FAIL"
+    },
+    {
+      "id": "MKT-001",
+      "title": "tablet /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "PASS",
+      "ms": 1679.456,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-001",
+      "title": "tablet /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "PASS",
+      "ms": 1584.9937,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-001",
+      "title": "tablet /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "PASS",
+      "ms": 1572.5504,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-001",
+      "title": "mobile /: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "PASS",
+      "ms": 1633.8567,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-001",
+      "title": "mobile /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "PASS",
+      "ms": 1589.6705,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-001",
+      "title": "mobile /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "FAIL",
+      "ms": 3040.1828,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": "",
+      "retry": "FAIL"
+    },
+    {
+      "id": "MKT-001",
+      "title": "mobile /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "PASS",
+      "ms": 1558.7278,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-001",
+      "title": "mobile /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "PASS",
+      "ms": 1507.6792,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-001",
+      "title": "mobile /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow",
+      "status": "PASS",
+      "ms": 1644.1596,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-002",
+      "title": "header and footer navigation: all internal links resolve (no broken links)",
+      "status": "PASS",
+      "ms": 2795.1091,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-003",
+      "title": "home page: header has the 5 configured nav links and the footer shows copyright",
+      "status": "PASS",
+      "ms": 1637.4591,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-004",
+      "title": "mobile: hamburger menu is hidden by default and toggles the nav",
+      "status": "PASS",
+      "ms": 1788.2416,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-005",
+      "title": "SEO: <html lang>, meta description, title template on sub-pages",
+      "status": "PASS",
+      "ms": 581.4027,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-006",
+      "title": "SEO: per-page meta descriptions differ (sub-pages should not all reuse the home description)",
+      "status": "FAIL",
+      "ms": 1744.0852,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": "",
+      "retry": "FAIL"
+    },
+    {
+      "id": "MKT-007",
+      "title": "Plans page shows exactly the public plans from the plans API (name, price, features)",
+      "status": "PASS",
+      "ms": 1723.0032,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-008",
+      "title": "Contact page: mailto link matches configured email; there is no contact form (NOT_IMPLEMENTED)",
+      "status": "PASS",
+      "ms": 2442.2818,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "MKT-009",
+      "title": "admin edits -> marketing site updates (cache-aware, <=120s); XSS payload is rendered inert; content restored",
+      "status": "PASS",
+      "ms": 85279.3211,
+      "file": "e2e/01-marketing.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "CON-001",
+      "title": "login page renders form; empty submit is blocked by validation",
+      "status": "PASS",
+      "ms": 4998.1493,
+      "file": "e2e/02-console.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "CON-002",
+      "title": "wrong password shows an error and does not authenticate",
+      "status": "PASS",
+      "ms": 4608.597,
+      "file": "e2e/02-console.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "CON-003",
+      "title": "protected route redirects an unauthenticated visitor to /login?next=",
+      "status": "PASS",
+      "ms": 17373.8031,
+      "file": "e2e/02-console.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "CON-004",
+      "title": "super admin lands in the Super Admin shell with the full platform nav",
+      "status": "PASS",
+      "ms": 3830.3783,
+      "file": "e2e/02-console.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "CON-005",
+      "title": "every super-admin page renders without JS errors or 5xx (4xx/blocked recorded to console-routes.json)",
+      "status": "PASS",
+      "ms": 215708.5528,
+      "file": "e2e/02-console.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "CON-006",
+      "title": "Website module: 9 tabs; editing Hero in the UI saves, validates, persists, and reaches the public API",
+      "status": "PASS",
+      "ms": 33238.639,
+      "file": "e2e/02-console.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "CON-007",
+      "title": "Plans page lists the real plans from the API",
+      "status": "PASS",
+      "ms": 6706.7545,
+      "file": "e2e/02-console.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "CON-008",
+      "title": "merchant (Northwind owner) gets the company shell, never the platform nav",
+      "status": "PASS",
+      "ms": 3499.3149,
+      "file": "e2e/02-console.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "CON-009",
+      "title": "merchant typing a super-admin URL sees no platform data (API 403 enforced behind the UI)",
+      "status": "PASS",
+      "ms": 24978.6661,
+      "file": "e2e/02-console.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "CON-010",
+      "title": "company pages render for the merchant without JS errors/5xx (results saved)",
+      "status": "FAIL",
+      "ms": 115405.6308,
+      "file": "e2e/02-console.test.mjs",
+      "note": "",
+      "retry": "FAIL"
+    },
+    {
+      "id": "CON-011",
+      "title": "UI tenant isolation: Northwind products visible to Northwind owner, absent for Lakeside owner",
+      "status": "PASS",
+      "ms": 36525.3437,
+      "file": "e2e/02-console.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "CON-012",
+      "title": "responsive: login + super admin home usable at tablet (no horizontal overflow)",
+      "status": "PASS",
+      "ms": 8831.2631,
+      "file": "e2e/02-console.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "CON-012",
+      "title": "responsive: login + super admin home usable at mobile (no horizontal overflow)",
+      "status": "PASS",
+      "ms": 6086.7741,
+      "file": "e2e/02-console.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "CON-013",
+      "title": "logout from the UI ends the session and protected pages redirect again",
+      "status": "PASS",
+      "ms": 7332.8098,
+      "file": "e2e/02-console.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "STO-001",
+      "title": "Northwind storefront home renders its brand, products and no JS errors/5xx",
+      "status": "PASS",
+      "ms": 7666.095,
+      "file": "e2e/03-storefront.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "STO-002",
+      "title": "product listing page shows the 12 seeded Northwind products",
+      "status": "PASS",
+      "ms": 9619.102,
+      "file": "e2e/03-storefront.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "STO-003",
+      "title": "product detail page renders name, price and an add-to-cart control",
+      "status": "FAIL",
+      "ms": 6528.1666,
+      "file": "e2e/03-storefront.test.mjs",
+      "note": "",
+      "retry": "FAIL"
+    },
+    {
+      "id": "STO-004",
+      "title": "unknown product slug shows a not-found page (not a crash)",
+      "status": "PASS",
+      "ms": 4370.251,
+      "file": "e2e/03-storefront.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "STO-005",
+      "title": "cart page and checkout page load (empty cart state handled)",
+      "status": "PASS",
+      "ms": 4789.6549,
+      "file": "e2e/03-storefront.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "STO-006",
+      "title": "customer auth pages render forms and validate empty submit",
+      "status": "PASS",
+      "ms": 7774.8058,
+      "file": "e2e/03-storefront.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "STO-007",
+      "title": "account pages require login (redirect or gate) for an anonymous visitor",
+      "status": "PASS",
+      "ms": 4294.2534,
+      "file": "e2e/03-storefront.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "STO-008",
+      "title": "Lakeside host never renders Northwind branding or products",
+      "status": "PASS",
+      "ms": 6178.1071,
+      "file": "e2e/03-storefront.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "STO-009",
+      "title": "responsive: Northwind home and products have no horizontal overflow at tablet",
+      "status": "PASS",
+      "ms": 5480.6736,
+      "file": "e2e/03-storefront.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "STO-009",
+      "title": "responsive: Northwind home and products have no horizontal overflow at mobile",
+      "status": "PASS",
+      "ms": 5575.1681,
+      "file": "e2e/03-storefront.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "STO-010",
+      "title": "browser add-to-cart flow: product -> cart shows the item (BUY-flow UI)",
+      "status": "PASS",
+      "ms": 9370.3892,
+      "file": "e2e/03-storefront.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "DB-001",
+      "title": "applied migrations match the migration files on disk (no pending / unknown)",
+      "status": "PASS",
+      "ms": 174.0051,
+      "file": "api/08-db-integrity.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "DB-002",
+      "title": "every tenant-scoped table has a NOT NULL tenant_id except the documented nullable ones",
+      "status": "PASS",
+      "ms": 126.4409,
+      "file": "api/08-db-integrity.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "DB-003",
+      "title": "cross-tenant referential consistency: child rows belong to the same tenant as their parent",
+      "status": "PASS",
+      "ms": 578.1991,
+      "file": "api/08-db-integrity.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "DB-004",
+      "title": "no orphan rows for key relations (FK integrity)",
+      "status": "PASS",
+      "ms": 278.1891,
+      "file": "api/08-db-integrity.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "DB-005",
+      "title": "unique constraints hold: no duplicate (tenant, SKU) among live products, no duplicate order numbers",
+      "status": "PASS",
+      "ms": 194.9874,
+      "file": "api/08-db-integrity.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "DB-006",
+      "title": "inventory invariants: on_hand >= 0, reserved >= 0, available = on_hand - reserved, reserved <= on_hand",
+      "status": "PASS",
+      "ms": 214.4462,
+      "file": "api/08-db-integrity.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "DB-007",
+      "title": "order money: total = subtotal - discount + shipping + tax + cod_fee (+ round_off) for every order",
+      "status": "PASS",
+      "ms": 70.0448,
+      "file": "api/08-db-integrity.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "DB-008",
+      "title": "reservation ledger consistency: reserved quantity equals open allocations of non-cancelled, unfulfilled orders (informational drift check)",
+      "status": "PASS",
+      "ms": 208.1363,
+      "file": "api/08-db-integrity.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "DB-009",
+      "title": "soft deletion: soft-deleted products are absent from public API and live listings",
+      "status": "PASS",
+      "ms": 133.112,
+      "file": "api/08-db-integrity.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "DB-010",
+      "title": "passwords are stored hashed (bcrypt) and no plaintext demo password is in the users table",
+      "status": "PASS",
+      "ms": 142.6075,
+      "file": "api/08-db-integrity.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "DB-011",
+      "title": "schema drift between TypeORM entities and live schema (informational; migrations are hand-written)",
+      "status": "PASS",
+      "ms": 0.2288,
+      "file": "api/08-db-integrity.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "DB-012",
+      "title": "seeded SIMPLE products must have inventory at the product level (variant_id NULL) so they can be purchased",
+      "status": "FAIL",
+      "ms": 94.0876,
+      "file": "api/08-db-integrity.test.mjs",
+      "note": "",
+      "retry": "FAIL"
+    },
+    {
+      "id": "ENV-001",
+      "title": "API liveness",
+      "status": "PASS",
+      "ms": 202.9452,
+      "file": "api/00-environment.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "ENV-002",
+      "title": "API readiness: MySQL, Mongo and cache Redis report up",
+      "status": "PASS",
+      "ms": 508.114,
+      "file": "api/00-environment.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "ENV-003",
+      "title": "MySQL port 3307 reachable",
+      "status": "PASS",
+      "ms": 4.0146,
+      "file": "api/00-environment.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "ENV-004",
+      "title": "MongoDB port 27017 reachable",
+      "status": "PASS",
+      "ms": 2.5398,
+      "file": "api/00-environment.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "ENV-005",
+      "title": "BullMQ Redis (6380) availability",
+      "status": "BLOCKED",
+      "ms": 3.3933,
+      "file": "api/00-environment.test.mjs",
+      "note": "BLOCKED: BullMQ Redis on 127.0.0.1:6380 is unavailable; queue-dependent tests are BLOCKED, not FAILED"
+    },
+    {
+      "id": "ENV-006",
+      "title": "console frontend serves HTTP 200",
+      "status": "PASS",
+      "ms": 287.6183,
+      "file": "api/00-environment.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "ENV-006",
+      "title": "marketing frontend serves HTTP 200",
+      "status": "PASS",
+      "ms": 1771.2428,
+      "file": "api/00-environment.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "ENV-006",
+      "title": "storefront(northwind) frontend serves HTTP 200",
+      "status": "PASS",
+      "ms": 1805.9077,
+      "file": "api/00-environment.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "ENV-007",
+      "title": "Swagger docs reachable",
+      "status": "PASS",
+      "ms": 9.5038,
+      "file": "api/00-environment.test.mjs",
+      "note": ""
+    },
+    {
+      "id": "ENV-008",
+      "title": "Prometheus /metrics endpoint serves text (observability)",
+      "status": "FAIL",
+      "ms": 57.6719,
+      "file": "api/00-environment.test.mjs",
+      "note": "",
+      "retry": "FAIL"
+    }
+  ]
+}

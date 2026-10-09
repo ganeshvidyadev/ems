@@ -1,0 +1,210 @@
+✔ [MKT-001] desktop /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (6804.3207ms)
+✔ [MKT-001] desktop /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2125.5015ms)
+# FLAKY-CHECK desktop /plans: first attempt failed (no <h1>), retrying
+✖ [MKT-001] desktop /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (3229.2885ms)
+✔ [MKT-001] desktop /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1599.1118ms)
+✔ [MKT-001] desktop /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1587.4495ms)
+✔ [MKT-001] desktop /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1726.7374ms)
+✔ [MKT-001] tablet /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1863.8157ms)
+✔ [MKT-001] tablet /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2004.3504ms)
+# FLAKY-CHECK tablet /plans: first attempt failed (no <h1>), retrying
+✖ [MKT-001] tablet /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (3974.5012ms)
+✔ [MKT-001] tablet /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1679.456ms)
+✔ [MKT-001] tablet /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1584.9937ms)
+✔ [MKT-001] tablet /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1572.5504ms)
+✔ [MKT-001] mobile /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1633.8567ms)
+✔ [MKT-001] mobile /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1589.6705ms)
+# FLAKY-CHECK mobile /plans: first attempt failed (no <h1>), retrying
+✖ [MKT-001] mobile /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (3040.1828ms)
+✔ [MKT-001] mobile /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1558.7278ms)
+✔ [MKT-001] mobile /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1507.6792ms)
+✔ [MKT-001] mobile /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1644.1596ms)
+✔ [MKT-002] header and footer navigation: all internal links resolve (no broken links) (2795.1091ms)
+✔ [MKT-003] home page: header has the 5 configured nav links and the footer shows copyright (1637.4591ms)
+✔ [MKT-004] mobile: hamburger menu is hidden by default and toggles the nav (1788.2416ms)
+✔ [MKT-005] SEO: <html lang>, meta description, title template on sub-pages (581.4027ms)
+# INFO distinct meta descriptions across 6 pages: 1
+✖ [MKT-006] SEO: per-page meta descriptions differ (sub-pages should not all reuse the home description) (1744.0852ms)
+✔ [MKT-007] Plans page shows exactly the public plans from the plans API (name, price, features) (1723.0032ms)
+# INFO contact page forms: 0 (form validation: NOT_IMPLEMENTED when 0)
+✔ [MKT-008] Contact page: mailto link matches configured email; there is no contact form (NOT_IMPLEMENTED) (2442.2818ms)
+✔ [MKT-009] admin edits -> marketing site updates (cache-aware, <=120s); XSS payload is rendered inert; content restored (85279.3211ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 22
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 140050.1257
+
+✖ failing tests:
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] desktop /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (3229.2885ms)
+  AssertionError [ERR_ASSERTION]: no <h1>
+      at file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:31:16
+      at async withRetry (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:25:7)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] tablet /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (3974.5012ms)
+  AssertionError [ERR_ASSERTION]: no <h1>
+      at file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:31:16
+      at async withRetry (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:25:7)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] mobile /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (3040.1828ms)
+  AssertionError [ERR_ASSERTION]: no <h1>
+      at file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:31:16
+      at async withRetry (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:25:7)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at e2e\01-marketing.test.mjs:99:1
+✖ [MKT-006] SEO: per-page meta descriptions differ (sub-pages should not all reuse the home description) (1744.0852ms)
+  AssertionError [ERR_ASSERTION]: every page reuses the same meta description
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:109:12)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+
+----- RETRY RUN -----
+✔ [MKT-001] desktop /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2904.3151ms)
+✔ [MKT-001] desktop /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1555.3544ms)
+# FLAKY-CHECK desktop /plans: first attempt failed (no <h1>), retrying
+✖ [MKT-001] desktop /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2898.3887ms)
+✔ [MKT-001] desktop /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1521.4616ms)
+✔ [MKT-001] desktop /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1778.0014ms)
+✔ [MKT-001] desktop /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1548.4596ms)
+✔ [MKT-001] tablet /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1598.3208ms)
+✔ [MKT-001] tablet /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1555.0721ms)
+# FLAKY-CHECK tablet /plans: first attempt failed (no <h1>), retrying
+✖ [MKT-001] tablet /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2839.4416ms)
+✔ [MKT-001] tablet /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1480.586ms)
+✔ [MKT-001] tablet /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1482.8265ms)
+✔ [MKT-001] tablet /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1515.7203ms)
+✔ [MKT-001] mobile /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1519.2899ms)
+✔ [MKT-001] mobile /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1483.5358ms)
+# FLAKY-CHECK mobile /plans: first attempt failed (no <h1>), retrying
+✖ [MKT-001] mobile /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2849.6697ms)
+✔ [MKT-001] mobile /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1439.3363ms)
+✔ [MKT-001] mobile /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1562.8599ms)
+✔ [MKT-001] mobile /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1418.3875ms)
+✔ [MKT-002] header and footer navigation: all internal links resolve (no broken links) (2158.3061ms)
+✔ [MKT-003] home page: header has the 5 configured nav links and the footer shows copyright (1583.3075ms)
+✔ [MKT-004] mobile: hamburger menu is hidden by default and toggles the nav (1660.2998ms)
+✔ [MKT-005] SEO: <html lang>, meta description, title template on sub-pages (468.5906ms)
+# INFO distinct meta descriptions across 6 pages: 1
+✖ [MKT-006] SEO: per-page meta descriptions differ (sub-pages should not all reuse the home description) (1499.9032ms)
+✔ [MKT-007] Plans page shows exactly the public plans from the plans API (name, price, features) (1769.7278ms)
+# INFO contact page forms: 0 (form validation: NOT_IMPLEMENTED when 0)
+✔ [MKT-008] Contact page: mailto link matches configured email; there is no contact form (NOT_IMPLEMENTED) (2451.6455ms)
+✔ [MKT-009] admin edits -> marketing site updates (cache-aware, <=120s); XSS payload is rendered inert; content restored (80293.022ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 22
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 125940.3924
+
+✖ failing tests:
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] desktop /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2898.3887ms)
+  AssertionError [ERR_ASSERTION]: no <h1>
+      at file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:31:16
+      at async withRetry (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:25:7)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] tablet /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2839.4416ms)
+  AssertionError [ERR_ASSERTION]: no <h1>
+      at file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:31:16
+      at async withRetry (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:25:7)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] mobile /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2849.6697ms)
+  AssertionError [ERR_ASSERTION]: no <h1>
+      at file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:31:16
+      at async withRetry (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:25:7)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at e2e\01-marketing.test.mjs:99:1
+✖ [MKT-006] SEO: per-page meta descriptions differ (sub-pages should not all reuse the home description) (1499.9032ms)
+  AssertionError [ERR_ASSERTION]: every page reuses the same meta description
+      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:109:12)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
