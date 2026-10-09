@@ -13,32 +13,44 @@ export default async function ContactPage() {
   return (
     <>
       <PageHero heading={contact.heading} subheading={contact.subheading} />
-      <section className="bg-surface">
-        <div className="mx-auto max-w-2xl px-6 py-24">
-          <div className="space-y-4">
-            <a href={`mailto:${contact.email}`} className="flex items-center gap-3 rounded-lg border border-line p-4 hover:border-brand">
-              <Mail className="h-5 w-5 text-fuchsia-600" />
-              <span className="text-sm text-ink">{contact.email}</span>
+      <section className="section pt-0">
+        <div className="container">
+          <div className="mx-auto flex max-w-xl flex-col gap-5">
+            <a
+              href={`mailto:${contact.email}`}
+              className="group flex items-center gap-5 rounded-2xl bg-white/5 p-7 ring-1 ring-white/10 transition-all duration-300 hover:bg-white/10 hover:ring-primary/50"
+            >
+              <Mail className="h-8 w-8 shrink-0 text-white transition-transform duration-300 group-hover:scale-110" />
+              <div>
+                <h3 className="font-secondary text-xl font-bold text-white">Email</h3>
+                <p className="text-text">{contact.email}</p>
+              </div>
             </a>
             {contact.phone && (
-              <div className="flex items-center gap-3 rounded-lg border border-line p-4">
-                <Phone className="h-5 w-5 text-fuchsia-600" />
-                <span className="text-sm text-ink">{contact.phone}</span>
-              </div>
+              <a
+                href={`tel:${contact.phone}`}
+                className="group flex items-center gap-5 rounded-2xl bg-white/5 p-7 ring-1 ring-white/10 transition-all duration-300 hover:bg-white/10 hover:ring-primary/50"
+              >
+                <Phone className="h-8 w-8 shrink-0 text-white transition-transform duration-300 group-hover:scale-110" />
+                <div>
+                  <h3 className="font-secondary text-xl font-bold text-white">Phone</h3>
+                  <p className="text-text">{contact.phone}</p>
+                </div>
+              </a>
             )}
             {contact.address && (
-              <div className="flex items-center gap-3 rounded-lg border border-line p-4">
-                <MapPin className="h-5 w-5 text-fuchsia-600" />
-                <span className="text-sm text-ink">{contact.address}</span>
+              <div className="flex items-center gap-5 rounded-2xl bg-white/5 p-7 ring-1 ring-white/10">
+                <MapPin className="h-8 w-8 shrink-0 text-white" />
+                <div>
+                  <h3 className="font-secondary text-xl font-bold text-white">Address</h3>
+                  <p className="text-text">{contact.address}</p>
+                </div>
               </div>
             )}
           </div>
 
-          <div className="mt-10 text-center">
-            <a
-              href={contact.ctaHref}
-              className="inline-block rounded-md bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-6 py-3 text-sm font-medium text-white shadow-lg shadow-fuchsia-500/20 hover:from-indigo-500 hover:to-fuchsia-500"
-            >
+          <div className="mt-12 text-center">
+            <a href={contact.ctaHref} className="btn btn-primary">
               {contact.ctaLabel}
             </a>
           </div>

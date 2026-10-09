@@ -163,7 +163,7 @@ export default function WebsitePage() {
   const [header, setHeader] = useState({ logoText: '', ctaLabel: '', ctaHref: '' });
   const [navLinks, setNavLinks] = useState<LinkRow[]>([]);
 
-  const [footer, setFooter] = useState({ tagline: '', copyrightHolder: '' });
+  const [footer, setFooter] = useState({ tagline: '', email: '', phone: '', copyrightHolder: '' });
   const [footerLinks, setFooterLinks] = useState<LinkRow[]>([]);
 
   const [plansHeading, setPlansHeading] = useState('');
@@ -220,7 +220,12 @@ export default function WebsitePage() {
     setHeader({ logoText: d.header.logoText, ctaLabel: d.header.ctaLabel, ctaHref: d.header.ctaHref });
     setNavLinks(d.header.navLinks);
 
-    setFooter({ tagline: d.footer.tagline, copyrightHolder: d.footer.copyrightHolder });
+    setFooter({
+      tagline: d.footer.tagline,
+      email: d.footer.email,
+      phone: d.footer.phone,
+      copyrightHolder: d.footer.copyrightHolder,
+    });
     setFooterLinks(d.footer.links);
 
     setPlansHeading(d.plansDisplay.heading);
@@ -861,6 +866,12 @@ export default function WebsitePage() {
                   value={footer.copyrightHolder}
                   onChange={(e) => setFooter((p) => ({ ...p, copyrightHolder: e.target.value }))}
                 />
+              </Field>
+              <Field label="Contact email (optional)" htmlFor="footerEmail">
+                <Input id="footerEmail" value={footer.email} onChange={(e) => setFooter((p) => ({ ...p, email: e.target.value }))} />
+              </Field>
+              <Field label="Contact phone (optional)" htmlFor="footerPhone">
+                <Input id="footerPhone" value={footer.phone} onChange={(e) => setFooter((p) => ({ ...p, phone: e.target.value }))} />
               </Field>
             </div>
 

@@ -94,7 +94,9 @@ const DEFAULT_HEADER: WebsiteHeaderContent = {
 };
 
 const DEFAULT_FOOTER: WebsiteFooterContent = {
-  tagline: '',
+  tagline: 'The multi-tenant e-commerce platform behind your store.',
+  email: 'hello@ems.app',
+  phone: '',
   copyrightHolder: 'EMS',
   links: [
     { label: 'Products', href: '/products' },

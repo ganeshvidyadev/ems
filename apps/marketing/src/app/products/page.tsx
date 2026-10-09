@@ -13,8 +13,8 @@ export default async function ProductsPage() {
   return (
     <>
       <PageHero heading={products.heading} subheading={products.subheading} />
-      <section className="bg-surface">
-        <div className="mx-auto max-w-content px-6 py-24">
+      <section className="section pt-0">
+        <div className="container">
           <FeatureGrid items={products.items} />
         </div>
       </section>

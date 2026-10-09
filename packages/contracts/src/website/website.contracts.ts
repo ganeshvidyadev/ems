@@ -78,6 +78,8 @@ export type WebsiteHeaderContent = z.infer<typeof websiteHeaderContentSchema>;
 
 export const websiteFooterContentSchema = z.object({
   tagline: z.string().trim().max(200).default(''),
+  email: z.string().trim().max(150).default(''),
+  phone: z.string().trim().max(40).default(''),
   copyrightHolder: z.string().trim().min(1).max(80),
   links: z.array(linkSchema).max(8),
 });

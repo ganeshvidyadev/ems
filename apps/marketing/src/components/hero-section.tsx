@@ -1,44 +1,36 @@
 import type { WebsiteHeroContent } from '@ems/contracts';
+import { HeroGlow } from '@/components/hero-glow';
 
+/** Ported from the banner block in Automark's `index.astro` (`.section-ph`,
+ * `hasHighlight` gradient-free purple-highlight title, `.btn` variants). The
+ * particle-canvas / video-showcase decoration is dropped — out of scope. */
 export function HeroSection({ content }: { content: WebsiteHeroContent }) {
   return (
-    <section className="relative overflow-hidden border-b border-line bg-gradient-to-br from-indigo-50 via-fuchsia-50 to-amber-50">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-violet-300/40 blur-3xl"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-amber-300/40 blur-3xl"
-      />
-      <div className="relative mx-auto max-w-content px-6 py-24 text-center">
-        {content.eyebrow && (
-          <p className="mx-auto mb-4 max-w-3xl text-sm font-semibold uppercase tracking-wide text-fuchsia-600">
-            {content.eyebrow}
-          </p>
-        )}
-        <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight text-ink sm:text-5xl">
-          {content.titlePrefix}{' '}
-          <span className="bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-amber-500 bg-clip-text text-transparent">
-            {content.titleHighlight}
-          </span>{' '}
-          {content.titleSuffix}
-        </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-ink-muted">{content.subtitle}</p>
-        <div className="mt-10 flex items-center justify-center gap-4">
-          <a
-            href={content.primaryCtaHref}
-            className="rounded-md bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-6 py-3 text-sm font-medium text-white shadow-lg shadow-fuchsia-500/20 hover:from-indigo-500 hover:to-fuchsia-500"
-          >
-            {content.primaryCtaLabel}
-          </a>
-          {content.secondaryCtaLabel && (
-            <a href={content.secondaryCtaHref} className="text-sm font-medium text-ink hover:text-fuchsia-600">
-              {content.secondaryCtaLabel}
-            </a>
+    <section className="section-ph relative overflow-hidden">
+      <div className="container relative">
+        <div className="relative mb-20 text-center">
+          {content.eyebrow && (
+            <div className="badge mx-auto mb-8 flex max-w-max items-center gap-x-2 rounded-xl bg-white px-4 py-1.5 text-sm font-medium text-dark">
+              {content.eyebrow}
+            </div>
           )}
+          <h1 className="hasHighlight mx-auto mb-8 lg:max-w-4xl">
+            {content.titlePrefix} <strong className="text-primary">{content.titleHighlight}</strong> {content.titleSuffix}
+          </h1>
+          <p className="mx-auto mb-10 lg:max-w-2xl">{content.subtitle}</p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <a href={content.primaryCtaHref} className="btn btn-primary">
+              {content.primaryCtaLabel}
+            </a>
+            {content.secondaryCtaLabel && (
+              <a href={content.secondaryCtaHref} className="btn btn-outline">
+                {content.secondaryCtaLabel}
+              </a>
+            )}
+          </div>
         </div>
       </div>
+      <HeroGlow />
     </section>
   );
 }

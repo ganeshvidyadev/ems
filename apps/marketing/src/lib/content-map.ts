@@ -24,24 +24,21 @@ export const ICON_MAP: Record<WebsiteIconKey, LucideIcon> = {
 };
 
 export interface AccentClasses {
+  /** Icon tile background + icon colour. */
   chip: string;
-  gradient: string;
-  check: string;
 }
 
+/**
+ * The Automark theme is built on two brand colours (violet `primary` / red
+ * `secondary`) plus neutrals — not a rainbow palette. Six accent keys are kept (no
+ * contract/DB change, so previously-saved content keeps working) but mapped onto
+ * tonal variants of those two colours instead of distinct hues.
+ */
 export const ACCENT_MAP: Record<WebsiteAccentKey, AccentClasses> = {
-  indigo: { chip: 'bg-indigo-100 text-indigo-600', gradient: 'from-indigo-600 to-indigo-400', check: 'text-indigo-600' },
-  fuchsia: {
-    chip: 'bg-fuchsia-100 text-fuchsia-600',
-    gradient: 'from-indigo-600 to-fuchsia-600',
-    check: 'text-fuchsia-600',
-  },
-  amber: { chip: 'bg-amber-100 text-amber-600', gradient: 'from-amber-500 to-orange-500', check: 'text-amber-600' },
-  sky: { chip: 'bg-sky-100 text-sky-600', gradient: 'from-sky-500 to-sky-400', check: 'text-sky-600' },
-  emerald: {
-    chip: 'bg-emerald-100 text-emerald-600',
-    gradient: 'from-emerald-500 to-emerald-400',
-    check: 'text-emerald-600',
-  },
-  rose: { chip: 'bg-rose-100 text-rose-600', gradient: 'from-rose-500 to-rose-400', check: 'text-rose-600' },
+  indigo: { chip: 'bg-primary/15 text-primary' },
+  fuchsia: { chip: 'bg-primary-light/25 text-primary-light' },
+  amber: { chip: 'bg-secondary/15 text-secondary' },
+  sky: { chip: 'bg-white/10 text-white' },
+  emerald: { chip: 'bg-primary/10 text-primary' },
+  rose: { chip: 'bg-secondary/10 text-secondary' },
 };

@@ -1,11 +1,24 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/typography";
+@plugin "tailwind-bootstrap-grid";
+
+/* Automark theme tokens (colors/fonts/sizes), from theme.json — see styles/generated-theme.css */
+@import "./styles/generated-theme.css";
+
+@import "./styles/safe.css";
+@import "./styles/utilities.css";
 
 @layer base {
-  body {
-    background-color: theme('colors.surface');
-    color: theme('colors.ink');
-    -webkit-font-smoothing: antialiased;
-  }
+  @import "./styles/base.css";
 }
+
+@layer components {
+  @import "./styles/animations.css";
+  @import "./styles/components.css";
+  @import "./styles/navigation.css";
+  @import "./styles/buttons.css";
+}
+
+/* Font variables set by next/font in layout.tsx (--font-primary / --font-secondary)
+   are what generated-theme.css's font-primary / font-secondary utilities resolve to. */

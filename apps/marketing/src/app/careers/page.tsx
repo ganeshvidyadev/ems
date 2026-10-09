@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { MapPin, Briefcase, Clock } from 'lucide-react';
+import { Briefcase, MapPin } from 'lucide-react';
 import type { WebsiteContentResponse } from '@ems/contracts';
 import { marketingFetch } from '@/lib/api-client';
 import { PageHero } from '@/components/page-hero';
@@ -13,40 +13,39 @@ export default async function CareersPage() {
   return (
     <>
       <PageHero heading={career.heading} subheading={career.subheading} />
-      <section className="bg-surface">
-        <div className="mx-auto max-w-3xl px-6 py-24">
+      <section className="section pt-0">
+        <div className="container">
           {career.openings.length === 0 ? (
-            <p className="text-center text-ink-muted">No open roles right now — check back soon.</p>
+            <p className="text-center text-text">No open roles right now — check back soon.</p>
           ) : (
-            <div className="space-y-4">
+            <div className="grid gap-8 lg:grid-cols-2">
               {career.openings.map((opening, index) => (
-                <a
-                  key={index}
-                  href={opening.applyHref}
-                  className="block rounded-lg border border-line bg-surface p-6 shadow-sm transition hover:border-brand hover:shadow-md"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-lg font-semibold text-ink">{opening.title}</h3>
-                      <p className="mt-1 text-sm text-ink-muted">{opening.department}</p>
+                <div key={index} className="rounded-2xl border border-border/50 bg-white/5 p-8 backdrop-blur-sm">
+                  <div className="mb-6 flex flex-col gap-4">
+                    <h3 className="text-h5 font-bold text-white">
+                      <a href={opening.applyHref} className="transition-colors duration-200 hover:text-primary">
+                        {opening.title}
+                      </a>
+                    </h3>
+                    {opening.description && <p className="leading-relaxed text-text">{opening.description}</p>}
+                  </div>
+
+                  <hr className="mb-6 border-border/50" />
+
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex flex-wrap gap-x-9 gap-y-2">
+                      <span className="inline-flex items-center gap-2 text-text">
+                        <Briefcase className="h-5 w-5" /> {opening.department} · {opening.type}
+                      </span>
+                      <span className="inline-flex items-center gap-2 text-text">
+                        <MapPin className="h-5 w-5" /> {opening.location}
+                      </span>
                     </div>
-                    <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-600">
-                      {opening.type}
-                    </span>
+                    <a href={opening.applyHref} className="btn btn-outline px-6 py-3 text-sm">
+                      Apply Now
+                    </a>
                   </div>
-                  {opening.description && <p className="mt-3 text-sm text-ink-muted">{opening.description}</p>}
-                  <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-ink-muted">
-                    <span className="inline-flex items-center gap-1.5">
-                      <MapPin className="h-3.5 w-3.5" /> {opening.location}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <Briefcase className="h-3.5 w-3.5" /> {opening.department}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5" /> {opening.type}
-                    </span>
-                  </div>
-                </a>
+                </div>
               ))}
             </div>
           )}
