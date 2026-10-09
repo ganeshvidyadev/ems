@@ -55,6 +55,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 import { useLowStock } from '@/lib/queries/inventory';
 import { AdminThemeContext } from './admin-theme';
 import { GlobalSearchPalette } from './global-search-palette';
@@ -326,7 +327,10 @@ function Sidebar({
 }
 
 function NotificationsBell() {
-  const lowStock = useLowStock();
+  const { user } = useAuth();
+  // Low-stock alerts are a tenant (merchant) concept: a platform admin has no tenant, so the
+  // call would always be a 403.
+  const lowStock = useLowStock({ enabled: user?.userType === 'TENANT' });
   const lowStockItems = lowStock.data ?? [];
   const [cleared, setCleared] = useState(false);
 

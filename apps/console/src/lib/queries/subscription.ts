@@ -20,6 +20,15 @@ export interface TenantSubscriptionInfo {
   gracePeriodEndsAt: string | null;
 }
 
+/** Raw shape of `GET /console/subscription/usage`. */
+interface ApiQuotaUsage {
+  limitKey: string;
+  current: number;
+  max: number;
+  unlimited: boolean;
+  remaining: number;
+}
+
 export interface QuotaLimitSummary {
   key: string;
   limit: number;
@@ -50,7 +59,19 @@ export function useCurrentSubscription() {
 export function useSubscriptionUsage() {
   return useQuery({
     queryKey: [USAGE_KEY],
-    queryFn: () => apiGet<QuotaLimitSummary[]>('/console/subscription/usage'),
+    queryFn: async (): Promise<QuotaLimitSummary[]> => {
+      // The API reports `{ limitKey, current, max, unlimited, remaining }`; the page renders
+      // `{ key, used, limit, percentage }`. Mapping here (instead of trusting the shape) is what
+      // stops the page crashing on `undefined.replace` when it reads `key`.
+      const rows = await apiGet<ApiQuotaUsage[]>('/console/subscription/usage');
+      return rows.map((r) => ({
+        key: r.limitKey,
+        used: r.current,
+        limit: r.unlimited ? -1 : r.max,
+        remaining: r.unlimited ? -1 : r.remaining,
+        percentage: r.unlimited || r.max <= 0 ? 0 : Math.round((r.current / r.max) * 100),
+      }));
+    },
   });
 }
 

@@ -70,7 +70,10 @@ export class MetricsController {
       help,
       registers: [this.registry],
       async collect() {
-        gauge.set(await read());
+        // Coerced: MySQL returns aggregates (e.g. TIMESTAMPDIFF) as strings, and
+        // prom-client throws on a non-number, which turned the whole scrape into a 500.
+        const value = Number(await read());
+        gauge.set(Number.isFinite(value) ? value : 0);
       },
     });
   }

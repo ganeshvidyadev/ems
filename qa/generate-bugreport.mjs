@@ -18,6 +18,8 @@ for (const b of bugs) {
   md += `\n## ${b.id} — ${b.title}\n\n- **Module:** ${b.module}\n- **Severity:** ${b.severity}\n- **Status:** ${b.status}\n- **API endpoint / UI route:** \`${b.route}\`\n`;
   md += `- **Preconditions:** ${b.preconditions}\n- **Reproduction steps:**\n${b.steps.map((s, i) => `  ${i + 1}. ${s}`).join('\n')}\n`;
   md += `- **Expected result:** ${b.expected}\n- **Actual result:** ${b.actual}\n- **Evidence / logs:** ${b.evidence}\n`;
+  if (b.fix_applied) md += `- **Fix applied:** ${b.fix_applied}
+`;
   md += `- **Screenshot / trace:** see \`qa-reports/screenshots/\` and \`qa-reports/raw/\`\n- **Suspected root cause:** ${b.root_cause}\n- **Suggested fix:** ${b.fix}\n- **Regression test recommendation:** ${b.regression}\n`;
 }
 md += `\n---\n\n## Suspected issues from code review (NOT reproduced — need verification)\n

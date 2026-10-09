@@ -7,7 +7,7 @@ import {
   type ExceptionFilter,
 } from '@nestjs/common';
 import * as Sentry from '@sentry/node';
-import { CrossTenantAccessError, DomainError } from '@ems/kernel';
+import { CrossTenantAccessError, DomainError, TenantContextMissingError } from '@ems/kernel';
 import {
   ErrorCode,
   docsUrlForErrorCode,
@@ -132,6 +132,22 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       };
     }
 
+    // --- Tenant could not be determined: generic text, detail stays in the log --
+    // The raw message names the ORM entity and operation (e.g. "Operation 'StoreEntity
+    // query' requires a tenant context"), which is internal detail a client must not see.
+    if (exception instanceof TenantContextMissingError) {
+      this.logger.warn(`TENANT CONTEXT MISSING: ${exception.message}`);
+      return {
+        status: statusForErrorCode(exception.code),
+        body: {
+          code: exception.code,
+          message: 'The tenant for this request could not be determined',
+          docsUrl: docsUrlForErrorCode(exception.code),
+        },
+        logLevel: 'none',
+      };
+    }
+
     // --- Domain errors: the registry decides the status ------------------
     if (exception instanceof DomainError) {
       const status = statusForErrorCode(exception.code);
@@ -168,6 +184,31 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           message: Array.isArray(message) ? message.join('; ') : message,
         },
         logLevel: status >= 500 ? 'error' : 'none',
+      };
+    }
+
+    // --- Body-parser errors (oversized / malformed body) ------------------
+    // These are plain Errors carrying a 4xx `status`, not HttpExceptions; without this
+    // branch a 5 MB body surfaced as an unexpected 500 INTERNAL_ERROR.
+    const parserError = exception as { status?: number; type?: string };
+    if (
+      exception instanceof Error &&
+      typeof parserError.status === 'number' &&
+      parserError.status >= 400 &&
+      parserError.status < 500 &&
+      typeof parserError.type === 'string' &&
+      parserError.type.startsWith('entity.')
+    ) {
+      return {
+        status: parserError.status,
+        body: {
+          code: ErrorCode.MALFORMED_REQUEST,
+          message:
+            parserError.status === HttpStatus.PAYLOAD_TOO_LARGE
+              ? 'The request body is too large'
+              : 'The request body could not be parsed',
+        },
+        logLevel: 'none',
       };
     }
 

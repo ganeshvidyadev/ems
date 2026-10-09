@@ -11,7 +11,16 @@ function formatPrice(priceMinor: string, currency: string): string {
  * large price, tick-list of features, CTA. The monthly/yearly toggle is dropped (it
  * needs client-side JS to sync section-level state into each card); we show the
  * monthly price only, same as before this restyle. */
-export function PlansSection({ plans, display }: { plans: PublicPlan[]; display: WebsitePlansDisplayContent }) {
+export function PlansSection({
+  plans,
+  display,
+  headingAs: Heading = 'h2',
+}: {
+  plans: PublicPlan[];
+  display: WebsitePlansDisplayContent;
+  /** `h1` on the dedicated /plans page (it has no other title); `h2` when embedded in the home page. */
+  headingAs?: 'h1' | 'h2';
+}) {
   const displayByCode = new Map(display.items.map((item) => [item.planCode, item]));
 
   return (
@@ -19,7 +28,7 @@ export function PlansSection({ plans, display }: { plans: PublicPlan[]; display:
       <div className="container">
         <div className="section-container">
           <div className="section-intro centralize">
-            <h2 className="hasHighlight title">{display.heading}</h2>
+            <Heading className="hasHighlight title">{display.heading}</Heading>
             <p className="subtitle">{display.subheading}</p>
           </div>
           <div className="section-content">

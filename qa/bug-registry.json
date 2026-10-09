@@ -2,7 +2,7 @@
   {
     "id": "BUG-001",
     "severity": "High",
-    "status": "CONFIRMED",
+    "status": "FIXED",
     "module": "Inventory / Seed data / Checkout",
     "tests": [
       "SF-017",
@@ -22,12 +22,13 @@
     "evidence": "qa/api/05-storefront-workflow SF-017; DB: `inventory_levels.variant_id` = 1..12 for all seeded rows while the products are SIMPLE with no variants (storefront returns `variants: []`) and the order line sends `variantId: null`; `InventoryRepository.findSlot` filters `variant_id IS NULL` so no slot is found.",
     "root_cause": "`apps/api/src/database/seeds/seed-northwind-rich-data.ts` (~lines 390-425) creates a default ProductVariant per SIMPLE product and attaches the stock to `variantId: savedVariant.id`, but SIMPLE products are sold with `variantId = null`. Seed/data-model mismatch (not reproduced on merchant-created products).",
     "fix": "Seed inventory for SIMPLE products with `variantId: null` (and do not create a default variant), or make cart/checkout resolve the sole default variant for SIMPLE products. Add a seed self-check that every ACTIVE product has a purchasable slot.",
-    "regression": "DB-012 + SF-017 (seeded product can be ordered end to end). Add a seed smoke test to CI."
+    "regression": "DB-012 + SF-017 (seeded product can be ordered end to end). Add a seed smoke test to CI.",
+    "fix_applied": "Seed no longer creates a default variant for SIMPLE products and stores inventory with variant_id NULL (seed-northwind-rich-data.ts, seed-organic-doorstep.ts); the seed also repairs already-seeded slots (idempotent UPDATE). Verified: 12/12 slots variant-less, SF-017/SF-019/DB-012 pass, seeded product orders end to end."
   },
   {
     "id": "BUG-002",
     "severity": "High",
-    "status": "CONFIRMED",
+    "status": "FIXED",
     "module": "Security / Rate limiting",
     "tests": [
       "SEC-012",
@@ -45,12 +46,13 @@
     "evidence": "qa/api/07 SEC-012/013. Code review: `RATE_LIMIT_*` env vars are parsed but never consumed; `@nestjs/throttler` is a dependency that is never imported; only nginx (not active locally) rate limits. Account lockout (5 failures / 15 min) exists for real accounts (read in auth.service.ts; deliberately not exercised against shared demo accounts).",
     "root_cause": "Throttling was configured but never wired (also listed as an open P0 in PRODUCTION_READINESS_REPORT.md).",
     "fix": "Add a Redis-backed throttler guard (IP + tenant + route class), strict on auth/*, storefront/auth/*, gift-cards/check-balance, reviews, checkout.",
-    "regression": "SEC-012, SEC-013 must pass; add per-endpoint limits tests."
+    "regression": "SEC-012, SEC-013 must pass; add per-endpoint limits tests.",
+    "fix_applied": "New RateLimitGuard (apps/api/src/common/guards/rate-limit.guard.ts, registered globally before JwtAuthGuard): Redis fixed-window throttle, per (IP, identity) on credential endpoints at RATE_LIMIT_AUTH_PER_MIN plus a per-IP ceiling, and @RateLimit({limit:10}) on gift-card check-balance; fails open if Redis is down; storefront proxy now forwards x-forwarded-for so shoppers are not one IP. Verified: 429 + Retry-After after 30 failed logins / 10 gift-card lookups."
   },
   {
     "id": "BUG-003",
     "severity": "High",
-    "status": "CONFIRMED",
+    "status": "FIXED",
     "module": "Admin console / Orders",
     "tests": [
       "CON-010"
@@ -67,12 +69,13 @@
     "evidence": "qa-reports/console-company-routes.json; probe run 4/6. `apps/console/src/app/(app)/orders/page.tsx` lines 85-86 call `useState` after an early `return` (`if (!store) return ...`) — also reported by `next lint` (react-hooks/rules-of-hooks).",
     "root_cause": "Conditional hooks: `useState` for isExporting/selectedOrderIds declared after the `if (!store)` early return; when `store` resolves between renders the hook count changes.",
     "fix": "Move both `useState` calls above every early return (same fix pattern already applied to storefront MobileNav in commit 0da8c89).",
-    "regression": "CON-010 (/orders), plus enable the `react-hooks/rules-of-hooks` lint as a CI gate."
+    "regression": "CON-010 (/orders), plus enable the `react-hooks/rules-of-hooks` lint as a CI gate.",
+    "fix_applied": "useState hooks moved above the early returns in apps/console/src/app/(app)/orders/page.tsx. Verified: 0/6 crashes on direct load (was 4/6); eslint rules-of-hooks clean."
   },
   {
     "id": "BUG-004",
     "severity": "Medium",
-    "status": "CONFIRMED",
+    "status": "FIXED",
     "module": "Admin console / Subscription",
     "tests": [
       "CON-010"
@@ -89,12 +92,13 @@
     "evidence": "qa-reports/console-company-routes.json, probe screenshot. API 404 is returned for a missing subscription.",
     "root_cause": "Unhandled 404/undefined subscription state plus conditional hooks in the subscription page (suspected: apps/console/src/app/(app)/subscription/page.tsx).",
     "fix": "Treat 404 as 'no subscription', hoist hooks, guard `.replace` on undefined plan/status strings.",
-    "regression": "CON-010 (/subscription) with a tenant that has no subscription."
+    "regression": "CON-010 (/subscription) with a tenant that has no subscription.",
+    "fix_applied": "useSubscriptionUsage now maps the API shape {limitKey,current,max,unlimited} to the page model, and the page guards undefined keys and renders \"Unlimited\" (apps/console/src/lib/queries/subscription.ts, subscription/page.tsx). Root cause was a client/API shape mismatch, not the missing subscription. Verified in browser: no crash, usage rows render."
   },
   {
     "id": "BUG-005",
     "severity": "Medium",
-    "status": "CONFIRMED",
+    "status": "FIXED",
     "module": "Tenant resolution (storefront)",
     "tests": [
       "TEN-011b"
@@ -110,12 +114,13 @@
     "evidence": "qa/api/03 TEN-011b FAIL; probe output. Code: `tenant-resolver.middleware.ts` Fallback 2 (lines ~172-187) is not gated by NODE_ENV and runs when the *Host* is a dev host even if the forwarded hostname is unknown.",
     "root_cause": "Dev-convenience fallback 'first ACTIVE tenant' is reachable in any environment and also triggers for unknown forwarded hostnames.",
     "fix": "Gate Fallback 2 behind NODE_ENV!=='production' and only when no forwarded hostname was supplied; return 404 for an unknown forwarded hostname.",
-    "regression": "TEN-011a/011b/013."
+    "regression": "TEN-011a/011b/013.",
+    "fix_applied": "Tenant resolver skips the dev-host \"first ACTIVE tenant\" fallback when an explicit forwarded hostname was supplied and never runs it in production (tenant-resolver.middleware.ts). Verified: unknown x-ems-hostname -> 400, real hostnames and plain localhost dev flow unchanged; TEN-011b passes."
   },
   {
     "id": "BUG-006",
     "severity": "Medium",
-    "status": "CONFIRMED",
+    "status": "FIXED",
     "module": "Observability",
     "tests": [
       "ENV-008"
@@ -131,12 +136,13 @@
     "evidence": "qa/api/00 ENV-008; probe output.",
     "root_cause": "A prom-client gauge/counter receives a numeric string (MySQL COUNT returned as string) instead of a number (suspected in the DB/queue gauge collectors).",
     "fix": "Coerce with Number() before .set()/.inc(); add an e2e test hitting /metrics.",
-    "regression": "ENV-008."
+    "regression": "ENV-008.",
+    "fix_applied": "metrics.controller.ts coerces gauge values with Number() before gauge.set(). Verified: GET /metrics 200; ENV-008 passes."
   },
   {
     "id": "BUG-007",
     "severity": "Medium",
-    "status": "NOT REPRODUCED (intermittent or fixed)",
+    "status": "FIXED",
     "module": "Storefront web",
     "tests": [
       "STO-003"
@@ -152,12 +158,13 @@
     "evidence": "qa/e2e/03 STO-003 FAIL (reproduced twice); dev-mode stack not narrowed to a component. | Re-run 2026-10-09 (22:2x-22:55 IST): STO-003 PASS in the full run and 3/3 isolated reruns; storefront source unchanged in git, so the earlier failure may have been dev-server/HMR state. Keep open until re-checked on a production build.",
     "root_cause": "Suspected: client-only value (Date/locale formatting or window check) or invalid HTML nesting in the product detail tree.",
     "fix": "Reproduce with `next build && next start`, bisect the detail components, gate client-only values behind useEffect.",
-    "regression": "STO-003."
+    "regression": "STO-003.",
+    "fix_applied": "ProductShare read navigator/window during render (server had no Share button and an empty URL). Browser-only values now set in useEffect (apps/storefront/src/components/product-share.tsx). Verified: STO-003 passes (no hydration error)."
   },
   {
     "id": "BUG-008",
     "severity": "Low",
-    "status": "CONFIRMED",
+    "status": "FIXED",
     "module": "API error handling",
     "tests": [
       "API-005"
@@ -173,12 +180,13 @@
     "evidence": "qa/api/07 API-005.",
     "root_cause": "GlobalExceptionFilter does not map body-parser's PayloadTooLargeError (status 413) and treats it as unexpected; error occurs before the correlation middleware.",
     "fix": "Map `err.status/ type==='entity.too.large'` to 413 in the filter.",
-    "regression": "API-005."
+    "regression": "API-005.",
+    "fix_applied": "GlobalExceptionFilter maps body-parser entity.* errors to their 4xx status (413 \"The request body is too large\"). Verified live."
   },
   {
     "id": "BUG-009",
     "severity": "Low",
-    "status": "CONFIRMED",
+    "status": "FIXED",
     "module": "API error handling / info exposure",
     "tests": [
       "SEC-007"
@@ -194,12 +202,13 @@
     "evidence": "qa/api/07 SEC-007.",
     "root_cause": "Error message built from the guarded repository operation.",
     "fix": "Use a generic public message; log details server-side.",
-    "regression": "SEC-007."
+    "regression": "SEC-007.",
+    "fix_applied": "GlobalExceptionFilter returns a generic message for TenantContextMissingError and logs the detail server-side. Verified live; SEC-007 passes."
   },
   {
     "id": "BUG-010",
     "severity": "Low",
-    "status": "CONFIRMED",
+    "status": "FIXED",
     "module": "Marketing website / SEO & a11y",
     "tests": [
       "MKT-001"
@@ -215,12 +224,13 @@
     "evidence": "qa/e2e/01 MKT-001 /plans x3.",
     "root_cause": "`apps/marketing/src/app/plans/page.tsx` renders `PlansSection` (h2) without a PageHero/h1.",
     "fix": "Render PageHero (or promote the section heading to h1) on the dedicated /plans route.",
-    "regression": "MKT-001."
+    "regression": "MKT-001.",
+    "fix_applied": "PlansSection takes headingAs; /plans renders it as <h1> (apps/marketing). Verified: 1 h1 on every route."
   },
   {
     "id": "BUG-011",
     "severity": "Low",
-    "status": "CONFIRMED",
+    "status": "FIXED",
     "module": "Marketing website / SEO",
     "tests": [
       "MKT-006"
@@ -236,12 +246,13 @@
     "evidence": "qa/e2e/01 MKT-006.",
     "root_cause": "Only the root layout defines `metadata.description`; sub-pages only set `title`.",
     "fix": "Add `description` to each page's `metadata` (ideally from the website content).",
-    "regression": "MKT-006."
+    "regression": "MKT-006.",
+    "fix_applied": "Each marketing page now exports generateMetadata with a description from its own editable content. Verified: 6 distinct descriptions."
   },
   {
     "id": "BUG-012",
     "severity": "Low",
-    "status": "CONFIRMED",
+    "status": "FIXED",
     "module": "Admin console / Super-admin shell",
     "tests": [],
     "title": "Every super-admin page triggers a tenant-only API call that is always 403 (`GET /console/inventory/low-stock`)",
@@ -255,12 +266,13 @@
     "evidence": "qa-reports/console-routes.json (executed CON-005 data).",
     "root_cause": "Shared layout widget fetches low-stock regardless of user type.",
     "fix": "Skip tenant queries when userType==='PLATFORM'.",
-    "regression": "Extend CON-005 to fail on unexpected 4xx."
+    "regression": "Extend CON-005 to fail on unexpected 4xx.",
+    "fix_applied": "Platform users no longer fire tenant queries: NotificationsBell low-stock query is disabled for PLATFORM users and the merchant dashboard at / redirects platform users to /analytics. Verified: no 4xx on super-admin pages."
   },
   {
     "id": "BUG-013",
     "severity": "Low",
-    "status": "SUSPECTED",
+    "status": "NOT A BUG",
     "module": "Storefront theme",
     "tests": [
       "SF-025"
@@ -276,6 +288,7 @@
     "evidence": "qa/api/05 SF-025 INFO. | Re-verified 2026-10-09: still 404 RESOURCE_NOT_FOUND on Host northwind.ems.localhost.",
     "root_cause": "No published `tenant_themes` row for the seeded tenant; not confirmed to be user-visible.",
     "fix": "Seed a published theme row or return the assigned theme.",
-    "regression": "SF-025."
+    "regression": "SF-025.",
+    "fix_applied": "GET /storefront/theme requires ?storeId=; the QA probe omitted it. A 404 for a store with no published tenant_themes row is correct, and the storefront app uses /storefront/theme-assignment (200). No code change."
   }
 ]

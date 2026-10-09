@@ -191,8 +191,8 @@ export default function SubscriptionPage() {
             {usage.map((u) => (
               <div key={u.key} className="rounded-lg border border-slate-100 bg-slate-50/50 p-4">
                 <div className="flex justify-between text-xs mb-2">
-                  <span className="font-medium text-slate-700 capitalize">{u.key.replace(/_/g, ' ')}</span>
-                  <span className="font-semibold text-slate-900">{u.used} / {u.limit}</span>
+                  <span className="font-medium text-slate-700 capitalize">{(u.key ?? '').replace(/_/g, ' ')}</span>
+                  <span className="font-semibold text-slate-900">{u.used} / {u.limit < 0 ? 'Unlimited' : u.limit}</span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
                   <div

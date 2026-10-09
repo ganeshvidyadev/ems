@@ -3,7 +3,12 @@ import type { WebsiteContentResponse } from '@ems/contracts';
 import { marketingFetch } from '@/lib/api-client';
 import { PageHero } from '@/components/page-hero';
 
-export const metadata: Metadata = { title: 'About' };
+// Per-page description taken from the same editable content as the page body, so each route
+// has its own snippet instead of inheriting the site-wide one.
+export async function generateMetadata(): Promise<Metadata> {
+  const content = await marketingFetch<WebsiteContentResponse>('website/content');
+  return { title: 'About', description: content.about.subheading || undefined };
+}
 
 export default async function AboutPage() {
   const content = await marketingFetch<WebsiteContentResponse>('website/content');

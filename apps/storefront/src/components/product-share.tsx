@@ -1,11 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Share2, Check, Copy, MessageCircle, Twitter, QrCode, X, Send } from 'lucide-react';
 
 export function ProductShare({ productName, productUrl }: { productName: string; productUrl?: string }) {
   const [copied, setCopied] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
+  // Browser-only facts are read after mount. Reading `navigator`/`window` during render made the
+  // server HTML (no Share button, empty URL) differ from the client's first render, which React
+  // reports as a hydration mismatch.
+  const [canNativeShare, setCanNativeShare] = useState(false);
+  const [pageUrl, setPageUrl] = useState(productUrl ?? '');
+
+  useEffect(() => {
+    setCanNativeShare(typeof navigator.share === 'function');
+    if (!productUrl) setPageUrl(window.location.href);
+  }, [productUrl]);
 
   function getShareUrl(): string {
     if (productUrl) return productUrl;
@@ -43,7 +53,7 @@ export function ProductShare({ productName, productUrl }: { productName: string;
     }
   }
 
-  const currentUrl = getShareUrl();
+  const currentUrl = pageUrl;
   const shareText = encodeURIComponent(`Check out ${productName} on our store!`);
   const shareUrl = encodeURIComponent(currentUrl);
 
@@ -60,7 +70,7 @@ export function ProductShare({ productName, productUrl }: { productName: string;
         </span>
         <div className="flex items-center gap-2">
           {/* Native Web Share on supported devices */}
-          {typeof navigator !== 'undefined' && typeof navigator.share === 'function' && (
+          {canNativeShare && (
             <button
               onClick={() => void handleNativeShare()}
               className="inline-flex h-7 items-center gap-1 rounded-theme border border-line px-2 text-ink hover:border-brand hover:text-brand transition-colors"

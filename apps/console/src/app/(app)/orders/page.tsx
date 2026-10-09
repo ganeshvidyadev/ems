@@ -56,6 +56,11 @@ function OrdersPageContent() {
   const [status, setStatus] = useState<OrderListQuery['status'] | ''>('');
   const [paymentStatus, setPaymentStatus] = useState<OrderListQuery['paymentStatus'] | ''>('');
   const [fulfilmentStatus, setFulfilmentStatus] = useState<OrderListQuery['fulfilmentStatus'] | ''>('');
+  // Declared before the early returns below: hooks must run in the same order on every
+  // render, otherwise the store loading -> loaded transition crashes with "Rendered more
+  // hooks than during the previous render".
+  const [isExporting, setIsExporting] = useState(false);
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
 
   const ordersQuery = useOrders({
     page,
@@ -81,9 +86,6 @@ function OrdersPageContent() {
 
   const orders = ordersQuery.data?.data ?? [];
   const pagination = ordersQuery.data?.meta.pagination;
-
-  const [isExporting, setIsExporting] = useState(false);
-  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
 
   const allSelected = orders.length > 0 && orders.every((o) => selectedOrderIds.has(o.id));
 

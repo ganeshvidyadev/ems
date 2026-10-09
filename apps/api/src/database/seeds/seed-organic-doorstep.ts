@@ -11,7 +11,6 @@ import {
   BrandEntity,
   CategoryEntity,
   ProductEntity,
-  ProductVariantEntity,
   ProductMediaEntity,
   ProductCategoryEntity,
   BannerEntity,
@@ -24,9 +23,7 @@ export async function seedOrganicDoorstepCatalog(ds: DataSource) {
   const storeRepo = ds.getRepository(StoreEntity);
   const brandRepo = ds.getRepository(BrandEntity);
   const categoryRepo = ds.getRepository(CategoryEntity);
-  const productRepo = ds.getRepository(ProductEntity);
-  const variantRepo = ds.getRepository(ProductVariantEntity);
-  const mediaRepo = ds.getRepository(ProductMediaEntity);
+  const productRepo = ds.getRepository(ProductEntity);  const mediaRepo = ds.getRepository(ProductMediaEntity);
   const prodCatRepo = ds.getRepository(ProductCategoryEntity);
   const bannerRepo = ds.getRepository(BannerEntity);
   const warehouseRepo = ds.getRepository(WarehouseEntity);
@@ -366,31 +363,15 @@ export async function seedOrganicDoorstepCatalog(ds: DataSource) {
         });
         prod = await productRepo.save(prod);
 
-        // Variant
-        const variant = variantRepo.create({
-          publicId: newPublicId(),
-          tenantId,
-          productId: prod.id,
-          sku: spec.sku,
-          title: 'Standard Unit',
-          optionValues: {},
-          optionSignature: 'default',
-          position: 0,
-          priceMinor: spec.priceMinor,
-          comparePriceMinor: spec.comparePriceMinor,
-          costPriceMinor: String(Math.round(Number(spec.priceMinor) * 0.5)),
-          weightGrams: spec.weightGrams,
-          isActive: true,
-        });
-        const savedVariant = await variantRepo.save(variant);
-
+        // Inventory is variant-less: a SIMPLE product is sold with variantId = null and
+        // InventoryRepository.findSlot filters `variant_id IS NULL` (see seed-northwind-rich-data.ts).
         // Inventory
         await inventoryRepo.save(
           inventoryRepo.create({
             tenantId,
             warehouseId: warehouse.id,
             productId: prod.id,
-            variantId: savedVariant.id,
+            variantId: null,
             quantityOnHand: 150,
             quantityReserved: 5,
             quantityIncoming: 0,

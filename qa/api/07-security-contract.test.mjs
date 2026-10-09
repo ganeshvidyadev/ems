@@ -154,11 +154,15 @@ test('[SEC-012] RATE LIMITING: 40 rapid unauthenticated gift-card lookups are th
   assert.ok(codes.includes(429), `no throttling observed: statuses ${[...new Set(codes)].join(',')}`);
 });
 
-test('[SEC-013] RATE LIMITING: repeated failed logins for one unknown account are throttled or locked', async () => {
+test('[SEC-013] RATE LIMITING: repeated failed logins for one unknown account are throttled or locked (limit = RATE_LIMIT_AUTH_PER_MIN, 30 in local .env)', async () => {
   const email = `qa-bruteforce-${Date.now()}@example.invalid`;
   const codes = [];
-  for (let i = 0; i < 12; i++) codes.push((await call('POST', '/auth/login', { body: { email, password: `Wrong-Password-${i}!` } })).status);
-  assert.ok(codes.some((c) => c === 429 || c === 423), `12 failed attempts never throttled: ${[...new Set(codes)].join(',')}`);
+  for (let i = 0; i < 60; i++) {
+    const status = (await call('POST', '/auth/login', { body: { email, password: `Wrong-Password-${i}!` } })).status;
+    codes.push(status);
+    if (status === 429) break;
+  }
+  assert.ok(codes.some((c) => c === 429 || c === 423), `60 failed attempts never throttled: ${[...new Set(codes)].join(',')}`);
 });
 
 test('[SEC-014] account lockout exists for a real account after repeated failures (uses a throwaway invite-free check: informational)', async (t) => {

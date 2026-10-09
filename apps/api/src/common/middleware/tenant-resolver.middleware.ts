@@ -118,6 +118,14 @@ export class TenantResolverMiddleware implements NestMiddleware {
     ).filter((value): value is string => value !== null);
 
     for (const hostname of candidates) {
+      // A dev host (localhost / 127.0.0.1) only ever resolves through the "first ACTIVE
+      // tenant" dev fallback. When the storefront proxy supplied an explicit hostname
+      // that did not resolve, falling back to the dev host would hand an *unknown*
+      // storefront another tenant's catalogue instead of a clean 404 — so the dev
+      // fallback is skipped in that case, and never runs in production.
+      const isDevHostCandidate = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === 'ems.localhost';
+      if (isDevHostCandidate && (this.app.isProduction || (forwarded && forwarded !== hostname))) continue;
+
       const resolution = await this.lookupDomain(hostname);
       if (!resolution) continue;
 

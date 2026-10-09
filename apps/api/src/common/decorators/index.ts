@@ -22,6 +22,17 @@ export const READ_ONLY_KEY = 'ems:read-only';
 export const PLAN_QUOTA_KEY = 'ems:plan-quota';
 export const ALLOW_ONBOARDING_KEY = 'ems:allow-onboarding';
 export const BLOCKED_DURING_IMPERSONATION_KEY = 'ems:blocked-during-impersonation';
+export const RATE_LIMIT_KEY = 'ems:rate-limit';
+
+export interface RateLimitOptions {
+  /** Bucket name; requests share a counter per (name, client IP, host). */
+  name: string;
+  /** Maximum requests per minute. */
+  limit: number;
+}
+
+/** Throttles an abuse-prone public route (see `RateLimitGuard`). Returns 429 + Retry-After. */
+export const RateLimit = (options: RateLimitOptions) => SetMetadata(RATE_LIMIT_KEY, options);
 
 /**
  * Protects an endpoint so only an authenticated storefront customer can access it.

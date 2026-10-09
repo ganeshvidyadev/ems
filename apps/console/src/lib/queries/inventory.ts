@@ -11,10 +11,11 @@ import { apiGet, apiGetPaginated, apiPost } from '@/lib/api-client';
 const INVENTORY_KEY = 'inventory';
 
 /** Slots at or below their reorder point — the console's main inventory landing view. */
-export function useLowStock() {
+export function useLowStock(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: [INVENTORY_KEY, 'low-stock'],
     queryFn: () => apiGet<InventoryLevelResponse[]>('/console/inventory/low-stock'),
+    enabled: options.enabled ?? true,
   });
 }
 

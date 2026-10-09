@@ -37,6 +37,10 @@ const FORWARDED_REQUEST_HEADERS = [
   'accept-language',
   'authorization',
   'cookie',
+  // The shopper's real address. Without it every storefront call reaches the API from
+  // this server's IP, so the API's per-IP throttling (login, gift-card lookups) would
+  // treat all shoppers as one client.
+  'x-forwarded-for',
 ] as const;
 
 async function proxy(request: NextRequest, path: string[]): Promise<Response> {

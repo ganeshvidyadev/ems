@@ -70,6 +70,7 @@ import { PlatformSearchModule } from './modules/platform-search/platform-search.
 import { PlatformIntegrationModule } from './modules/platform-integration/platform-integration.module';
 import { QueueModule } from './queues/queue.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { RateLimitGuard } from './common/guards/rate-limit.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
 import { TenantStatusGuard } from './common/guards/tenant-status.guard';
 import { MaintenanceModeGuard } from './common/guards/maintenance-mode.guard';
@@ -201,6 +202,9 @@ import { RequestContextService } from './common/services/request-context.service
     //                              permissions so a suspended tenant gets 403 SUSPENDED
     //                              rather than a misleading "missing permission".
     //   4. PermissionsGuard      — does this user hold the required permission?
+    // Abuse throttling runs before authentication so a flood of bad credentials is cut
+    // off without spending a password hash or a DB lookup on each attempt.
+    { provide: APP_GUARD, useClass: RateLimitGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: MaintenanceModeGuard },
     { provide: APP_GUARD, useClass: TenantStatusGuard },

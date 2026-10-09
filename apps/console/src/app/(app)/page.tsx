@@ -11,7 +11,8 @@ import {
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Alert,
   Badge,
@@ -82,6 +83,21 @@ const STATUS_BADGE: Record<OrderResponse['status'], 'default' | 'success' | 'war
 };
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const isPlatform = user?.userType === 'PLATFORM';
+
+  // `/` is the merchant dashboard. A platform admin has no store, so rendering it would only
+  // fire tenant-scoped requests that are always 403; send them to their own home instead.
+  useEffect(() => {
+    if (isPlatform) router.replace('/analytics');
+  }, [isPlatform, router]);
+
+  if (isPlatform) return null;
+  return <MerchantDashboard />;
+}
+
+function MerchantDashboard() {
   const { user } = useAuth();
   const { store, isLoading: storeLoading, isError: storeIsError, error: storeError } = useCurrentStore();
   const [rangeDays, setRangeDays] = useState<'7' | '30' | '90'>('30');

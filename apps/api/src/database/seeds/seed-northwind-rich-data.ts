@@ -11,7 +11,6 @@ import {
   BrandEntity,
   CategoryEntity,
   ProductEntity,
-  ProductVariantEntity,
   ProductMediaEntity,
   ProductCategoryEntity,
   BannerEntity,
@@ -30,7 +29,6 @@ export async function seedNorthwindRichData(ds: DataSource) {
   const brandRepo = ds.getRepository(BrandEntity);
   const categoryRepo = ds.getRepository(CategoryEntity);
   const productRepo = ds.getRepository(ProductEntity);
-  const variantRepo = ds.getRepository(ProductVariantEntity);
   const mediaRepo = ds.getRepository(ProductMediaEntity);
   const prodCatRepo = ds.getRepository(ProductCategoryEntity);
   const bannerRepo = ds.getRepository(BannerEntity);
@@ -359,6 +357,19 @@ export async function seedNorthwindRichData(ds: DataSource) {
     },
   ];
 
+  // Repair databases seeded by the earlier version (stock bound to a default variant of a
+  // SIMPLE product, which made the product unpurchasable). Idempotent: once the slots are
+  // variant-less this matches nothing. Only slots of this tenant's seeded SIMPLE products
+  // whose variant is the auto-created 'default' one are touched.
+  await ds.query(
+    `UPDATE inventory_levels il
+       JOIN product_variants v ON v.id = il.variant_id
+       JOIN products p ON p.id = il.product_id
+        SET il.variant_id = NULL
+      WHERE p.tenant_id = ? AND p.type = 'SIMPLE' AND v.option_signature = 'default'`,
+    [tenantId],
+  );
+
   for (const spec of productSpecs) {
     let prod = await productRepo.findOne({ where: { tenantId, slug: spec.slug } });
     if (!prod) {
@@ -386,31 +397,17 @@ export async function seedNorthwindRichData(ds: DataSource) {
       });
       prod = await productRepo.save(prod);
 
-      // Variant
-      const variant = variantRepo.create({
-        publicId: newPublicId(),
-        tenantId,
-        productId: prod.id,
-        sku: spec.sku,
-        title: 'Standard Unit',
-        optionValues: {},
-        optionSignature: 'default',
-        position: 0,
-        priceMinor: spec.priceMinor,
-        comparePriceMinor: spec.comparePriceMinor,
-        costPriceMinor: String(Math.round(Number(spec.priceMinor) * 0.5)),
-        weightGrams: spec.weightGrams,
-        isActive: true,
-      });
-      const savedVariant = await variantRepo.save(variant);
-
-      // Inventory
+      // Inventory. A SIMPLE product has no variants: cart and checkout sell it with
+      // `variantId = null`, and `InventoryRepository.findSlot` filters `variant_id IS NULL`,
+      // so the stock slot must be variant-less. (An earlier version of this seed created a
+      // default variant and bound the stock to it, which made every seeded product fail
+      // checkout with INVENTORY_INSUFFICIENT.)
       await inventoryRepo.save(
         inventoryRepo.create({
           tenantId,
           warehouseId: warehouse.id,
           productId: prod.id,
-          variantId: savedVariant.id,
+          variantId: null,
           quantityOnHand: 150,
           quantityReserved: 5,
           quantityIncoming: 0,

@@ -5,7 +5,7 @@ import {
   checkGiftCardBalanceRequestSchema,
   issueGiftCardRequestSchema,
 } from '@ems/contracts';
-import { Permissions, Public, Validate } from '../../common/decorators';
+import { Permissions, Public, RateLimit, Validate } from '../../common/decorators';
 import { Paginated } from '../../common/interceptors/response-envelope.interceptor';
 import { GiftCardService } from './gift-card.service';
 
@@ -32,6 +32,8 @@ export class GiftCardController {
 
   @Post('storefront/gift-cards/check-balance')
   @Public()
+  // A valid/invalid answer for a card code is an enumeration oracle; keep it slow.
+  @RateLimit({ name: 'gift-card-lookup', limit: 10 })
   @Validate(checkGiftCardBalanceRequestSchema)
   @ApiOperation({ summary: "Check a gift card's remaining balance" })
   async checkBalance(@Body() body: ReturnType<typeof checkGiftCardBalanceRequestSchema.parse>) {
