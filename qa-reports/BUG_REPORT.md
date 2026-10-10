@@ -294,3 +294,34 @@ These come from reading the code (API inventory), not from execution. They are n
 | BUG-013 | SF-025 PASS; registry says not a bug | not re-investigated |
 
 New findings: none Critical/High. Tenant isolation (TEN-001..014, 14/14) PASS; no cross-tenant exposure. See final QA message for observations (API/Next dev servers dying under memory pressure, ~155 MB free during the run).
+
+## QA cycle 4: seeded-data findings (2026-10-10, main at cfb7bfc)
+
+Environment: EMS API built from dist on :4100 (:4000/:3000 held by an unrelated project); console briefly on :3100, storefront briefly on :3001; marketing not started (RAM); BullMQ :6380 down. Database 127.0.0.1:3307/ems after `seed:realistic` (commit b510ce5). Reports written to this worktree because edits to the main checkout are blocked by a hook.
+
+### New bugs
+
+| ID | Severity | Summary | Location | Reproduction |
+|---|---|---|---|---|
+| BUG-014 | High | Console Orders list and dashboard always empty: the public store ULID is compared with the internal bigint `store_id` | `apps/api/src/modules/order/order.repository.ts:32`; `report/daily-sales-rollup.repository.ts:83-84,126-127`; `report/report.service.ts:20,83` | As owner@electrohub-india.test, `GET /console/orders?storeId=<public id from /console/stores>` returns total 0 (152 without storeId). `GET /console/reports/sales-summary?from=2026-04-14&to=2026-10-10&storeId=<public id>` returns ordersCount 0 (125 without). |
+| BUG-015 | Medium | GST computed on the pre-discount line subtotal | `modules/checkout/checkout.service.ts:118-126` (discount applied later at 270, 327) | ElectroHub, 2 x Rs 23,499 to MH with EHSAVE15: discount Rs 1,500, tax stays Rs 8,459.64 (expected Rs 8,189.64). All 385 discounted seeded lines follow the same pattern. |
+| BUG-016 | Medium | Storefront customer token not bound to the host's tenant | `common/guards/jwt-auth.guard.ts:99-108` | Log in a StyleVerse customer, call `GET /storefront/account/orders` with `x-ems-hostname: freshbasket-grocery.ems.localhost`: 200 with the customer's own StyleVerse order (expected 401). No cross-tenant data exposure. |
+| BUG-017 | Medium | N+1 queries in list responses | `order.service.ts:512-524`; `product.service.ts:298-309`; storefront path uncached (`product-storefront.controller.ts:59`) | MySQL `Questions` delta: /console/orders 40 (10 rows) to 366 (100 rows); /console/products 58 to 539; /storefront/products 36 to 337. Storefront product list 4.6-6.2 s. |
+| BUG-018 | Medium (data-dependent) | Website module 403 `PERMISSION_DENIED platform.website:read` for super-admin | permissions only in `database/seeds/permissions.seed.ts:104`; no migration adds them | On this DB (210 permission rows, max id 828) all 17 WEB-* tests fail. Any existing DB upgraded to this release loses the module. |
+| BUG-019 | Low | Order responses expose internal `customerId` | `order.service.ts:530` | Order shows `customerId: "24"`; `GET /console/customers/24` is 404. |
+| BUG-020 | Low | Gift-card and returns lists not paginated properly | `gift-card/gift-card.controller.ts:20-22`; `order/return.controller.ts:19-21` | `limit=abc`, `limit=-1`, `page=0` return 500 INTERNAL_ERROR; `limit=100000` accepted. Returns list has no pagination. |
+| BUG-021 | Low | Cart accepts a VARIABLE product without a variant | `cart/cart.service.ts:100-107` | StyleVerse: `POST /storefront/cart/{id}/items` with a VARIABLE productId and no variantId returns 200 using the parent's SKU and price. |
+| BUG-022 | Low | Hard-coded WELCOME10 promo and wrong footer logo | `storefront/src/components/announcement-bar.tsx:19`, `first-order-modal.tsx:29,90,100`, `product-offers.tsx:8`; `theme-footer.tsx:21-25` | No seeded tenant has WELCOME10; footer shows the Famms logo on non-organic themes (e.g. FreshBasket "harvest"). |
+| BUG-023 | Low | Marketplace supplier sub-orders don't reconcile | `marketplace/marketplace-order.service.ts:217-255` | Sub-order total = net payable but no item commission recorded; DB-007 fails on order id 2 (tenant 11: subtotal 90,000 vs total 72,000). |
+
+Observation: dashboard Low-stock widget renders product ULIDs first, then makes one `GET /console/products/{id}` per item.
+
+### Status changes
+
+| ID | Status | Notes |
+|---|---|---|
+| BUG-001 | reopened (data only) | Northwind's 12 SIMPLE products again have stock tied to a variant (SF-017, SF-019, DB-012 fail). The seed fix is in code but its repair was not run on this DB; together with BUG-018 this suggests the DB was rebuilt after cycle 3. |
+| BUG-007 | reopened | Hydration-mismatch warnings on storefront /products, /cart and product pages. |
+| BUG-004 residual (fake subscription) | open | Console shows "Standard Merchant / ACTIVE / MONTHLY" while the API returns 404 (`subscription/page.tsx:75,85,90`); affects all 5 seeded tenants. |
+| BUG-012 / dashboard pre-redirect calls | verified-fixed | Super-admin on `/` only calls `/auth/refresh` before redirecting to `/analytics`. |
+| LOW-002 (413 code / correlationId) | open | Status 413 but code `MALFORMED_REQUEST`; correlationId "unknown". |

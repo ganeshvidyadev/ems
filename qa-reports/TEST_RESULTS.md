@@ -306,3 +306,33 @@ Stack under test: API :4000 (pid 25064, restarted mid-cycle), served from the si
 | `node run-all.mjs e2e` | INVALID: Next dev servers :3000/:3001/:3003 died mid-run. Marketing desktop+tablet MKT-001 (12) and STO-008 PASS; the other 38 rows recorded as BLOCKED (ERR_CONNECTION_REFUSED), not FAIL |
 
 Direct probes (this cycle): gift-card check-balance 10x201 then 429; 45 parallel failed logins one identity -> 30x401 then 15x429; unknown `x-ems-hostname` -> 400; Host evil.example.com -> generic TENANT_CONTEXT_MISSING message; /metrics 200; 30 MB body -> 413 `MALFORMED_REQUEST` "The request body is too large"; Lakeside host cannot read a Northwind slug (404).
+
+## QA cycle 4 - seeded realistic data (2026-10-10, main at cfb7bfc)
+
+Totals: 174 tests, 140 PASS, 32 FAIL, 1 BLOCKED, 1 NOT_TESTED (pass rate 140/172 = 81.4%). Critical 0, High 1 new (BUG-014). Bug details in BUG_REPORT.md "QA cycle 4".
+
+| Run | Result | Failures |
+|---|---|---|
+| Jest unit (apps/api, `--runInBand`) | 206/206 PASS (25 suites) | none |
+| API suites 00-08 (`QA_API=http://localhost:4100/api/v1 node run-all.mjs api --retry-failed`) | 144: 119 PASS, 23 FAIL, 1 BLOCKED (ENV-005 BullMQ), 1 NOT_TESTED (SEC-014) | ENV-006 x2 (frontends down), WEB x17 (BUG-018), SF-017/SF-019/DB-012 (BUG-001 data), DB-007 (BUG-023) |
+| Suite 09 seeded tenants (`node --test api/09-seeded-tenants.test.mjs`, 2 runs, not flaky) | 30: 21 PASS, 9 FAIL | STI-008 (BUG-016), SWF-005 x2 (BUG-014), SWF-007 (BUG-021), SWF-008 (BUG-019), PERF-001 (storefront > 3 s), PERF-002 (BUG-020), PERF-003 (BUG-017), LOW-002 |
+
+### Seed integrity (read-only SQL)
+
+All PASS: per-tenant counts match SEED_PLAN (200 products, 100 customers, 150 orders, 2 warehouses, 6 staff, 9 coupons, 8 gift cards, 1 theme); no cross-tenant tenant_id across 61 links for the 5 seeded tenants; order totals reconcile; 0 inventory mismatches over 3,292 stock slots; order_sequences >= max order number; MRP >= price and cost <= price; coupon usage, gift-card balances, rating aggregates and domains consistent; idempotency confirmed by SEED_RESULT_20261010-045118 (0 inserted, 36,884 present). Northwind unchanged versus baseline; Lakeside differs only by QA-tagged soft-deleted coupons. Residue noted: 8 old PASSWORD_RESET auth_tokens (2026-09-18) tagged tenant 5 for users of tenants 1-4.
+
+### Tenant isolation
+
+Suite 03 14/14 PASS. Suite 09 STI-001..007 PASS (list scoping, 80 cross-tenant reads by id all 404, cross-tenant writes refused, non-owner staff confined, header/query tenant switching refused, storefront host isolation, gift card/coupon cross-use rejected). STI-008 FAIL (BUG-016, no data exposure).
+
+### Performance (StyleVerse, median of 3)
+
+Console lists 450-1,540 ms; storefront products 4,634-6,150 ms; search 1,407-3,709 ms; product page 1,487-2,525 ms; checkout 1.05-1.38 s. Absolute times inflated by low RAM and a remote cache Redis (~0.9 s); statement counts (BUG-017) are machine-independent.
+
+### Not tested
+
+e2e suites 01-03 and marketing (memory); queue-dependent flows (BullMQ down); Jest isolation/e2e tiers (need BullMQ and ems_test); console typecheck/lint (memory).
+
+### QA data left in the DB
+
+4 CANCELLED orders ORD-000151/152 on ElectroHub and FreshBasket (sequences now 152, so `seed:realistic --validate` will report 152 vs 150); hold/resume history on seeded ORD-000120 in both; suite 06's cancelled Northwind ORD-000002 and soft-deleted `QA-WF-*` product; 1 soft-deleted QAISO coupon on Lakeside.
