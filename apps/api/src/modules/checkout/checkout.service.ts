@@ -97,10 +97,8 @@ export class CheckoutService {
   // never trusted for the actual charge)
   // =========================================================================
 
-  private async priceLines(
-    cart: StoredCart,
-    address: OrderAddress | undefined,
-  ): Promise<PricedLine[]> {
+  /** Prices each line before discount and tax — `applyDiscountToLines` then `applyTaxToLines` fill those in. */
+  private async priceLines(cart: StoredCart): Promise<PricedLine[]> {
     if (cart.items.length === 0) throw new CartEmptyError();
     const currency = cart.currency as CurrencyCode;
 
@@ -117,15 +115,6 @@ export class CheckoutService {
         const unitPrice = Money.fromMinor(variant?.priceMinor ?? product.priceMinor, currency);
         const lineSubtotal = unitPrice.multiplyByQuantity(item.quantity);
 
-        const { taxRate, taxMinor, breakup } = address
-          ? await this.tax.computeLineTax(
-              product.taxClassId ?? null,
-              lineSubtotal,
-              address.countryCode,
-              address.stateCode ?? null,
-            )
-          : { taxRate: '0', taxMinor: Money.zero(currency), breakup: [] };
-
         return {
           productId: product.id,
           variantId: variant?.id ?? null,
@@ -137,10 +126,10 @@ export class CheckoutService {
           unitPrice,
           lineSubtotal,
           lineDiscount: Money.zero(currency),
-          taxRate,
-          lineTax: taxMinor,
-          taxBreakup: breakup,
-          lineTotal: lineSubtotal.add(taxMinor),
+          taxRate: '0',
+          lineTax: Money.zero(currency),
+          taxBreakup: [],
+          lineTotal: lineSubtotal,
           // A marketplace line's stock lives in the *supplier's* tenant, not
           // this one — `inventory_levels` for it doesn't even exist here.
           // Checkout skips reservation for it entirely; the supplier's own
@@ -244,6 +233,30 @@ export class CheckoutService {
     });
   }
 
+  /**
+   * Taxes each line on its discounted amount: GST is levied on the transaction
+   * value after a discount shown on the invoice (BUG-015). Must run after
+   * `applyDiscountToLines`. Without an address no tax is computed.
+   */
+  private async applyTaxToLines(lines: PricedLine[], address: OrderAddress | undefined): Promise<void> {
+    if (!address) return;
+    await Promise.all(
+      lines.map(async (line) => {
+        const taxable = line.lineSubtotal.subtract(line.lineDiscount);
+        const { taxRate, taxMinor, breakup } = await this.tax.computeLineTax(
+          line.taxClassId,
+          taxable,
+          address.countryCode,
+          address.stateCode ?? null,
+        );
+        line.taxRate = taxRate;
+        line.lineTax = taxMinor;
+        line.taxBreakup = breakup;
+        line.lineTotal = taxable.add(taxMinor);
+      }),
+    );
+  }
+
   async priceOrder(
     cartId: string,
     shippingAddress?: OrderAddress,
@@ -252,7 +265,7 @@ export class CheckoutService {
   ) {
     const cart = await this.cart.get(cartId);
     const currency = cart.currency as CurrencyCode;
-    const lines = await this.priceLines(cart, shippingAddress);
+    const lines = await this.priceLines(cart);
     const isCod = paymentGateway === 'cod';
 
     const subtotal = Money.sum(
@@ -268,6 +281,7 @@ export class CheckoutService {
       }
     }
     this.applyDiscountToLines(lines, discount, currency);
+    await this.applyTaxToLines(lines, shippingAddress);
 
     const shipping = shippingAddress
       ? await this.computeShipping(
@@ -311,7 +325,7 @@ export class CheckoutService {
     const storeId = cart.storeId;
     const currency = cart.currency as CurrencyCode;
 
-    const lines = await this.priceLines(cart, input.shippingAddress);
+    const lines = await this.priceLines(cart);
     const subtotal = Money.sum(
       lines.map((l) => l.lineSubtotal),
       currency,
@@ -325,6 +339,7 @@ export class CheckoutService {
       discount = result.discount;
     }
     this.applyDiscountToLines(lines, discount, currency);
+    await this.applyTaxToLines(lines, input.shippingAddress);
 
     const isCod = input.paymentGateway === 'cod';
     const shippingCost = await this.computeShipping(
