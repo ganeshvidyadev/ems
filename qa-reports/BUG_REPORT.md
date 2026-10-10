@@ -325,3 +325,33 @@ Observation: dashboard Low-stock widget renders product ULIDs first, then makes 
 | BUG-004 residual (fake subscription) | open | Console shows "Standard Merchant / ACTIVE / MONTHLY" while the API returns 404 (`subscription/page.tsx:75,85,90`); affects all 5 seeded tenants. |
 | BUG-012 / dashboard pre-redirect calls | verified-fixed | Super-admin on `/` only calls `/auth/refresh` before redirecting to `/analytics`. |
 | LOW-002 (413 code / correlationId) | open | Status 413 but code `MALFORMED_REQUEST`; correlationId "unknown". |
+
+## BUG-014 verification (2026-10-10 15:15-18:00 IST, fix 22414ec)
+
+**Verdict: BUG-014 verified-fixed (Confirmed).** Fix: `order.service.ts:59-64` resolves `storeId`/`customerId` with `order.repository.ts:95` (`resolveId`, tenant-scoped); an id that does not resolve returns an empty page. `daily-sales-rollup.repository.ts:14,97,141` and `report.service.ts:83` resolve the store in a tenant-scoped subquery (`rollupStoreFilter`).
+
+Build note: the first run (15:15) used `nest build` of a clean main checkout at 22414ec. By 17:30 the main checkout had 38 uncommitted changes from another session, and its `dist` had been rebuilt from that tree. The final runs therefore used a dist built from this worktree (b37bbdb = 22414ec + the BUG-015 checkout change only), run on :4100 with the main checkout's `.env`. Both builds gave the same BUG-014 results.
+
+| Check | Result | Evidence |
+|---|---|---|
+| `/console/orders?storeId=<public id>` (owner of each tenant) | PASS | ElectroHub 154 = unfiltered 154 = DB 154; StyleVerse 150 = 150 = 150; FreshBasket 154 = 154 = 154. These were 152/150/152 in cycle 4; QA cancelled orders 153-155 were added since. Pagination with limit 20: 8 pages, page 2 does not repeat page 1, last page holds the remainder, `hasNext` is correct, and every item has the filtered store id. |
+| `sales-summary?from=2026-04-14&to=2026-10-10&storeId=<public id>` | PASS | ordersCount 125 = unfiltered 125 = `daily_sales_rollup` (channel ALL) 125 for all 3 tenants; gross and net match; byDay has 99 / 87 / 86 days, and summing byDay gives ordersCount. Cycle 4 got 0. |
+| `?customerId=<public id>` | PASS | The customer with the most orders in each tenant: API 9 / 8 / 9 = DB 9 / 8 / 9, and every returned order belongs to that customer. Combining it with storeId gives the same counts. |
+| Unknown customer (random valid ULID) | PASS | total 0 |
+| Cross-tenant store/customer ids, all 6 ordered tenant pairs | PASS | orders total 0 with B's store id, total 0 with B's customer id, sales-summary ordersCount 0 and byDay empty. B's data is never returned. |
+| Random valid ULID as storeId | PASS | orders total 0; sales-summary ordersCount 0 |
+| Malformed id on `/console/orders` (`not-a-ulid`, `1`, `' OR 1=1 --`, for storeId and customerId) | PASS | 422 VALIDATION_FAILED |
+| Console UI, ElectroHub and StyleVerse (Chrome headless, console dev on :3000 -> API :4100) | PASS | Orders page shows 20 rows and no "No orders match these filters" message (API total 155 / 150). The dashboard shows ElectroHub net revenue Rs 5,51,915.81, 32 orders and 5 recent orders; StyleVerse Rs 1,03,063.69, 29 orders and 5 recent orders. All console calls with storeId returned 200. Screenshots: `qa-reports/screenshots/bug014-electrohub-india-{dashboard,orders}.png`, `bug014-styleverse-fashion-{dashboard,orders}.png` |
+| Report export (`buildRollupTable`) | BLOCKED | `POST /console/reports/generate` goes through BullMQ (:6380 down). Only the unit test covers it (`test/unit/store-id-filters.spec.ts`). |
+
+Regression test: `qa/api/10-bug014-store-filters.test.mjs` (B14-001..033), 14/14 PASS.
+
+### New findings from this run
+
+| ID | Severity | Status | Description | Location |
+|---|---|---|---|---|
+| BUG-024 | Low | Confirmed | `sales-summary` and `reports/generate` accept any string as `storeId` (`z.string()`), while `/console/orders` requires a ULID (422). The input does no harm: `not-a-ulid`, `1` and `' OR 1=1 --` return 200 with ordersCount 0, and the value is a bound parameter. The validation is still inconsistent. Suggested fix: use `publicIdSchema.optional()`. | `packages/contracts/src/report/report.contracts.ts:22,57` |
+| QA-H-001 | QA harness | Fixed in `qa/` | TEN-011a sent its raw-Host request to port 4000, which was hard-coded, so it ignored `QA_API`. In cycle 4, :4000 was held by an unrelated app, so the cycle-4 TEN-011a PASS was measured against the wrong server and is not valid evidence. The test now derives the port from `QA_API`, and on :4100 it genuinely passes. | `qa/api/03-tenant-isolation.test.mjs:135` |
+| ENV-007 | Environment (not a product bug) | Observed | The shared `ems` DB has migrations 20-22 applied (`WebsitePermissions`, `NorthwindSimpleStock`, `SupplierOrderReconciliation`). These files exist only as untracked files in the main checkout. As a result DB-001 fails against committed code, while DB-007 and DB-012 now pass. The main checkout's `dist` (built 16:07) contains uncommitted code. | main checkout `apps/api/src/database/migrations/17916264000*` |
+
+Unchanged: BUG-016 (STI-008), BUG-021 (SWF-007), BUG-019 (SWF-008), BUG-020 (PERF-002), BUG-017 (PERF-003) and LOW-002 still fail.

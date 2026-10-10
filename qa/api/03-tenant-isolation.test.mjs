@@ -2,7 +2,9 @@ import http from 'node:http';
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { call, login, decodeJwt } from '../lib/client.mjs';
-import { USERS, HOSTS } from '../lib/config.mjs';
+import { USERS, HOSTS, API_ROOT } from '../lib/config.mjs';
+
+const API_URL = new URL(API_ROOT);
 
 let nw, ls, nwProducts, nwCustomers, nwCoupons, fixtureCouponId;
 const RUN = Date.now().toString(36).toUpperCase();
@@ -132,7 +134,7 @@ test('[TEN-010] storefront product list is tenant-scoped by host', async () => {
 
 const rawStorefrontStore = (hostHeader) =>
   new Promise((resolve) => {
-    const r = http.request({ host: '127.0.0.1', port: 4000, path: '/api/v1/storefront/store', headers: { Host: hostHeader } }, (m) => {
+    const r = http.request({ host: '127.0.0.1', port: Number(API_URL.port || 80), path: '/api/v1/storefront/store', headers: { Host: hostHeader } }, (m) => {
       let b = '';
       m.on('data', (d) => (b += d));
       m.on('end', () => resolve({ status: m.statusCode, text: b }));

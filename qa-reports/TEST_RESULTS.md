@@ -336,3 +336,19 @@ e2e suites 01-03 and marketing (memory); queue-dependent flows (BullMQ down); Je
 ### QA data left in the DB
 
 4 CANCELLED orders ORD-000151/152 on ElectroHub and FreshBasket (sequences now 152, so `seed:realistic --validate` will report 152 vs 150); hold/resume history on seeded ORD-000120 in both; suite 06's cancelled Northwind ORD-000002 and soft-deleted `QA-WF-*` product; 1 soft-deleted QAISO coupon on Lakeside.
+
+## BUG-014 verification (2026-10-10, fix 22414ec; API dist on :4100)
+
+| Run | Result | Notes |
+|---|---|---|
+| Jest unit, apps/api (`node ../../node_modules/jest/bin/jest.js --config test/jest-unit.json --runInBand`) | 216/216 PASS (26 suites), clean main checkout at 22414ec; 220/220 (27 suites) on the worktree at b37bbdb | |
+| `node --test api/10-bug014-store-filters.test.mjs` (new) | 14/14 PASS (twice) | see BUG_REPORT "BUG-014 verification" for numbers |
+| `node --test api/03-tenant-isolation.test.mjs` | 14/14 PASS | First run had 13/14: TEN-011a hit the hard-coded :4000 (harness defect QA-H-001, fixed); it passed on retry after the fix |
+| `node --test api/08-db-integrity.test.mjs` | 11/12 (1 FAIL) | DB-001 FAIL: 3 migrations in the DB are untracked in the main checkout (ENV-007). DB-007 and DB-012 now PASS because of those migrations (on the clean 15:15 run before they were applied: 10/12, DB-007 and DB-012 FAIL as in cycle 4) |
+| `node --test api/09-seeded-tenants.test.mjs` (QA_API=:4100, QA_PERF_OUT=scratch) | 30: 24 PASS, 6 FAIL | SWF-005 x2 now PASS (BUG-014). Still FAIL: STI-008, SWF-007, SWF-008, PERF-002, PERF-003, LOW-002. PERF-001 PASS this time, versus FAIL in cycle 4: timing-dependent (more free RAM), not a code change |
+| Console UI (Playwright + system Chrome; ElectroHub, StyleVerse) | PASS | the Orders list and dashboard are populated; screenshots `qa-reports/screenshots/bug014-*.png` |
+| Report export with storeId | BLOCKED | BullMQ :6380 down |
+
+Pass rate for this verification (API + UI checks run): 14 + 14 + 11 + 24 + 2 UI = 65 PASS / 72 executed = 90.3%. BLOCKED 1 (export).
+
+QA data added: ORD-000155 (QA-MV2CY7YR, CANCELLED, stock restocked) on ElectroHub and FreshBasket, and hold/resume history on ORD-000120 in both tenants (status back to PROCESSING). CANCELLED QA orders ORD-000153/154 from earlier runs today are also present. They now fill the dashboard "Recent orders" widget for those two tenants.
