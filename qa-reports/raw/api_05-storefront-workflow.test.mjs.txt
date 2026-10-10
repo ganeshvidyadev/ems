@@ -1,138 +1,35 @@
-✔ [SF-001] product listing returns paginated envelope with meta.pagination (6372.6549ms)
-✔ [SF-002] pagination pages do not overlap (4317.9231ms)
-✔ [SF-003] sorting by priceMinor orders ascending / descending correctly (5552.0729ms)
-✔ [SF-004] invalid sort / limit / page -> 422 with validation details (not 500) (2097.0991ms)
-✔ [SF-005] search finds products by name (incl. short queries) and is case-insensitive (10628.8817ms)
-✔ [SF-006] SQL-injection style search strings are inert (200, no 500, no data bleed) (12785.8323ms)
-✔ [SF-007] product detail by slug; unknown slug -> 404 envelope (3969.8916ms)
-✔ [SF-008] storefront never exposes unpublished/draft products or cost price (2396.8082ms)
-✔ [SF-009] categories, banners, theme and menus endpoints serve for the tenant (1772.0252ms)
-✔ [SF-010] cart: create requires storeId; unknown cart id -> 404/409, not 500 (1874.2507ms)
-✔ [SF-011] cart add / update / remove item round trip (5597.1903ms)
-✔ [SF-012] cart rejects invalid quantities and foreign product ids (1356.6326ms)
-✔ [SF-013] cart is isolated by tenant host (cannot be read through another tenant host) (774.5932ms)
-✔ [SF-014] checkout pricing returns consistent money breakdown (total = subtotal - discount + shipping + tax) (774.0291ms)
-✔ [SF-015] order validation: missing address / bad gateway / empty cart rejected (1696.1321ms)
-✔ [SF-016] placing an order without an Idempotency-Key is rejected (400) (398.1187ms)
-✖ [SF-017] COD order placement succeeds, decrements/reserves stock, and is visible to the owning merchant only (1131.291ms)
-✔ [SF-018] cart is emptied/consumed after order and cannot be reused to double-order (1004.5236ms)
-✖ [SF-019] merchant can cancel the QA order and stock is released (cleanup/restore) (1.5174ms)
-✔ [SF-020] coupon applies to cart and invalid coupon is rejected (3811.3771ms)
-✔ [SF-021] gift card balance check returns balance for a valid code and valid:false otherwise (641.5036ms)
+✔ [SF-001] product listing returns paginated envelope with meta.pagination (6292.6731ms)
+✔ [SF-002] pagination pages do not overlap (3869.574ms)
+✔ [SF-003] sorting by priceMinor orders ascending / descending correctly (3688.743ms)
+✔ [SF-004] invalid sort / limit / page -> 422 with validation details (not 500) (1590.0118ms)
+✔ [SF-005] search finds products by name (incl. short queries) and is case-insensitive (8301.9226ms)
+✔ [SF-006] SQL-injection style search strings are inert (200, no 500, no data bleed) (8641.3662ms)
+✔ [SF-007] product detail by slug; unknown slug -> 404 envelope (2118.6141ms)
+✔ [SF-008] storefront never exposes unpublished/draft products or cost price (2449.3988ms)
+✔ [SF-009] categories, banners, theme and menus endpoints serve for the tenant (1281.1309ms)
+✔ [SF-010] cart: create requires storeId; unknown cart id -> 404/409, not 500 (2167.2398ms)
+✔ [SF-011] cart add / update / remove item round trip (4157.2771ms)
+✔ [SF-012] cart rejects invalid quantities and foreign product ids (1459.5022ms)
+✔ [SF-013] cart is isolated by tenant host (cannot be read through another tenant host) (719.0407ms)
+✔ [SF-014] checkout pricing returns consistent money breakdown (total = subtotal - discount + shipping + tax) (752.7109ms)
+✔ [SF-015] order validation: missing address / bad gateway / empty cart rejected (1461.1171ms)
+✔ [SF-016] placing an order without an Idempotency-Key is rejected (400) (419.2516ms)
+✔ [SF-017] COD order placement succeeds, decrements/reserves stock, and is visible to the owning merchant only (8979.895ms)
+✔ [SF-018] cart is emptied/consumed after order and cannot be reused to double-order (1108.3016ms)
+✔ [SF-019] merchant can cancel the QA order and stock is released (cleanup/restore) (1604.607ms)
+✔ [SF-020] coupon applies to cart and invalid coupon is rejected (3643.6097ms)
+✔ [SF-021] gift card balance check returns balance for a valid code and valid:false otherwise (2181.6167ms)
 # INFO /storefront/theme -> HTTP 404
-✔ [SF-025] GET /storefront/theme for the seeded tenant (INFO: 404 means no row in tenant_themes; theme-assignment still serves) (1045.4428ms)
-✔ [SF-022] cannot order more than available stock (oversell guard) (3917.5691ms)
-✔ [SF-023] customer account endpoints require a storefront token (2275.8053ms)
-✔ [SF-024] a merchant JWT is not accepted as a storefront customer token (1501.4831ms)
+✔ [SF-025] GET /storefront/theme for the seeded tenant (INFO: 404 means no row in tenant_themes; theme-assignment still serves) (1011.9456ms)
+✔ [SF-022] cannot order more than available stock (oversell guard) (2966.4923ms)
+✔ [SF-023] customer account endpoints require a storefront token (1433.2384ms)
+✔ [SF-024] a merchant JWT is not accepted as a storefront customer token (1156.6274ms)
 ℹ tests 25
 ℹ suites 0
-ℹ pass 23
-ℹ fail 2
+ℹ pass 25
+ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 77931.3441
-
-✖ failing tests:
-
-test at api\05-storefront-workflow.test.mjs:160:1
-✖ [SF-017] COD order placement succeeds, decrements/reserves stock, and is visible to the owning merchant only (1131.291ms)
-  AssertionError [ERR_ASSERTION]: place order -> 409 {"code":"INVENTORY_INSUFFICIENT","message":"Only 0 of 3 requested units are available","context":{"productId":"1","variantId":null,"requested":3,"available":0},"docsUrl":"https://docs.ems.app/errors/INVENTORY_INSUFFICIENT"}
-      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/05-storefront-workflow.test.mjs:164:10)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async Test.run (node:internal/test_runner/test:1208:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: false,
-    expected: true,
-    operator: '==',
-    diff: 'simple'
-  }
-
-test at api\05-storefront-workflow.test.mjs:196:1
-✖ [SF-019] merchant can cancel the QA order and stock is released (cleanup/restore) (1.5174ms)
-  AssertionError [ERR_ASSERTION]: precondition: order created
-      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/05-storefront-workflow.test.mjs:197:10)
-      at Test.runInAsyncScope (node:async_hooks:227:14)
-      at Test.run (node:internal/test_runner/test:1201:25)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: undefined,
-    expected: true,
-    operator: '==',
-    diff: 'simple'
-  }
-
-
------ RETRY RUN -----
-✔ [SF-001] product listing returns paginated envelope with meta.pagination (5450.4802ms)
-✔ [SF-002] pagination pages do not overlap (5789.0408ms)
-✔ [SF-003] sorting by priceMinor orders ascending / descending correctly (4309.1229ms)
-✔ [SF-004] invalid sort / limit / page -> 422 with validation details (not 500) (3197.8761ms)
-✔ [SF-005] search finds products by name (incl. short queries) and is case-insensitive (4208.821ms)
-✔ [SF-006] SQL-injection style search strings are inert (200, no 500, no data bleed) (6231.598ms)
-✔ [SF-007] product detail by slug; unknown slug -> 404 envelope (2489.1749ms)
-✔ [SF-008] storefront never exposes unpublished/draft products or cost price (1783.0099ms)
-✔ [SF-009] categories, banners, theme and menus endpoints serve for the tenant (2320.2467ms)
-✔ [SF-010] cart: create requires storeId; unknown cart id -> 404/409, not 500 (939.2468ms)
-✔ [SF-011] cart add / update / remove item round trip (4446.4531ms)
-✔ [SF-012] cart rejects invalid quantities and foreign product ids (1460.4409ms)
-✔ [SF-013] cart is isolated by tenant host (cannot be read through another tenant host) (769.8834ms)
-✔ [SF-014] checkout pricing returns consistent money breakdown (total = subtotal - discount + shipping + tax) (678.2232ms)
-✔ [SF-015] order validation: missing address / bad gateway / empty cart rejected (1996.5719ms)
-✔ [SF-016] placing an order without an Idempotency-Key is rejected (400) (310.7426ms)
-✖ [SF-017] COD order placement succeeds, decrements/reserves stock, and is visible to the owning merchant only (1169.569ms)
-✔ [SF-018] cart is emptied/consumed after order and cannot be reused to double-order (1008.457ms)
-✖ [SF-019] merchant can cancel the QA order and stock is released (cleanup/restore) (2.37ms)
-✔ [SF-020] coupon applies to cart and invalid coupon is rejected (3576.3031ms)
-✔ [SF-021] gift card balance check returns balance for a valid code and valid:false otherwise (700.6434ms)
-# INFO /storefront/theme -> HTTP 404
-✔ [SF-025] GET /storefront/theme for the seeded tenant (INFO: 404 means no row in tenant_themes; theme-assignment still serves) (2091.8418ms)
-✔ [SF-022] cannot order more than available stock (oversell guard) (3382.6479ms)
-✔ [SF-023] customer account endpoints require a storefront token (1831.6841ms)
-✔ [SF-024] a merchant JWT is not accepted as a storefront customer token (1442.479ms)
-ℹ tests 25
-ℹ suites 0
-ℹ pass 23
-ℹ fail 2
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 61851.1893
-
-✖ failing tests:
-
-test at api\05-storefront-workflow.test.mjs:160:1
-✖ [SF-017] COD order placement succeeds, decrements/reserves stock, and is visible to the owning merchant only (1169.569ms)
-  AssertionError [ERR_ASSERTION]: place order -> 409 {"code":"INVENTORY_INSUFFICIENT","message":"Only 0 of 3 requested units are available","context":{"productId":"1","variantId":null,"requested":3,"available":0},"docsUrl":"https://docs.ems.app/errors/INVENTORY_INSUFFICIENT"}
-      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/05-storefront-workflow.test.mjs:164:10)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async Test.run (node:internal/test_runner/test:1208:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: false,
-    expected: true,
-    operator: '==',
-    diff: 'simple'
-  }
-
-test at api\05-storefront-workflow.test.mjs:196:1
-✖ [SF-019] merchant can cancel the QA order and stock is released (cleanup/restore) (2.37ms)
-  AssertionError [ERR_ASSERTION]: precondition: order created
-      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/05-storefront-workflow.test.mjs:197:10)
-      at Test.runInAsyncScope (node:async_hooks:227:14)
-      at Test.run (node:internal/test_runner/test:1201:25)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: undefined,
-    expected: true,
-    operator: '==',
-    diff: 'simple'
-  }
+ℹ duration_ms 73760.981
 

@@ -1,144 +1,398 @@
-✔ [CON-001] login page renders form; empty submit is blocked by validation (6253.4366ms)
-✔ [CON-002] wrong password shows an error and does not authenticate (4681.529ms)
-✔ [CON-003] protected route redirects an unauthenticated visitor to /login?next= (7939.2451ms)
-✔ [CON-004] super admin lands in the Super Admin shell with the full platform nav (3590.0908ms)
-✔ [CON-005] every super-admin page renders without JS errors or 5xx (4xx/blocked recorded to console-routes.json) (247085.1963ms)
-✖ [CON-006] Website module: 9 tabs; editing Hero in the UI saves, validates, persists, and reaches the public API (176.758ms)
-✖ [CON-007] Plans page lists the real plans from the API (13.2222ms)
-✖ [CON-008] merchant (Northwind owner) gets the company shell, never the platform nav (63175.533ms)
-✔ [CON-009] merchant typing a super-admin URL sees no platform data (API 403 enforced behind the UI) (30379.1153ms)
-✖ [CON-010] company pages render for the merchant without JS errors/5xx (results saved) (144673.0186ms)
-✔ [CON-011] UI tenant isolation: Northwind products visible to Northwind owner, absent for Lakeside owner (30114.5154ms)
-✔ [CON-012] responsive: login + super admin home usable at tablet (no horizontal overflow) (8428.1774ms)
-✔ [CON-012] responsive: login + super admin home usable at mobile (no horizontal overflow) (6215.2999ms)
-✔ [CON-013] logout from the UI ends the session and protected pages redirect again (25290.7645ms)
+✖ [CON-001] login page renders form; empty submit is blocked by validation (1199.7519ms)
+✖ [CON-002] wrong password shows an error and does not authenticate (503.1028ms)
+✖ [CON-003] protected route redirects an unauthenticated visitor to /login?next= (443.9093ms)
+✖ [CON-004] super admin lands in the Super Admin shell with the full platform nav (480.1165ms)
+✖ [CON-005] every super-admin page renders without JS errors or 5xx (4xx/blocked recorded to console-routes.json) (425.5451ms)
+✖ [CON-006] Website module: 9 tabs; editing Hero in the UI saves, validates, persists, and reaches the public API (10457.4221ms)
+✖ [CON-007] Plans page lists the real plans from the API (495.1239ms)
+✖ [CON-008] merchant (Northwind owner) gets the company shell, never the platform nav (437.7623ms)
+✖ [CON-009] merchant typing a super-admin URL sees no platform data (API 403 enforced behind the UI) (474.8258ms)
+✖ [CON-010] company pages render for the merchant without JS errors/5xx (results saved) (458.5295ms)
+✖ [CON-011] UI tenant isolation: Northwind products visible to Northwind owner, absent for Lakeside owner (5317.2956ms)
+✖ [CON-012] responsive: login + super admin home usable at tablet (no horizontal overflow) (444.7918ms)
+✖ [CON-012] responsive: login + super admin home usable at mobile (no horizontal overflow) (465.3188ms)
+✖ [CON-013] logout from the UI ends the session and protected pages redirect again (481.8428ms)
 ℹ tests 14
 ℹ suites 0
-ℹ pass 10
-ℹ fail 4
+ℹ pass 0
+ℹ fail 14
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 579649.647
+ℹ duration_ms 23772.7282
 
 ✖ failing tests:
 
+test at e2e\02-console.test.mjs:29:1
+✖ [CON-001] login page renders form; empty submit is blocked by validation (1199.7519ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:32:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:42:1
+✖ [CON-002] wrong password shows an error and does not authenticate (503.1028ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:45:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:53:1
+✖ [CON-003] protected route redirects an unauthenticated visitor to /login?next= (443.9093ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/tenants
+  Call log:
+  [2m  - navigating to "http://localhost:3000/tenants", waiting until "domcontentloaded"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:56:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/tenants", waiting until "domcontentloaded"' ]
+  }
+
+test at e2e\02-console.test.mjs:62:1
+✖ [CON-004] super admin lands in the Super Admin shell with the full platform nav (480.1165ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:65:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:73:1
+✖ [CON-005] every super-admin page renders without JS errors or 5xx (4xx/blocked recorded to console-routes.json) (425.5451ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:77:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
 test at e2e\02-console.test.mjs:101:1
-✖ [CON-006] Website module: 9 tabs; editing Hero in the UI saves, validates, persists, and reaches the public API (176.758ms)
-  [TypeError: fetch failed] {
-    [cause]: AggregateError [ECONNREFUSED]: 
-        at internalConnectMultiple (node:net:1193:18)
-        at afterConnectMultiple (node:net:1783:7) {
-      code: 'ECONNREFUSED',
-      [errors]: [
-        Error: connect ECONNREFUSED ::1:4000
-            at createConnectionError (node:net:1746:14)
-            at afterConnectMultiple (node:net:1776:16),
-        Error: connect ECONNREFUSED 127.0.0.1:4000
-            at createConnectionError (node:net:1746:14)
-            at afterConnectMultiple (node:net:1776:16)
-      ]
-    }
+✖ [CON-006] Website module: 9 tabs; editing Hero in the UI saves, validates, persists, and reaches the public API (10457.4221ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:108:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
   }
 
 test at e2e\02-console.test.mjs:139:1
-✖ [CON-007] Plans page lists the real plans from the API (13.2222ms)
-  [TypeError: fetch failed] {
-    [cause]: AggregateError [ECONNREFUSED]: 
-        at internalConnectMultiple (node:net:1193:18)
-        at afterConnectMultiple (node:net:1783:7) {
-      code: 'ECONNREFUSED',
-      [errors]: [
-        Error: connect ECONNREFUSED ::1:4000
-            at createConnectionError (node:net:1746:14)
-            at afterConnectMultiple (node:net:1776:16),
-        Error: connect ECONNREFUSED 127.0.0.1:4000
-            at createConnectionError (node:net:1746:14)
-            at afterConnectMultiple (node:net:1776:16)
-      ]
-    }
+✖ [CON-007] Plans page lists the real plans from the API (495.1239ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:143:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
   }
 
 test at e2e\02-console.test.mjs:150:1
-✖ [CON-008] merchant (Northwind owner) gets the company shell, never the platform nav (63175.533ms)
-  page.waitForURL: Timeout 60000ms exceeded.
-  =========================== logs ===========================
-  waiting for navigation until "load"
-  ============================================================
-      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\super-admin-mantis-redesign-0ab54e\qa\e2e\02-console.test.mjs:22:14)
-      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\super-admin-mantis-redesign-0ab54e\qa\e2e\02-console.test.mjs:153:5) {
-    name: 'TimeoutError',
-    log: []
+✖ [CON-008] merchant (Northwind owner) gets the company shell, never the platform nav (437.7623ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:153:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:161:1
+✖ [CON-009] merchant typing a super-admin URL sees no platform data (API 403 enforced behind the UI) (474.8258ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:164:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
   }
 
 test at e2e\02-console.test.mjs:177:1
-✖ [CON-010] company pages render for the merchant without JS errors/5xx (results saved) (144673.0186ms)
-  locator.innerText: Timeout 30000ms exceeded.
+✖ [CON-010] company pages render for the merchant without JS errors/5xx (results saved) (458.5295ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
   Call log:
-  [2m  - waiting for locator('body')[22m
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
   
-      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\super-admin-mantis-redesign-0ab54e\qa\e2e\02-console.test.mjs:186:48) {
-    name: 'TimeoutError',
-    log: [ "  - waiting for locator('body')" ]
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:181:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:194:1
+✖ [CON-011] UI tenant isolation: Northwind products visible to Northwind owner, absent for Lakeside owner (5317.2956ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:199:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:214:3
+✖ [CON-012] responsive: login + super admin home usable at tablet (no horizontal overflow) (444.7918ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:217:18) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:214:3
+✖ [CON-012] responsive: login + super admin home usable at mobile (no horizontal overflow) (465.3188ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:217:18) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:228:1
+✖ [CON-013] logout from the UI ends the session and protected pages redirect again (481.8428ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:231:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
   }
 
 
 ----- RETRY RUN -----
-✔ [CON-001] login page renders form; empty submit is blocked by validation (4165.9483ms)
-✔ [CON-002] wrong password shows an error and does not authenticate (4682.2845ms)
-✔ [CON-003] protected route redirects an unauthenticated visitor to /login?next= (1485.1728ms)
-✔ [CON-004] super admin lands in the Super Admin shell with the full platform nav (3825.2841ms)
-✖ [CON-005] every super-admin page renders without JS errors or 5xx (4xx/blocked recorded to console-routes.json) (297942.7694ms)
-✔ [CON-006] Website module: 9 tabs; editing Hero in the UI saves, validates, persists, and reaches the public API (42406.6189ms)
-✔ [CON-007] Plans page lists the real plans from the API (7328.7663ms)
-✔ [CON-008] merchant (Northwind owner) gets the company shell, never the platform nav (5850.1296ms)
-✔ [CON-009] merchant typing a super-admin URL sees no platform data (API 403 enforced behind the UI) (24255.7274ms)
-✖ [CON-010] company pages render for the merchant without JS errors/5xx (results saved) (146062.1982ms)
-✔ [CON-011] UI tenant isolation: Northwind products visible to Northwind owner, absent for Lakeside owner (36261.1403ms)
-✔ [CON-012] responsive: login + super admin home usable at tablet (no horizontal overflow) (7012.5974ms)
-✔ [CON-012] responsive: login + super admin home usable at mobile (no horizontal overflow) (6264.018ms)
-✔ [CON-013] logout from the UI ends the session and protected pages redirect again (5699.3262ms)
+✖ [CON-001] login page renders form; empty submit is blocked by validation (1218.3953ms)
+✖ [CON-002] wrong password shows an error and does not authenticate (479.5453ms)
+✖ [CON-003] protected route redirects an unauthenticated visitor to /login?next= (427.5248ms)
+✖ [CON-004] super admin lands in the Super Admin shell with the full platform nav (447.8151ms)
+✖ [CON-005] every super-admin page renders without JS errors or 5xx (4xx/blocked recorded to console-routes.json) (410.9603ms)
+✖ [CON-006] Website module: 9 tabs; editing Hero in the UI saves, validates, persists, and reaches the public API (13924.2084ms)
+✖ [CON-007] Plans page lists the real plans from the API (449.1231ms)
+✖ [CON-008] merchant (Northwind owner) gets the company shell, never the platform nav (440.5834ms)
+✖ [CON-009] merchant typing a super-admin URL sees no platform data (API 403 enforced behind the UI) (445.9792ms)
+✖ [CON-010] company pages render for the merchant without JS errors/5xx (results saved) (457.6785ms)
+✖ [CON-011] UI tenant isolation: Northwind products visible to Northwind owner, absent for Lakeside owner (4331.3063ms)
+✖ [CON-012] responsive: login + super admin home usable at tablet (no horizontal overflow) (475.4847ms)
+✖ [CON-012] responsive: login + super admin home usable at mobile (no horizontal overflow) (471.5034ms)
+✖ [CON-013] logout from the UI ends the session and protected pages redirect again (487.1232ms)
 ℹ tests 14
 ℹ suites 0
-ℹ pass 12
-ℹ fail 2
+ℹ pass 0
+ℹ fail 14
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 594979.4044
+ℹ duration_ms 26154.3901
 
 ✖ failing tests:
 
-test at e2e\02-console.test.mjs:73:1
-✖ [CON-005] every super-admin page renders without JS errors or 5xx (4xx/blocked recorded to console-routes.json) (297942.7694ms)
-  locator.innerText: Timeout 30000ms exceeded.
+test at e2e\02-console.test.mjs:29:1
+✖ [CON-001] login page renders form; empty submit is blocked by validation (1218.3953ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
   Call log:
-  [2m  - waiting for locator('body')[22m
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
   
-      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\super-admin-mantis-redesign-0ab54e\qa\e2e\02-console.test.mjs:82:48) {
-    name: 'TimeoutError',
-    log: [ "  - waiting for locator('body')" ]
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:32:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:42:1
+✖ [CON-002] wrong password shows an error and does not authenticate (479.5453ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:45:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:53:1
+✖ [CON-003] protected route redirects an unauthenticated visitor to /login?next= (427.5248ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/tenants
+  Call log:
+  [2m  - navigating to "http://localhost:3000/tenants", waiting until "domcontentloaded"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:56:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/tenants", waiting until "domcontentloaded"' ]
+  }
+
+test at e2e\02-console.test.mjs:62:1
+✖ [CON-004] super admin lands in the Super Admin shell with the full platform nav (447.8151ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:65:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:73:1
+✖ [CON-005] every super-admin page renders without JS errors or 5xx (4xx/blocked recorded to console-routes.json) (410.9603ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:77:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:101:1
+✖ [CON-006] Website module: 9 tabs; editing Hero in the UI saves, validates, persists, and reaches the public API (13924.2084ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:108:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:139:1
+✖ [CON-007] Plans page lists the real plans from the API (449.1231ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:143:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:150:1
+✖ [CON-008] merchant (Northwind owner) gets the company shell, never the platform nav (440.5834ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:153:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:161:1
+✖ [CON-009] merchant typing a super-admin URL sees no platform data (API 403 enforced behind the UI) (445.9792ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:164:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
   }
 
 test at e2e\02-console.test.mjs:177:1
-✖ [CON-010] company pages render for the merchant without JS errors/5xx (results saved) (146062.1982ms)
-  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
-  + actual - expected
+✖ [CON-010] company pages render for the merchant without JS errors/5xx (results saved) (457.6785ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
   
-  + [
-  +   '/orders',
-  +   '/subscription'
-  + ]
-  - []
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:181:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:194:1
+✖ [CON-011] UI tenant isolation: Northwind products visible to Northwind owner, absent for Lakeside owner (4331.3063ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
   
-      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/02-console.test.mjs:190:12)
-      at async Test.run (node:internal/test_runner/test:1208:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
-    generatedMessage: true,
-    code: 'ERR_ASSERTION',
-    actual: [ '/orders', '/subscription' ],
-    expected: [],
-    operator: 'deepStrictEqual',
-    diff: 'simple'
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:199:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:214:3
+✖ [CON-012] responsive: login + super admin home usable at tablet (no horizontal overflow) (475.4847ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:217:18) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:214:3
+✖ [CON-012] responsive: login + super admin home usable at mobile (no horizontal overflow) (471.5034ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:217:18) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\02-console.test.mjs:228:1
+✖ [CON-013] logout from the UI ends the session and protected pages redirect again (487.1232ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+  Call log:
+  [2m  - navigating to "http://localhost:3000/login", waiting until "networkidle"[22m
+  
+      at uiLogin (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:15:14)
+      at uiLoginOk (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:21:9)
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\02-console.test.mjs:231:11) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3000/login", waiting until "networkidle"' ]
   }
 

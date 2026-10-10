@@ -290,3 +290,19 @@ Blocked and Not Tested are shown separately and are **not** in the pass rate. 8 
 | STO-009 | PASS | responsive: Northwind home and products have no horizontal overflow at tablet | e2e/03-storefront.test.mjs |
 | STO-009 | PASS | responsive: Northwind home and products have no horizontal overflow at mobile | e2e/03-storefront.test.mjs |
 | STO-010 | PASS | browser add-to-cart flow: product -> cart shows the item (BUY-flow UI) | e2e/03-storefront.test.mjs |
+
+---
+
+## QA cycle 3 - verification of commit 177efa3 (2026-10-09 23:40 - 2026-10-10 00:50 IST)
+
+Stack under test: API :4000 (pid 25064, restarted mid-cycle), served from the sibling worktree `super-admin-mantis-redesign-0ab54e` which is at the same commit 177efa3 with clean sources. `pnpm` is blocked by Device Guard in this environment and this worktree has no `node_modules`, so the jest unit tiers and typecheck/lint could NOT be re-run (unit-results.json above is from the previous cycle and is stale).
+
+| Run | Result |
+|---|---|
+| `node run-all.mjs api --retry-failed` (+ `--only=06 --merge` re-run) | api 00-08: 129+12 PASS after retry/re-run; 0 real FAIL; 1 BLOCKED (ENV-005 BullMQ :6380 down); 1 NOT_TESTED (SEC-014, by design) |
+| first api attempt (23:39) | invalid: API process restarted/stalled (ECONNREFUSED ::1:4000, ~120 spurious FAIL), discarded |
+| flaky on first pass, PASS on retry | API-001 (20 s timeout while API warming), SEC-013 (sequential logins ~2.2 s each, so fewer than 30/min reached; passes on retry and with a parallel burst) |
+| WF-001..012 | first run timed out (API stalled); PASS 12/12 on re-run |
+| `node run-all.mjs e2e` | INVALID: Next dev servers :3000/:3001/:3003 died mid-run. Marketing desktop+tablet MKT-001 (12) and STO-008 PASS; the other 38 rows recorded as BLOCKED (ERR_CONNECTION_REFUSED), not FAIL |
+
+Direct probes (this cycle): gift-card check-balance 10x201 then 429; 45 parallel failed logins one identity -> 30x401 then 15x429; unknown `x-ems-hostname` -> 400; Host evil.example.com -> generic TENANT_CONTEXT_MISSING message; /metrics 200; 30 MB body -> 413 `MALFORMED_REQUEST` "The request body is too large"; Lakeside host cannot read a Northwind slug (404).

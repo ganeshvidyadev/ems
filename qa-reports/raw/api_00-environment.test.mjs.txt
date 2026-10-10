@@ -1,80 +1,19 @@
-✔ [ENV-001] API liveness (176.6649ms)
-✔ [ENV-002] API readiness: MySQL, Mongo and cache Redis report up (376.5799ms)
-✔ [ENV-003] MySQL port 3307 reachable (3.3285ms)
-✔ [ENV-004] MongoDB port 27017 reachable (2.2353ms)
-﹣ [ENV-005] BullMQ Redis (6380) availability (3.0149ms) # BLOCKED: BullMQ Redis on 127.0.0.1:6380 is unavailable; queue-dependent tests are BLOCKED, not FAILED
-✔ [ENV-006] console frontend serves HTTP 200 (628.5635ms)
-✔ [ENV-006] marketing frontend serves HTTP 200 (403.7177ms)
-✔ [ENV-006] storefront(northwind) frontend serves HTTP 200 (2057.1007ms)
-✔ [ENV-007] Swagger docs reachable (7.9907ms)
-✖ [ENV-008] Prometheus /metrics endpoint serves text (observability) (93.685ms)
+✔ [ENV-001] API liveness (359.939ms)
+✔ [ENV-002] API readiness: MySQL, Mongo and cache Redis report up (355.0347ms)
+✔ [ENV-003] MySQL port 3307 reachable (3.6625ms)
+✔ [ENV-004] MongoDB port 27017 reachable (3.0366ms)
+﹣ [ENV-005] BullMQ Redis (6380) availability (4.3254ms) # BLOCKED: BullMQ Redis on 127.0.0.1:6380 is unavailable; queue-dependent tests are BLOCKED, not FAILED
+✔ [ENV-006] console frontend serves HTTP 200 (10713.5398ms)
+✔ [ENV-006] marketing frontend serves HTTP 200 (4951.5829ms)
+✔ [ENV-006] storefront(northwind) frontend serves HTTP 200 (10017.7675ms)
+✔ [ENV-007] Swagger docs reachable (10.1518ms)
+✔ [ENV-008] Prometheus /metrics endpoint serves text (observability) (74.1489ms)
 ℹ tests 10
 ℹ suites 0
-ℹ pass 8
-ℹ fail 1
+ℹ pass 9
+ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 1
 ℹ todo 0
-ℹ duration_ms 8395.4853
-
-✖ failing tests:
-
-test at api\00-environment.test.mjs:55:1
-✖ [ENV-008] Prometheus /metrics endpoint serves text (observability) (93.685ms)
-  AssertionError [ERR_ASSERTION]: HTTP 500: {"success":false,"error":{"code":"INTERNAL_ERROR","message":"An unexpected error occurred. Quote the correlation ID when reporting this.","context":{"detail":"V
-  
-  500 !== 200
-  
-      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/00-environment.test.mjs:58:10)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async Test.run (node:internal/test_runner/test:1208:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 500,
-    expected: 200,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-
------ RETRY RUN -----
-✔ [ENV-001] API liveness (96.206ms)
-✔ [ENV-002] API readiness: MySQL, Mongo and cache Redis report up (333.1374ms)
-✔ [ENV-003] MySQL port 3307 reachable (3.3204ms)
-✔ [ENV-004] MongoDB port 27017 reachable (1.8405ms)
-﹣ [ENV-005] BullMQ Redis (6380) availability (3.424ms) # BLOCKED: BullMQ Redis on 127.0.0.1:6380 is unavailable; queue-dependent tests are BLOCKED, not FAILED
-✔ [ENV-006] console frontend serves HTTP 200 (119.9888ms)
-✔ [ENV-006] marketing frontend serves HTTP 200 (173.1575ms)
-✔ [ENV-006] storefront(northwind) frontend serves HTTP 200 (1617.2017ms)
-✔ [ENV-007] Swagger docs reachable (2.6294ms)
-✖ [ENV-008] Prometheus /metrics endpoint serves text (observability) (16.0259ms)
-ℹ tests 10
-ℹ suites 0
-ℹ pass 8
-ℹ fail 1
-ℹ cancelled 0
-ℹ skipped 1
-ℹ todo 0
-ℹ duration_ms 8325.9047
-
-✖ failing tests:
-
-test at api\00-environment.test.mjs:55:1
-✖ [ENV-008] Prometheus /metrics endpoint serves text (observability) (16.0259ms)
-  AssertionError [ERR_ASSERTION]: HTTP 500: {"success":false,"error":{"code":"INTERNAL_ERROR","message":"An unexpected error occurred. Quote the correlation ID when reporting this.","context":{"detail":"V
-  
-  500 !== 200
-  
-      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/api/00-environment.test.mjs:58:10)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async Test.run (node:internal/test_runner/test:1208:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 500,
-    expected: 200,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
+ℹ duration_ms 33083.6659
 

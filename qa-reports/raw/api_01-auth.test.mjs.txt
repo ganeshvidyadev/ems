@@ -1,22 +1,22 @@
-✔ [AUTH-001] superAdmin can log in and /auth/me returns own identity (2486.321ms)
-✔ [AUTH-001] nwOwner can log in and /auth/me returns own identity (3019.8625ms)
-✔ [AUTH-001] nwOps can log in and /auth/me returns own identity (2629.0634ms)
-✔ [AUTH-001] lsOwner can log in and /auth/me returns own identity (3246.3083ms)
-✔ [AUTH-001] lsOps can log in and /auth/me returns own identity (3637.6937ms)
-✔ [AUTH-002] login response never leaks password hash / secrets (1064.8805ms)
-✔ [AUTH-003] wrong password for unknown account is rejected with 401 and generic error (355.9635ms)
-✔ [AUTH-004] wrong password for a real account (single attempt) is 401, same shape as unknown account (1955.8765ms)
-✔ [AUTH-005] login with missing fields -> 422 validation envelope (14.0851ms)
-✔ [AUTH-006] protected endpoint without token -> 401 (35.2439ms)
-✔ [AUTH-007] malformed / garbage bearer token -> 401 (20.2397ms)
-✔ [AUTH-008] tampered JWT payload (privilege escalation attempt) -> 401 (8.7654ms)
-✔ [AUTH-009] alg=none JWT is rejected (4.5101ms)
-✔ [AUTH-010] access token carries expected claims and a short TTL (0.2983ms)
-✔ [AUTH-011] logout invalidates the access token (denylist) (3502.7677ms)
-✔ [AUTH-012] refresh without a refresh cookie is rejected (5.4751ms)
-✔ [AUTH-013] refresh cookie is HttpOnly (session security) (968.4211ms)
-✔ [AUTH-014] register with invalid payload -> 422, not 500 (7.0455ms)
-✔ [AUTH-015] forgot-password does not reveal whether an account exists (85.4495ms)
+✔ [AUTH-001] superAdmin can log in and /auth/me returns own identity (3993.5155ms)
+✔ [AUTH-001] nwOwner can log in and /auth/me returns own identity (4064.5474ms)
+✔ [AUTH-001] nwOps can log in and /auth/me returns own identity (5144.6927ms)
+✔ [AUTH-001] lsOwner can log in and /auth/me returns own identity (5797.6535ms)
+✔ [AUTH-001] lsOps can log in and /auth/me returns own identity (5107.2332ms)
+✔ [AUTH-002] login response never leaks password hash / secrets (2553.3205ms)
+✔ [AUTH-003] wrong password for unknown account is rejected with 401 and generic error (1693.444ms)
+✔ [AUTH-004] wrong password for a real account (single attempt) is 401, same shape as unknown account (9762.9053ms)
+✔ [AUTH-005] login with missing fields -> 422 validation envelope (1330.5588ms)
+✔ [AUTH-006] protected endpoint without token -> 401 (36.6894ms)
+✔ [AUTH-007] malformed / garbage bearer token -> 401 (11.3305ms)
+✔ [AUTH-008] tampered JWT payload (privilege escalation attempt) -> 401 (9.2246ms)
+✔ [AUTH-009] alg=none JWT is rejected (3.1129ms)
+✔ [AUTH-010] access token carries expected claims and a short TTL (0.3664ms)
+✔ [AUTH-011] logout invalidates the access token (denylist) (5032.2467ms)
+✔ [AUTH-012] refresh without a refresh cookie is rejected (8.4312ms)
+✔ [AUTH-013] refresh cookie is HttpOnly (session security) (2628.2258ms)
+✔ [AUTH-014] register with invalid payload -> 422, not 500 (1368.7648ms)
+✔ [AUTH-015] forgot-password does not reveal whether an account exists (2986.4464ms)
 ℹ tests 19
 ℹ suites 0
 ℹ pass 19
@@ -24,5 +24,5 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 23171.2632
+ℹ duration_ms 51881.2573
 

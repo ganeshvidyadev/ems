@@ -272,3 +272,25 @@ These come from reading the code (API inventory), not from execution. They are n
 - **OBS-004** Login latency is high locally: 1–7 s per `POST /auth/login` (bcrypt cost 12 plus ~0.8 s round trip to the hosted Redis).
 - **OBS-005** Dev-mode first request to each Next page triggers a compile (1–10 s) and occasionally one transient 404 on cold start (classified FLAKY, passes on retry).
 - **OBS-006** Residue left by the run (cannot be hard-deleted through the API; verified in MySQL): 2 CANCELLED QA orders (stock released; seeded Northwind stock verified back at 1800 on-hand / 60 reserved), 3 soft-deleted QA products (+their inventory rows), 3 soft-deleted QA coupons in Lakeside. No live (non-deleted) QA product or coupon remains. Website content rows were removed again so the module is back to code defaults.
+
+---
+
+## Cycle 3 verification of BUG-001..013 (commit 177efa3)
+
+| Bug | Verdict | Evidence |
+|---|---|---|
+| BUG-001 | verified-fixed | DB-012, SF-017, SF-019 PASS (seeded product orders; stock released on cancel) |
+| BUG-002 | verified-fixed | gift-card 429 after 10 (SEC-012 PASS); login 429 after 30 in a parallel burst; SEC-013 passes on retry (flaky only because sequential login latency ~2 s) |
+| BUG-003 | could-not-test (console down); code verified | hooks hoisted above early returns in orders/page.tsx |
+| BUG-004 | could-not-test (console down); code verified | usage mapped to {key,used,limit}; page hooks all precede returns. Residual: with no subscription the page shows a fake "Standard Merchant / ACTIVE" |
+| BUG-005 | verified-fixed | unknown x-ems-hostname -> 400 (TEN-011b PASS). Bare Host localhost with no forwarded host still resolves to Northwind (dev fallback, gated off in production) |
+| BUG-006 | verified-fixed | /metrics 200 (ENV-008 PASS) |
+| BUG-007 | could-not-test (storefront down); code verified | ProductShare reads navigator/window after mount |
+| BUG-008 | verified-fixed | 30 MB body -> 413 (API-005 PASS). Nit: code is MALFORMED_REQUEST, correlationId still "unknown" |
+| BUG-009 | verified-fixed | message is now generic (SEC-007 PASS) |
+| BUG-010 | verified-fixed (desktop+tablet) | MKT-001 /plans PASS at desktop and tablet (h1 asserted); mobile run blocked |
+| BUG-011 | could-not-test in browser; inputs verified | five distinct subheadings in /website/content feed generateMetadata; MKT-006 blocked |
+| BUG-012 | could-not-test (console down); code verified | useLowStock enabled only for TENANT users |
+| BUG-013 | SF-025 PASS; registry says not a bug | not re-investigated |
+
+New findings: none Critical/High. Tenant isolation (TEN-001..014, 14/14) PASS; no cross-tenant exposure. See final QA message for observations (API/Next dev servers dying under memory pressure, ~155 MB free during the run).

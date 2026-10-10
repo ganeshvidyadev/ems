@@ -1,210 +1,588 @@
-✔ [MKT-001] desktop /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (8852.8664ms)
-✔ [MKT-001] desktop /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2198.1072ms)
-# FLAKY-CHECK desktop /plans: first attempt failed (no <h1>), retrying
-✖ [MKT-001] desktop /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (4151.2364ms)
-✔ [MKT-001] desktop /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1801.5963ms)
-✔ [MKT-001] desktop /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2092.4498ms)
-✔ [MKT-001] desktop /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1841.6911ms)
-✔ [MKT-001] tablet /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1968.0314ms)
-✔ [MKT-001] tablet /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1809.1508ms)
-# FLAKY-CHECK tablet /plans: first attempt failed (no <h1>), retrying
-✖ [MKT-001] tablet /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (4185.3895ms)
-✔ [MKT-001] tablet /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2231.7605ms)
-✔ [MKT-001] tablet /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2143.0533ms)
-✔ [MKT-001] tablet /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1944.8143ms)
-✔ [MKT-001] mobile /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1950.3647ms)
-✔ [MKT-001] mobile /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2291.4357ms)
-# FLAKY-CHECK mobile /plans: first attempt failed (no <h1>), retrying
-✖ [MKT-001] mobile /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (4052.3946ms)
-✔ [MKT-001] mobile /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2225.2468ms)
-✔ [MKT-001] mobile /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1992.264ms)
-✔ [MKT-001] mobile /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2088.9049ms)
-✔ [MKT-002] header and footer navigation: all internal links resolve (no broken links) (4067.013ms)
-✔ [MKT-003] home page: header has the 5 configured nav links and the footer shows copyright (1806.8641ms)
-✔ [MKT-004] mobile: hamburger menu is hidden by default and toggles the nav (2313.3371ms)
-✔ [MKT-005] SEO: <html lang>, meta description, title template on sub-pages (627.7521ms)
-# INFO distinct meta descriptions across 6 pages: 1
-✖ [MKT-006] SEO: per-page meta descriptions differ (sub-pages should not all reuse the home description) (2030.6666ms)
-✔ [MKT-007] Plans page shows exactly the public plans from the plans API (name, price, features) (3105.8622ms)
-# INFO contact page forms: 0 (form validation: NOT_IMPLEMENTED when 0)
-✔ [MKT-008] Contact page: mailto link matches configured email; there is no contact form (NOT_IMPLEMENTED) (3030.9078ms)
-✔ [MKT-009] admin edits -> marketing site updates (cache-aware, <=120s); XSS payload is rendered inert; content restored (75019.5876ms)
+✔ [MKT-001] desktop /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (7081.5725ms)
+✔ [MKT-001] desktop /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (3191.6669ms)
+✔ [MKT-001] desktop /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2396.9281ms)
+✔ [MKT-001] desktop /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2415.0563ms)
+✔ [MKT-001] desktop /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2499.2741ms)
+✔ [MKT-001] desktop /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2509.2619ms)
+✔ [MKT-001] tablet /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2696.9988ms)
+✔ [MKT-001] tablet /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2474.5017ms)
+✔ [MKT-001] tablet /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2589.1075ms)
+✔ [MKT-001] tablet /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2557.1197ms)
+✔ [MKT-001] tablet /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2512.6169ms)
+✔ [MKT-001] tablet /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2511.2075ms)
+# FLAKY-CHECK mobile /: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/), retrying
+✖ [MKT-001] mobile /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (809.5495ms)
+# FLAKY-CHECK mobile /products: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/products), retrying
+✖ [MKT-001] mobile /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (876.2213ms)
+# FLAKY-CHECK mobile /plans: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/plans), retrying
+✖ [MKT-001] mobile /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (841.3081ms)
+# FLAKY-CHECK mobile /about: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/about), retrying
+✖ [MKT-001] mobile /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (964.5572ms)
+# FLAKY-CHECK mobile /careers: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/careers), retrying
+✖ [MKT-001] mobile /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (984.5143ms)
+# FLAKY-CHECK mobile /contact: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/contact), retrying
+✖ [MKT-001] mobile /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1075.872ms)
+✖ [MKT-002] header and footer navigation: all internal links resolve (no broken links) (451.7301ms)
+✖ [MKT-003] home page: header has the 5 configured nav links and the footer shows copyright (451.1673ms)
+✖ [MKT-004] mobile: hamburger menu is hidden by default and toggles the nav (487.4928ms)
+✖ [MKT-005] SEO: <html lang>, meta description, title template on sub-pages (496.8104ms)
+✖ [MKT-006] SEO: per-page meta descriptions differ (sub-pages should not all reuse the home description) (479.929ms)
+✖ [MKT-007] Plans page shows exactly the public plans from the plans API (name, price, features) (585.0567ms)
+✖ [MKT-008] Contact page: mailto link matches configured email; there is no contact form (NOT_IMPLEMENTED) (1054.7741ms)
+✖ [MKT-009] admin edits -> marketing site updates (cache-aware, <=120s); XSS payload is rendered inert; content restored (11444.2736ms)
 ℹ tests 26
 ℹ suites 0
-ℹ pass 22
-ℹ fail 4
+ℹ pass 12
+ℹ fail 14
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 144063.5866
+ℹ duration_ms 58513.4809
 
 ✖ failing tests:
 
 test at e2e\01-marketing.test.mjs:24:5
-✖ [MKT-001] desktop /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (4151.2364ms)
-  AssertionError [ERR_ASSERTION]: no <h1>
-      at file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:31:16
-      at async withRetry (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:16:12)
-      at async TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:25:7)
-      at async Test.run (node:internal/test_runner/test:1208:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: false,
-    expected: true,
-    operator: '==',
-    diff: 'simple'
+✖ [MKT-001] mobile /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (809.5495ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/
+  Call log:
+  [2m  - navigating to "http://localhost:3003/", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/", waiting until "networkidle"' ]
   }
 
 test at e2e\01-marketing.test.mjs:24:5
-✖ [MKT-001] tablet /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (4185.3895ms)
-  AssertionError [ERR_ASSERTION]: no <h1>
-      at file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:31:16
-      at async withRetry (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:16:12)
-      at async TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:25:7)
-      at async Test.run (node:internal/test_runner/test:1208:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: false,
-    expected: true,
-    operator: '==',
-    diff: 'simple'
+✖ [MKT-001] mobile /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (876.2213ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/products
+  Call log:
+  [2m  - navigating to "http://localhost:3003/products", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/products", waiting until "networkidle"' ]
   }
 
 test at e2e\01-marketing.test.mjs:24:5
-✖ [MKT-001] mobile /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (4052.3946ms)
-  AssertionError [ERR_ASSERTION]: no <h1>
-      at file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:31:16
-      at async withRetry (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:16:12)
-      at async TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:25:7)
-      at async Test.run (node:internal/test_runner/test:1208:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: false,
-    expected: true,
-    operator: '==',
-    diff: 'simple'
+✖ [MKT-001] mobile /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (841.3081ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/plans
+  Call log:
+  [2m  - navigating to "http://localhost:3003/plans", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/plans", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] mobile /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (964.5572ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/about
+  Call log:
+  [2m  - navigating to "http://localhost:3003/about", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/about", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] mobile /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (984.5143ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/careers
+  Call log:
+  [2m  - navigating to "http://localhost:3003/careers", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/careers", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] mobile /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1075.872ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/contact
+  Call log:
+  [2m  - navigating to "http://localhost:3003/contact", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/contact", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:46:1
+✖ [MKT-002] header and footer navigation: all internal links resolve (no broken links) (451.7301ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/
+  Call log:
+  [2m  - navigating to "http://localhost:3003/", waiting until "domcontentloaded"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:51:18) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/", waiting until "domcontentloaded"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:66:1
+✖ [MKT-003] home page: header has the 5 configured nav links and the footer shows copyright (451.1673ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/
+  Call log:
+  [2m  - navigating to "http://localhost:3003/", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:69:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:76:1
+✖ [MKT-004] mobile: hamburger menu is hidden by default and toggles the nav (487.4928ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/
+  Call log:
+  [2m  - navigating to "http://localhost:3003/", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:79:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:89:1
+✖ [MKT-005] SEO: <html lang>, meta description, title template on sub-pages (496.8104ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/about
+  Call log:
+  [2m  - navigating to "http://localhost:3003/about", waiting until "domcontentloaded"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:92:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/about", waiting until "domcontentloaded"' ]
   }
 
 test at e2e\01-marketing.test.mjs:99:1
-✖ [MKT-006] SEO: per-page meta descriptions differ (sub-pages should not all reuse the home description) (2030.6666ms)
-  AssertionError [ERR_ASSERTION]: every page reuses the same meta description
-      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:109:12)
-      at async Test.run (node:internal/test_runner/test:1208:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: false,
-    expected: true,
-    operator: '==',
-    diff: 'simple'
+✖ [MKT-006] SEO: per-page meta descriptions differ (sub-pages should not all reuse the home description) (479.929ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/
+  Call log:
+  [2m  - navigating to "http://localhost:3003/", waiting until "domcontentloaded"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:104:18) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/", waiting until "domcontentloaded"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:113:1
+✖ [MKT-007] Plans page shows exactly the public plans from the plans API (name, price, features) (585.0567ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/plans
+  Call log:
+  [2m  - navigating to "http://localhost:3003/plans", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:117:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/plans", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:129:1
+✖ [MKT-008] Contact page: mailto link matches configured email; there is no contact form (NOT_IMPLEMENTED) (1054.7741ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/contact
+  Call log:
+  [2m  - navigating to "http://localhost:3003/contact", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:133:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/contact", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:140:1
+✖ [MKT-009] admin edits -> marketing site updates (cache-aware, <=120s); XSS payload is rendered inert; content restored (11444.2736ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/
+  Call log:
+  [2m  - navigating to "http://localhost:3003/", waiting until "domcontentloaded"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:178:18) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/", waiting until "domcontentloaded"' ]
   }
 
 
 ----- RETRY RUN -----
-✔ [MKT-001] desktop /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (4525.1863ms)
-✔ [MKT-001] desktop /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1911.9499ms)
-# FLAKY-CHECK desktop /plans: first attempt failed (no <h1>), retrying
-✖ [MKT-001] desktop /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (3990.8824ms)
-✔ [MKT-001] desktop /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1703.5351ms)
-✔ [MKT-001] desktop /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1698.7921ms)
-✔ [MKT-001] desktop /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1774.0214ms)
-✔ [MKT-001] tablet /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1852.6816ms)
-✔ [MKT-001] tablet /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1770.2542ms)
-# FLAKY-CHECK tablet /plans: first attempt failed (no <h1>), retrying
-✖ [MKT-001] tablet /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (3072.5839ms)
-✔ [MKT-001] tablet /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1649.6378ms)
-✔ [MKT-001] tablet /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1753.4249ms)
-✔ [MKT-001] tablet /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1722.2939ms)
-✔ [MKT-001] mobile /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1811.0944ms)
-✔ [MKT-001] mobile /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2039.6687ms)
-# FLAKY-CHECK mobile /plans: first attempt failed (no <h1>), retrying
-✖ [MKT-001] mobile /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (4136.6339ms)
-✔ [MKT-001] mobile /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1756.5609ms)
-✔ [MKT-001] mobile /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1646.6202ms)
-✔ [MKT-001] mobile /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (1814.1115ms)
-✔ [MKT-002] header and footer navigation: all internal links resolve (no broken links) (3443.5874ms)
-✔ [MKT-003] home page: header has the 5 configured nav links and the footer shows copyright (1919.9996ms)
-✔ [MKT-004] mobile: hamburger menu is hidden by default and toggles the nav (2328.8804ms)
-✔ [MKT-005] SEO: <html lang>, meta description, title template on sub-pages (615.6676ms)
-# INFO distinct meta descriptions across 6 pages: 1
-✖ [MKT-006] SEO: per-page meta descriptions differ (sub-pages should not all reuse the home description) (2043.4652ms)
-✔ [MKT-007] Plans page shows exactly the public plans from the plans API (name, price, features) (2177.8622ms)
-# INFO contact page forms: 0 (form validation: NOT_IMPLEMENTED when 0)
-✔ [MKT-008] Contact page: mailto link matches configured email; there is no contact form (NOT_IMPLEMENTED) (2244.2357ms)
-✔ [MKT-009] admin edits -> marketing site updates (cache-aware, <=120s); XSS payload is rendered inert; content restored (133483.1291ms)
+# FLAKY-CHECK desktop /: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/), retrying
+✖ [MKT-001] desktop /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2399.7528ms)
+# FLAKY-CHECK desktop /products: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/products), retrying
+✖ [MKT-001] desktop /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (893.8411ms)
+# FLAKY-CHECK desktop /plans: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/plans), retrying
+✖ [MKT-001] desktop /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (923.2517ms)
+# FLAKY-CHECK desktop /about: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/about), retrying
+✖ [MKT-001] desktop /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (768.4801ms)
+# FLAKY-CHECK desktop /careers: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/careers), retrying
+✖ [MKT-001] desktop /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (884.1012ms)
+# FLAKY-CHECK desktop /contact: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/contact), retrying
+✖ [MKT-001] desktop /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (920.3613ms)
+# FLAKY-CHECK tablet /: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/), retrying
+✖ [MKT-001] tablet /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (923.045ms)
+# FLAKY-CHECK tablet /products: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/products), retrying
+✖ [MKT-001] tablet /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (823.3764ms)
+# FLAKY-CHECK tablet /plans: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/plans), retrying
+✖ [MKT-001] tablet /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (851.6058ms)
+# FLAKY-CHECK tablet /about: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/about), retrying
+✖ [MKT-001] tablet /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (869.5546ms)
+# FLAKY-CHECK tablet /careers: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/careers), retrying
+✖ [MKT-001] tablet /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (951.6661ms)
+# FLAKY-CHECK tablet /contact: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/contact), retrying
+✖ [MKT-001] tablet /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (929.8148ms)
+# FLAKY-CHECK mobile /: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/), retrying
+✖ [MKT-001] mobile /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (904.1438ms)
+# FLAKY-CHECK mobile /products: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/products), retrying
+✖ [MKT-001] mobile /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (878.4621ms)
+# FLAKY-CHECK mobile /plans: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/plans), retrying
+✖ [MKT-001] mobile /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (824.6908ms)
+# FLAKY-CHECK mobile /about: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/about), retrying
+✖ [MKT-001] mobile /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (964.0479ms)
+# FLAKY-CHECK mobile /careers: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/careers), retrying
+✖ [MKT-001] mobile /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (964.0861ms)
+# FLAKY-CHECK mobile /contact: first attempt failed (page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/contact), retrying
+✖ [MKT-001] mobile /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (969.1599ms)
+✖ [MKT-002] header and footer navigation: all internal links resolve (no broken links) (498.9611ms)
+✖ [MKT-003] home page: header has the 5 configured nav links and the footer shows copyright (496.391ms)
+✖ [MKT-004] mobile: hamburger menu is hidden by default and toggles the nav (463.9618ms)
+✖ [MKT-005] SEO: <html lang>, meta description, title template on sub-pages (514.7033ms)
+✖ [MKT-006] SEO: per-page meta descriptions differ (sub-pages should not all reuse the home description) (482.4726ms)
+✖ [MKT-007] Plans page shows exactly the public plans from the plans API (name, price, features) (582.9217ms)
+✖ [MKT-008] Contact page: mailto link matches configured email; there is no contact form (NOT_IMPLEMENTED) (869.6691ms)
+✖ [MKT-009] admin edits -> marketing site updates (cache-aware, <=120s); XSS payload is rendered inert; content restored (13290.6954ms)
 ℹ tests 26
 ℹ suites 0
-ℹ pass 22
-ℹ fail 4
+ℹ pass 0
+ℹ fail 26
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 190371.7654
+ℹ duration_ms 36693.7995
 
 ✖ failing tests:
 
 test at e2e\01-marketing.test.mjs:24:5
-✖ [MKT-001] desktop /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (3990.8824ms)
-  AssertionError [ERR_ASSERTION]: no <h1>
-      at file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:31:16
-      at async withRetry (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:16:12)
-      at async TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:25:7)
-      at async Test.run (node:internal/test_runner/test:1208:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: false,
-    expected: true,
-    operator: '==',
-    diff: 'simple'
+✖ [MKT-001] desktop /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (2399.7528ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/
+  Call log:
+  [2m  - navigating to "http://localhost:3003/", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/", waiting until "networkidle"' ]
   }
 
 test at e2e\01-marketing.test.mjs:24:5
-✖ [MKT-001] tablet /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (3072.5839ms)
-  AssertionError [ERR_ASSERTION]: no <h1>
-      at file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:31:16
-      at async withRetry (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:16:12)
-      at async TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:25:7)
-      at async Test.run (node:internal/test_runner/test:1208:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: false,
-    expected: true,
-    operator: '==',
-    diff: 'simple'
+✖ [MKT-001] desktop /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (893.8411ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/products
+  Call log:
+  [2m  - navigating to "http://localhost:3003/products", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/products", waiting until "networkidle"' ]
   }
 
 test at e2e\01-marketing.test.mjs:24:5
-✖ [MKT-001] mobile /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (4136.6339ms)
-  AssertionError [ERR_ASSERTION]: no <h1>
-      at file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:31:16
-      at async withRetry (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:16:12)
-      at async TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:25:7)
-      at async Test.run (node:internal/test_runner/test:1208:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: false,
-    expected: true,
-    operator: '==',
-    diff: 'simple'
+✖ [MKT-001] desktop /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (923.2517ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/plans
+  Call log:
+  [2m  - navigating to "http://localhost:3003/plans", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/plans", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] desktop /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (768.4801ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/about
+  Call log:
+  [2m  - navigating to "http://localhost:3003/about", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/about", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] desktop /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (884.1012ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/careers
+  Call log:
+  [2m  - navigating to "http://localhost:3003/careers", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/careers", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] desktop /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (920.3613ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/contact
+  Call log:
+  [2m  - navigating to "http://localhost:3003/contact", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/contact", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] tablet /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (923.045ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/
+  Call log:
+  [2m  - navigating to "http://localhost:3003/", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] tablet /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (823.3764ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/products
+  Call log:
+  [2m  - navigating to "http://localhost:3003/products", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/products", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] tablet /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (851.6058ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/plans
+  Call log:
+  [2m  - navigating to "http://localhost:3003/plans", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/plans", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] tablet /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (869.5546ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/about
+  Call log:
+  [2m  - navigating to "http://localhost:3003/about", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/about", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] tablet /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (951.6661ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/careers
+  Call log:
+  [2m  - navigating to "http://localhost:3003/careers", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/careers", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] tablet /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (929.8148ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/contact
+  Call log:
+  [2m  - navigating to "http://localhost:3003/contact", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/contact", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] mobile /: loads, has title+h1, no JS errors/5xx, no horizontal overflow (904.1438ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/
+  Call log:
+  [2m  - navigating to "http://localhost:3003/", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] mobile /products: loads, has title+h1, no JS errors/5xx, no horizontal overflow (878.4621ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/products
+  Call log:
+  [2m  - navigating to "http://localhost:3003/products", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/products", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] mobile /plans: loads, has title+h1, no JS errors/5xx, no horizontal overflow (824.6908ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/plans
+  Call log:
+  [2m  - navigating to "http://localhost:3003/plans", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/plans", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] mobile /about: loads, has title+h1, no JS errors/5xx, no horizontal overflow (964.0479ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/about
+  Call log:
+  [2m  - navigating to "http://localhost:3003/about", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/about", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] mobile /careers: loads, has title+h1, no JS errors/5xx, no horizontal overflow (964.0861ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/careers
+  Call log:
+  [2m  - navigating to "http://localhost:3003/careers", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/careers", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:24:5
+✖ [MKT-001] mobile /contact: loads, has title+h1, no JS errors/5xx, no horizontal overflow (969.1599ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/contact
+  Call log:
+  [2m  - navigating to "http://localhost:3003/contact", waiting until "networkidle"[22m
+  
+      at D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:28:32
+      at async withRetry (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:16:12)
+      at async TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:25:7) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/contact", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:46:1
+✖ [MKT-002] header and footer navigation: all internal links resolve (no broken links) (498.9611ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/
+  Call log:
+  [2m  - navigating to "http://localhost:3003/", waiting until "domcontentloaded"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:51:18) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/", waiting until "domcontentloaded"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:66:1
+✖ [MKT-003] home page: header has the 5 configured nav links and the footer shows copyright (496.391ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/
+  Call log:
+  [2m  - navigating to "http://localhost:3003/", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:69:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:76:1
+✖ [MKT-004] mobile: hamburger menu is hidden by default and toggles the nav (463.9618ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/
+  Call log:
+  [2m  - navigating to "http://localhost:3003/", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:79:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:89:1
+✖ [MKT-005] SEO: <html lang>, meta description, title template on sub-pages (514.7033ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/about
+  Call log:
+  [2m  - navigating to "http://localhost:3003/about", waiting until "domcontentloaded"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:92:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/about", waiting until "domcontentloaded"' ]
   }
 
 test at e2e\01-marketing.test.mjs:99:1
-✖ [MKT-006] SEO: per-page meta descriptions differ (sub-pages should not all reuse the home description) (2043.4652ms)
-  AssertionError [ERR_ASSERTION]: every page reuses the same meta description
-      at TestContext.<anonymous> (file:///D:/office-data/Project/Romanchal/VGY/ems/.claude/worktrees/super-admin-mantis-redesign-0ab54e/qa/e2e/01-marketing.test.mjs:109:12)
-      at async Test.run (node:internal/test_runner/test:1208:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: false,
-    expected: true,
-    operator: '==',
-    diff: 'simple'
+✖ [MKT-006] SEO: per-page meta descriptions differ (sub-pages should not all reuse the home description) (482.4726ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/
+  Call log:
+  [2m  - navigating to "http://localhost:3003/", waiting until "domcontentloaded"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:104:18) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/", waiting until "domcontentloaded"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:113:1
+✖ [MKT-007] Plans page shows exactly the public plans from the plans API (name, price, features) (582.9217ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/plans
+  Call log:
+  [2m  - navigating to "http://localhost:3003/plans", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:117:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/plans", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:129:1
+✖ [MKT-008] Contact page: mailto link matches configured email; there is no contact form (NOT_IMPLEMENTED) (869.6691ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/contact
+  Call log:
+  [2m  - navigating to "http://localhost:3003/contact", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:133:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/contact", waiting until "networkidle"' ]
+  }
+
+test at e2e\01-marketing.test.mjs:140:1
+✖ [MKT-009] admin edits -> marketing site updates (cache-aware, <=120s); XSS payload is rendered inert; content restored (13290.6954ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3003/
+  Call log:
+  [2m  - navigating to "http://localhost:3003/", waiting until "domcontentloaded"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\01-marketing.test.mjs:178:18) {
+    name: 'Error',
+    log: [ '  - navigating to "http://localhost:3003/", waiting until "domcontentloaded"' ]
   }
 

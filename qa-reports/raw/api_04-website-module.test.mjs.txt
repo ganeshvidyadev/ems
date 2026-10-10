@@ -1,25 +1,25 @@
-✔ [WEB-001] admin can read all 9 editable sections (4080.2741ms)
-✔ [WEB-002] public endpoint needs no token and matches admin view (1130.6946ms)
-✔ [WEB-003] hero update is validated, persisted to website_content, and served publicly (2248.9536ms)
-✔ [WEB-004] partial update leaves other sections untouched (4458.6254ms)
-✔ [WEB-005] features.heading round-trips through admin PUT -> public GET (2288.848ms)
-✔ [WEB-005] products.heading round-trips through admin PUT -> public GET (2621.2232ms)
-✔ [WEB-005] plansDisplay.heading round-trips through admin PUT -> public GET (2231.1644ms)
-✔ [WEB-005] about.heading round-trips through admin PUT -> public GET (2146.2095ms)
-✔ [WEB-005] career.heading round-trips through admin PUT -> public GET (2311.0677ms)
-✔ [WEB-005] header.logoText round-trips through admin PUT -> public GET (2070.2357ms)
-✔ [WEB-005] footer.tagline round-trips through admin PUT -> public GET (2211.5571ms)
-✔ [WEB-006] invalid hero (empty CTA label) -> 422 and nothing saved (4566.4223ms)
-✔ [WEB-007] invalid feature icon / accent enum -> 422 (1277.017ms)
-✔ [WEB-008] length limits enforced (hero title > 120 chars) (1634.2681ms)
-✔ [WEB-009] max-items limit enforced (13 feature cards) (649.877ms)
-✔ [WEB-010] wrong types / non-object body rejected, never 500 (3856.5566ms)
-✔ [WEB-011] unauthenticated and merchant users cannot modify content (4452.1681ms)
-✔ [WEB-012] unknown sections are not persisted as new rows (1580.3549ms)
-✔ [WEB-013] stored XSS payload is returned as inert JSON text (rendering is checked in E2E) (2358.6358ms)
-✔ [WEB-014] pricing is sourced from /plans API, not duplicated static data (1684.2096ms)
-✔ [WEB-015] plan name/price shown by /plans match the plans table in MySQL (80.9857ms)
-✔ [WEB-016] restore: original content is back after the run (verified in after-hook, asserted here for current state) (319.1399ms)
+✔ [WEB-001] admin can read all 9 editable sections (5978.4903ms)
+✔ [WEB-002] public endpoint needs no token and matches admin view (1783.7756ms)
+✔ [WEB-003] hero update is validated, persisted to website_content, and served publicly (3029.5528ms)
+✔ [WEB-004] partial update leaves other sections untouched (2725.8546ms)
+✔ [WEB-005] features.heading round-trips through admin PUT -> public GET (2978.418ms)
+✔ [WEB-005] products.heading round-trips through admin PUT -> public GET (2924.1741ms)
+✔ [WEB-005] plansDisplay.heading round-trips through admin PUT -> public GET (2611.7301ms)
+✔ [WEB-005] about.heading round-trips through admin PUT -> public GET (2190.942ms)
+✔ [WEB-005] career.heading round-trips through admin PUT -> public GET (2192.0929ms)
+✔ [WEB-005] header.logoText round-trips through admin PUT -> public GET (2185.0753ms)
+✔ [WEB-005] footer.tagline round-trips through admin PUT -> public GET (2379.3636ms)
+✔ [WEB-006] invalid hero (empty CTA label) -> 422 and nothing saved (1673.7191ms)
+✔ [WEB-007] invalid feature icon / accent enum -> 422 (1209.2718ms)
+✔ [WEB-008] length limits enforced (hero title > 120 chars) (2782.5171ms)
+✔ [WEB-009] max-items limit enforced (13 feature cards) (798.5795ms)
+✔ [WEB-010] wrong types / non-object body rejected, never 500 (3350.5473ms)
+✔ [WEB-011] unauthenticated and merchant users cannot modify content (5405.507ms)
+✔ [WEB-012] unknown sections are not persisted as new rows (1662.3378ms)
+✔ [WEB-013] stored XSS payload is returned as inert JSON text (rendering is checked in E2E) (1904.2313ms)
+✔ [WEB-014] pricing is sourced from /plans API, not duplicated static data (349.0843ms)
+✔ [WEB-015] plan name/price shown by /plans match the plans table in MySQL (132.4266ms)
+✔ [WEB-016] restore: original content is back after the run (verified in after-hook, asserted here for current state) (302.8012ms)
 ℹ tests 22
 ℹ suites 0
 ℹ pass 22
@@ -27,5 +27,5 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 55664.8961
+ℹ duration_ms 57286.7158
 

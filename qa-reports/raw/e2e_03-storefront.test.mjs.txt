@@ -1,20 +1,266 @@
-✔ [STO-001] Northwind storefront home renders its brand, products and no JS errors/5xx (11431.5953ms)
-✔ [STO-002] product listing page shows the 12 seeded Northwind products (10205.1458ms)
-✔ [STO-003] product detail page renders name, price and an add-to-cart control (10108.9325ms)
-✔ [STO-004] unknown product slug shows a not-found page (not a crash) (8973.3312ms)
-✔ [STO-005] cart page and checkout page load (empty cart state handled) (4979.601ms)
-✔ [STO-006] customer auth pages render forms and validate empty submit (8607.8115ms)
-✔ [STO-007] account pages require login (redirect or gate) for an anonymous visitor (4132.3154ms)
-✔ [STO-008] Lakeside host never renders Northwind branding or products (5895.9966ms)
-✔ [STO-009] responsive: Northwind home and products have no horizontal overflow at tablet (26267.8364ms)
-✔ [STO-009] responsive: Northwind home and products have no horizontal overflow at mobile (6242.2306ms)
-✔ [STO-010] browser add-to-cart flow: product -> cart shows the item (BUY-flow UI) (8529.8978ms)
+✖ [STO-001] Northwind storefront home renders its brand, products and no JS errors/5xx (1290.5295ms)
+✖ [STO-002] product listing page shows the 12 seeded Northwind products (2707.7398ms)
+✖ [STO-003] product detail page renders name, price and an add-to-cart control (2445.9977ms)
+✖ [STO-004] unknown product slug shows a not-found page (not a crash) (471.2865ms)
+✖ [STO-005] cart page and checkout page load (empty cart state handled) (448.4918ms)
+✖ [STO-006] customer auth pages render forms and validate empty submit (474.8473ms)
+✖ [STO-007] account pages require login (redirect or gate) for an anonymous visitor (468.141ms)
+✔ [STO-008] Lakeside host never renders Northwind branding or products (839.847ms)
+✖ [STO-009] responsive: Northwind home and products have no horizontal overflow at tablet (468.7627ms)
+✖ [STO-009] responsive: Northwind home and products have no horizontal overflow at mobile (477.579ms)
+✖ [STO-010] browser add-to-cart flow: product -> cart shows the item (BUY-flow UI) (1387.9885ms)
 ℹ tests 11
 ℹ suites 0
-ℹ pass 11
-ℹ fail 0
+ℹ pass 1
+ℹ fail 10
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 106974.1978
+ℹ duration_ms 13139.9662
+
+✖ failing tests:
+
+test at e2e\03-storefront.test.mjs:19:1
+✖ [STO-001] Northwind storefront home renders its brand, products and no JS errors/5xx (1290.5295ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:22:28) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:30:1
+✖ [STO-002] product listing page shows the 12 seeded Northwind products (2707.7398ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/products
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/products", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:34:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/products", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:43:1
+✖ [STO-003] product detail page renders name, price and an add-to-cart control (2445.9977ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/products/northwind-reserve-arabica-500g
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/products/northwind-reserve-arabica-500g", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:47:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/products/northwind-reserve-arabica-500g", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:55:1
+✖ [STO-004] unknown product slug shows a not-found page (not a crash) (471.2865ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/products/qa-does-not-exist
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/products/qa-does-not-exist", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:58:28) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/products/qa-does-not-exist", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:63:1
+✖ [STO-005] cart page and checkout page load (empty cart state handled) (448.4918ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/cart
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/cart", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:67:30) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/cart", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:75:1
+✖ [STO-006] customer auth pages render forms and validate empty submit (474.8473ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/account/login
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/account/login", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:79:18) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/account/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:90:1
+✖ [STO-007] account pages require login (redirect or gate) for an anonymous visitor (468.141ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/account/orders
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/account/orders", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:93:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/account/orders", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:113:3
+✖ [STO-009] responsive: Northwind home and products have no horizontal overflow at tablet (468.7627ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:117:20) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:113:3
+✖ [STO-009] responsive: Northwind home and products have no horizontal overflow at mobile (477.579ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:117:20) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:126:1
+✖ [STO-010] browser add-to-cart flow: product -> cart shows the item (BUY-flow UI) (1387.9885ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/products/northwind-reserve-arabica-500g
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/products/northwind-reserve-arabica-500g", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:130:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/products/northwind-reserve-arabica-500g", waiting until "networkidle"' ]
+  }
+
+
+----- RETRY RUN -----
+✖ [STO-001] Northwind storefront home renders its brand, products and no JS errors/5xx (1208.5252ms)
+✖ [STO-002] product listing page shows the 12 seeded Northwind products (2430.8751ms)
+✖ [STO-003] product detail page renders name, price and an add-to-cart control (2579.6398ms)
+✖ [STO-004] unknown product slug shows a not-found page (not a crash) (467.4305ms)
+✖ [STO-005] cart page and checkout page load (empty cart state handled) (495.7464ms)
+✖ [STO-006] customer auth pages render forms and validate empty submit (470.5398ms)
+✖ [STO-007] account pages require login (redirect or gate) for an anonymous visitor (454.9024ms)
+✔ [STO-008] Lakeside host never renders Northwind branding or products (877.0036ms)
+✖ [STO-009] responsive: Northwind home and products have no horizontal overflow at tablet (426.0045ms)
+✖ [STO-009] responsive: Northwind home and products have no horizontal overflow at mobile (477.5476ms)
+✖ [STO-010] browser add-to-cart flow: product -> cart shows the item (BUY-flow UI) (1681.4212ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 1
+ℹ fail 10
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13199.787
+
+✖ failing tests:
+
+test at e2e\03-storefront.test.mjs:19:1
+✖ [STO-001] Northwind storefront home renders its brand, products and no JS errors/5xx (1208.5252ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:22:28) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:30:1
+✖ [STO-002] product listing page shows the 12 seeded Northwind products (2430.8751ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/products
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/products", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:34:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/products", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:43:1
+✖ [STO-003] product detail page renders name, price and an add-to-cart control (2579.6398ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/products/northwind-reserve-arabica-500g
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/products/northwind-reserve-arabica-500g", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:47:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/products/northwind-reserve-arabica-500g", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:55:1
+✖ [STO-004] unknown product slug shows a not-found page (not a crash) (467.4305ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/products/qa-does-not-exist
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/products/qa-does-not-exist", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:58:28) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/products/qa-does-not-exist", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:63:1
+✖ [STO-005] cart page and checkout page load (empty cart state handled) (495.7464ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/cart
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/cart", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:67:30) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/cart", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:75:1
+✖ [STO-006] customer auth pages render forms and validate empty submit (470.5398ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/account/login
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/account/login", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:79:18) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/account/login", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:90:1
+✖ [STO-007] account pages require login (redirect or gate) for an anonymous visitor (454.9024ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/account/orders
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/account/orders", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:93:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/account/orders", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:113:3
+✖ [STO-009] responsive: Northwind home and products have no horizontal overflow at tablet (426.0045ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:117:20) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:113:3
+✖ [STO-009] responsive: Northwind home and products have no horizontal overflow at mobile (477.5476ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:117:20) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/", waiting until "networkidle"' ]
+  }
+
+test at e2e\03-storefront.test.mjs:126:1
+✖ [STO-010] browser add-to-cart flow: product -> cart shows the item (BUY-flow UI) (1681.4212ms)
+  page.goto: net::ERR_CONNECTION_REFUSED at http://northwind.ems.localhost:3001/products/northwind-reserve-arabica-500g
+  Call log:
+  [2m  - navigating to "http://northwind.ems.localhost:3001/products/northwind-reserve-arabica-500g", waiting until "networkidle"[22m
+  
+      at TestContext.<anonymous> (D:\office-data\Project\Romanchal\VGY\ems\.claude\worktrees\agents-326747\qa\e2e\03-storefront.test.mjs:130:16) {
+    name: 'Error',
+    log: [ '  - navigating to "http://northwind.ems.localhost:3001/products/northwind-reserve-arabica-500g", waiting until "networkidle"' ]
+  }
 
