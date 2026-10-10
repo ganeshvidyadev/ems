@@ -5,6 +5,20 @@ import { DailySalesRollupEntity } from '../../database/entities';
 import { RequestContextService } from '../../common/services/request-context.service';
 import { TenantScopedRepository } from '../../database/repositories/tenant-scoped.repository';
 
+/**
+ * `store_id` filter for `daily_sales_rollup` queries. Callers pass the store's
+ * public id while the column holds the internal id, so it is resolved inline
+ * within the same tenant. An id that doesn't resolve compares against NULL and
+ * matches no rows.
+ */
+export function rollupStoreFilter(tenantId: string, storePublicId: string | null): { clause: string; params: string[] } {
+  if (!storePublicId) return { clause: '', params: [] };
+  return {
+    clause: 'AND store_id = (SELECT s.id FROM stores s WHERE s.public_id = ? AND s.tenant_id = ?)',
+    params: [storePublicId, tenantId],
+  };
+}
+
 @Injectable()
 export class DailySalesRollupRepository extends TenantScopedRepository<DailySalesRollupEntity> {
   constructor(
@@ -80,8 +94,9 @@ export class DailySalesRollupRepository extends TenantScopedRepository<DailySale
     returningCustomers: number;
   }> {
     const tenantId = this.tenantId;
-    const storeClause = storeId ? 'AND store_id = ?' : '';
-    const params = storeId ? [tenantId, from, to, storeId] : [tenantId, from, to];
+    const store = rollupStoreFilter(tenantId, storeId);
+    const storeClause = store.clause;
+    const params = [tenantId, from, to, ...store.params];
 
     const [row] = (await this.manager.query(
       `SELECT
@@ -123,8 +138,9 @@ export class DailySalesRollupRepository extends TenantScopedRepository<DailySale
   /** Per-day breakdown for the same range — powers the sales-summary chart. */
   async listByDay(storeId: string | null, from: string, to: string): Promise<{ date: string; ordersCount: number; grossMinor: string; netMinor: string }[]> {
     const tenantId = this.tenantId;
-    const storeClause = storeId ? 'AND store_id = ?' : '';
-    const params = storeId ? [tenantId, from, to, storeId] : [tenantId, from, to];
+    const store = rollupStoreFilter(tenantId, storeId);
+    const storeClause = store.clause;
+    const params = [tenantId, from, to, ...store.params];
 
     return this.manager.query(
       `SELECT \`date\`, SUM(orders_count) AS ordersCount, SUM(gross_minor) AS grossMinor, SUM(net_minor) AS netMinor

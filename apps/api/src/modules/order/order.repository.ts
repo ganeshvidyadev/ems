@@ -85,6 +85,20 @@ export class OrderRepository extends TenantScopedRepository<OrderEntity> {
     );
     return new Map((rows as { id: string; publicId: string }[]).map((row) => [row.id, row.publicId]));
   }
+
+  /**
+   * Resolves a public id to an internal id in another tenant-owned table.
+   *
+   * `table` is always a fixed literal from our own code (never request input),
+   * so interpolating it is safe — only `publicId` is a bound parameter.
+   */
+  async resolveId(table: 'stores' | 'customers', publicId: string): Promise<string | null> {
+    const rows = await this.manager.query(
+      `SELECT id FROM \`${table}\` WHERE public_id = ? AND tenant_id = ? LIMIT 1`,
+      [publicId, this.tenantId],
+    );
+    return (rows as { id: string }[])[0]?.id ?? null;
+  }
 }
 
 @Injectable()

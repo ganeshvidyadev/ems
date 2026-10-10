@@ -54,8 +54,17 @@ export class OrderService {
     filter: OrderListFilter;
     sort: { field: string; direction: 'ASC' | 'DESC' }[];
   }): Promise<PaginatedResult<OrderEntity>> {
+    // `storeId`/`customerId` arrive as public ids; the order columns hold internal
+    // bigint ids. An id that doesn't resolve in this tenant matches nothing —
+    // the filter is never dropped, so it can't widen the result.
+    const [storeId, customerId] = await Promise.all([
+      query.filter.storeId ? this.orders.resolveId('stores', query.filter.storeId) : undefined,
+      query.filter.customerId ? this.orders.resolveId('customers', query.filter.customerId) : undefined,
+    ]);
+    if (storeId === null || customerId === null) return { items: [], total: 0 };
+
     const { items, total } = await this.orders.listFiltered(
-      query.filter,
+      { ...query.filter, storeId, customerId },
       query.sort,
       (query.page - 1) * query.limit,
       query.limit,

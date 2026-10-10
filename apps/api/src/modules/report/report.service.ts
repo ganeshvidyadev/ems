@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import type { EntityManager } from 'typeorm';
 import type { ReportType, SalesSummaryQuery, SalesSummaryResponse } from '@ems/contracts';
-import { DailySalesRollupRepository } from './daily-sales-rollup.repository';
+import { DailySalesRollupRepository, rollupStoreFilter } from './daily-sales-rollup.repository';
 
 export interface ReportTable {
   header: string[];
@@ -80,8 +80,9 @@ export class ReportService {
   }
 
   private async buildRollupTable(tenantId: string, from: string, to: string, storeId: string | null): Promise<ReportTable> {
-    const clause = storeId ? 'AND store_id = ?' : '';
-    const params = storeId ? [tenantId, from, to, storeId] : [tenantId, from, to];
+    const store = rollupStoreFilter(tenantId, storeId);
+    const clause = store.clause;
+    const params = [tenantId, from, to, ...store.params];
     const rows = (await this.manager.query(
       `SELECT \`date\`, store_id, channel, orders_count, items_count, gross_minor, discount_minor,
               tax_minor, shipping_minor, refund_minor, net_minor, new_customers, returning_customers, cancelled_count
