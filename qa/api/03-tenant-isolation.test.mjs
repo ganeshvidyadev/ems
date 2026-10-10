@@ -81,15 +81,20 @@ test('[TEN-005] Northwind cannot see or touch the Lakeside fixture coupon', asyn
 
 test('[TEN-006] tenant switching via request headers/query is ignored (token tenant wins)', async () => {
   const nwTid = decodeJwt(nw).tid;
+  // Lakeside owns its own products (organic-doorstep seed), so compare against its own baseline
+  // list instead of assuming it is empty: a switch would add/replace rows with Northwind's.
+  const baseline = await call('GET', '/console/products?limit=100', { token: ls });
+  assert.equal(baseline.status, 200);
+  const baselineIds = baseline.body.data.map((p) => p.id).sort().join(',');
   for (const headers of [{ 'x-tenant-id': nwTid }, { 'x-ems-tenant-slug': 'northwind' }, { 'x-ems-tenant-id': nwTid }, { 'x-ems-hostname': HOSTS.northwind }]) {
     const r = await call('GET', '/console/products?limit=100', { token: ls, headers });
     assert.equal(r.status, 200);
-    assert.equal(r.body.data.length, 0, `header ${JSON.stringify(headers)} switched tenant`);
+    assert.equal(r.body.data.map((p) => p.id).sort().join(','), baselineIds, `header ${JSON.stringify(headers)} switched tenant`);
   }
   for (const q of [`tenantId=${nwTid}`, 'tenant=northwind', `tid=${nwTid}`]) {
     const r = await call('GET', `/console/products?limit=100&${q}`, { token: ls });
     assert.ok([200, 422].includes(r.status), `status ${r.status}`);
-    if (r.status === 200) assert.equal(r.body.data.length, 0, `query ${q} switched tenant`);
+    if (r.status === 200) assert.equal(r.body.data.map((p) => p.id).sort().join(','), baselineIds, `query ${q} switched tenant`);
   }
 });
 
