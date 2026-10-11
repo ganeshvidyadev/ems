@@ -18,8 +18,10 @@ export function useReturns(orderId?: string) {
   return useQuery({
     queryKey: [RETURNS_KEY, orderId ?? 'all'],
     queryFn: () =>
+      // The list is paginated (default 25) but this screen has no pager yet, so
+      // ask for the largest page the API allows.
       apiGet<ReturnSummary[]>('/console/returns', {
-        params: orderId ? { orderId } : undefined,
+        params: { limit: 100, ...(orderId ? { orderId } : {}) },
       }),
   });
 }
