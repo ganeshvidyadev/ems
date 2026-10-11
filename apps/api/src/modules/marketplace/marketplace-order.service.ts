@@ -129,7 +129,7 @@ export class MarketplaceOrderService {
         parentOrderId: orderId,
         parentOrderNumber: order.orderNumber,
         currency,
-        lines: priced.map((p) => p.item),
+        lines: priced,
         netPayable: supplierTotals.net,
       });
     }
@@ -189,7 +189,7 @@ export class MarketplaceOrderService {
       parentOrderId: string;
       parentOrderNumber: string;
       currency: string;
-      lines: OrderItemEntity[];
+      lines: { item: OrderItemEntity; supplierNet: Money; resellerCommission: Money; platformFee: Money }[];
       netPayable: Money;
     },
   ): Promise<void> {
@@ -210,7 +210,7 @@ export class MarketplaceOrderService {
 
       const orderNumber = await ordersRepo.nextOrderNumber(tx);
       const subtotal = lines.reduce(
-        (sum, item) => sum.add(Money.fromMinor(item.lineSubtotalMinor, currency as CurrencyCode)),
+        (sum, { item }) => sum.add(Money.fromMinor(item.lineSubtotalMinor, currency as CurrencyCode)),
         Money.zero(currency as CurrencyCode),
       );
 
@@ -226,6 +226,9 @@ export class MarketplaceOrderService {
         fulfilmentStatus: 'UNFULFILLED',
         currency,
         subtotalMinor: subtotal.amountMinor.toString(),
+        // Supplier receipts are net of the customer's discount and marketplace
+        // deductions. Keep the gross snapshot and record the reduction explicitly.
+        discountMinor: subtotal.subtract(netPayable).amountMinor.toString(),
         totalMinor: netPayable.amountMinor.toString(),
         amountPaidMinor: netPayable.amountMinor.toString(),
         channel: 'API',
@@ -237,7 +240,7 @@ export class MarketplaceOrderService {
         internalNote: `Routed from order ${parentOrderNumber} (reseller tenant ${resellerTenantId})`,
       } as Partial<OrderEntity>);
 
-      for (const item of lines) {
+      for (const { item, supplierNet, resellerCommission, platformFee } of lines) {
         await orderItemsRepo.insert({
           orderId: subOrder.id,
           productId: item.productId,
@@ -250,8 +253,12 @@ export class MarketplaceOrderService {
           quantity: item.quantity,
           unitPriceMinor: item.unitPriceMinor,
           lineSubtotalMinor: item.lineSubtotalMinor,
-          lineDiscountMinor: '0',
-          lineTotalMinor: item.lineSubtotalMinor,
+          lineDiscountMinor: Money.fromMinor(item.lineSubtotalMinor, currency as CurrencyCode)
+            .subtract(supplierNet).amountMinor.toString(),
+          lineTaxMinor: '0',
+          lineTotalMinor: supplierNet.amountMinor.toString(),
+          commissionMinor: resellerCommission.amountMinor.toString(),
+          properties: { marketplacePlatformFeeMinor: platformFee.amountMinor.toString() },
         } as Partial<OrderItemEntity>);
       }
     });

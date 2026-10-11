@@ -73,7 +73,7 @@ export class OrderRepository extends TenantScopedRepository<OrderEntity> {
 
   /** Batch reverse of the forward `resolveId`-style lookups — internal ids to public ids in another tenant-owned table. */
   async publicIdsFor(
-    table: 'stores' | 'products' | 'product_variants',
+    table: 'stores' | 'products' | 'product_variants' | 'customers',
     internalIds: (string | null)[],
   ): Promise<Map<string, string>> {
     const unique = [...new Set(internalIds.filter((id): id is string => id !== null))];

@@ -4,9 +4,16 @@ import {
   inspectReturnRequestSchema,
   rejectReturnRequestSchema,
   requestReturnRequestSchema,
+  paginationQuerySchema,
+  buildPaginationMeta,
 } from '@ems/contracts';
 import { Permissions, Validate } from '../../common/decorators';
 import { ReturnService } from './return.service';
+import { z } from 'zod';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import { Paginated } from '../../common/interceptors/response-envelope.interceptor';
+
+const returnListQuerySchema = paginationQuerySchema.extend({ orderId: z.string().optional() });
 
 @ApiTags('returns')
 @Controller({ version: '1' })
@@ -16,9 +23,9 @@ export class ReturnController {
   @Get('console/returns')
   @Permissions('return:read')
   @ApiOperation({ summary: 'List returns, optionally for one order' })
-  async list(@Query('orderId') orderId?: string) {
-    const rows = await this.returns.list(orderId);
-    return Promise.all(rows.map((r) => this.returns.toResponse(r)));
+  async list(@Query(new ZodValidationPipe(returnListQuerySchema)) query: ReturnType<typeof returnListQuerySchema.parse>) {
+    const { items, total } = await this.returns.listPage(query);
+    return new Paginated(await this.returns.toResponses(items), buildPaginationMeta(query.page, query.limit, total));
   }
 
   @Get('console/returns/:id')

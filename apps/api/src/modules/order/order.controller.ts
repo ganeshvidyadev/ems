@@ -37,7 +37,7 @@ export class OrderController {
       sort: query.sort,
     });
     return new Paginated(
-      await Promise.all(items.map((o) => this.orders.toResponse(o))),
+      await this.orders.toResponses(items),
       buildPaginationMeta(query.page, query.limit, total),
     );
   }

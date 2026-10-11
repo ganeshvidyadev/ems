@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { CartLineItem, CartResponse } from '@ems/contracts';
-import { Money, newPublicId, type CurrencyCode } from '@ems/kernel';
+import { BusinessRuleError, Money, newPublicId, type CurrencyCode } from '@ems/kernel';
 import type Redis from 'ioredis';
 import { REDIS_CLIENT } from '../../common/redis/redis.module';
 import { RequestContextService } from '../../common/services/request-context.service';
@@ -98,6 +98,9 @@ export class CartService {
     }
 
     let variant: Awaited<ReturnType<CartProductLookupRepository['getVariant']>> = null;
+    if (product.type === 'VARIABLE' && !variantPublicId) {
+      throw new BusinessRuleError('Select a variant before adding this product to the cart');
+    }
     if (variantPublicId) {
       variant = await this.products.getVariant(variantPublicId);
       if (!variant || variant.productId !== product.id) throw new CartEmptyError();

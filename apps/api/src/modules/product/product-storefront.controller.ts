@@ -56,7 +56,7 @@ export class ProductStorefrontController {
       { stampedeProtection: true },
     );
 
-    const items = await Promise.all(result.items.map((item) => this.products.toResponse(item, false)));
+    const items = await this.products.toResponses(result.items, false);
     return new Paginated(items, buildPaginationMeta(query.page, query.limit, result.total));
   }
 

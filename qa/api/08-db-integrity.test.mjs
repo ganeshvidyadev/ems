@@ -62,6 +62,18 @@ test('[DB-006] inventory invariants: on_hand >= 0, reserved >= 0, available = on
 test('[DB-007] order money: total = subtotal - discount + shipping + tax + cod_fee (+ round_off) for every order', () => {
   const bad = n('SELECT COUNT(*) FROM orders WHERE total_minor <> subtotal_minor - discount_minor + shipping_minor + tax_minor + cod_fee_minor + round_off_minor');
   assert.equal(bad, 0);
+  // Supplier sub-orders must reconcile at both levels; fixing only the header
+  // would leave gross-priced lines on an order paid at the supplier's net share.
+  assert.equal(n(`SELECT COUNT(*) FROM order_items i JOIN orders o ON o.id=i.order_id
+    WHERE o.is_marketplace_order=1 AND o.parent_order_id IS NOT NULL
+      AND i.line_total_minor <> i.line_subtotal_minor-i.line_discount_minor+i.line_tax_minor`), 0,
+  'supplier line money does not reconcile');
+  assert.equal(n(`SELECT COUNT(*) FROM orders o JOIN (
+      SELECT order_id, SUM(line_total_minor) AS line_total FROM order_items GROUP BY order_id
+    ) items ON items.order_id=o.id
+    WHERE o.is_marketplace_order=1 AND o.parent_order_id IS NOT NULL
+      AND o.total_minor <> items.line_total+o.shipping_minor+o.cod_fee_minor+o.round_off_minor`), 0,
+  'supplier line totals do not match the order total');
 });
 
 test('[DB-008] reservation ledger consistency: reserved quantity equals open allocations of non-cancelled, unfulfilled orders (informational drift check)', () => {

@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import type { InspectReturnRequest, RequestReturnRequest, ReturnResponse } from '@ems/contracts';
 import { BusinessRuleError, Money, type CurrencyCode } from '@ems/kernel';
 import { InjectEntityManager } from '@nestjs/typeorm';
-import type { EntityManager } from 'typeorm';
+import { In, type EntityManager } from 'typeorm';
 import { RequestContextService } from '../../common/services/request-context.service';
-import type { ReturnEntity, ReturnItemEntity } from '../../database/entities';
+import type { OrderEntity, ReturnEntity, ReturnItemEntity } from '../../database/entities';
 import { InventoryService } from '../inventory/inventory.service';
 import { OrderItemRepository, OrderRepository } from './order.repository';
 import { ReturnItemRepository, ReturnRepository } from './return.repository';
@@ -24,6 +24,23 @@ export class ReturnService {
   async list(orderId?: string) {
     if (orderId) return this.returns.findByOrder(orderId);
     return (await this.returns.findAndCount({})).items;
+  }
+
+  async listPage(query: { orderId?: string; page: number; limit: number }) {
+    const order = query.orderId ? await this.orders.findByPublicIdOrFail(query.orderId) : null;
+    return this.returns.findAndCount({ where: order ? { orderId: order.id } : {},
+      skip: (query.page - 1) * query.limit, take: query.limit, order: { createdAt: 'DESC', id: 'DESC' } });
+  }
+
+  async toResponses(rows: ReturnEntity[]): Promise<ReturnResponse[]> {
+    if (!rows.length) return [];
+    const [orders, items] = await Promise.all([
+      this.orders.find({ where: { id: In(rows.map((r) => r.orderId)) } }),
+      this.returnItems.find({ where: { returnId: In(rows.map((r) => r.id)) } }),
+    ]);
+    return Promise.all(rows.map((row) => this.toResponse(row, {
+      order: orders.find((order) => order.id === row.orderId)!, items: items.filter((item) => item.returnId === row.id),
+    })));
   }
 
   async getByPublicId(publicId: string): Promise<ReturnEntity> {
@@ -166,10 +183,10 @@ export class ReturnService {
     return rma;
   }
 
-  async toResponse(rma: ReturnEntity): Promise<ReturnResponse> {
-    const order = await this.orders.findOneOrFail({ where: { id: rma.orderId } as never });
+  async toResponse(rma: ReturnEntity, loaded?: { order: OrderEntity; items: ReturnItemEntity[] }): Promise<ReturnResponse> {
+    const order = loaded ? loaded.order : await this.orders.findOneOrFail({ where: { id: rma.orderId } as never });
     const currency = order.currency as CurrencyCode;
-    const items = await this.getItems(rma.id);
+    const items = loaded ? loaded.items : await this.getItems(rma.id);
 
     return {
       id: rma.publicId,

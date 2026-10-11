@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { In } from 'typeorm';
 import type {
   CreateProductRequest,
   ProductListQuery,
@@ -7,7 +8,7 @@ import type {
 } from '@ems/contracts';
 import { ConflictError, NotFoundError, newPublicId, uniqueSlug } from '@ems/kernel';
 import { CacheService } from '../../common/services/cache.service';
-import type { ProductEntity } from '../../database/entities';
+import type { ProductEntity, ProductVariantEntity } from '../../database/entities';
 import { ProductRepository } from './product.repository';
 import { VariantRepository } from './variant.repository';
 import { VariantService } from './services/variant.service';
@@ -18,6 +19,13 @@ export interface HydratedProduct {
   product: ProductEntity;
   categoryIds: string[];
   primaryCategoryId: string | null;
+}
+
+interface ProductResponseData {
+  variants: ProductVariantEntity[];
+  storePublicIds: Map<string, string>;
+  brandPublicIds: Map<string, string>;
+  taxClassPublicIds: Map<string, string>;
 }
 
 @Injectable()
@@ -55,7 +63,7 @@ export class ProductService {
       query.limit,
     );
 
-    const hydrated = await Promise.all(items.map((product) => this.hydrateLinks(product)));
+    const hydrated = await this.hydrateMany(items);
     return { items: hydrated, total };
   }
 
@@ -65,7 +73,11 @@ export class ProductService {
   }
 
   async hydrateMany(products: ProductEntity[]): Promise<HydratedProduct[]> {
-    return Promise.all(products.map((product) => this.hydrateLinks(product)));
+    const links = await this.products.categoriesForProducts(products.map((product) => product.id));
+    return products.map((product) => {
+      const own = links.filter((link) => link.productId === product.id);
+      return { product, categoryIds: own.map((link) => link.categoryId), primaryCategoryId: own.find((link) => link.isPrimary)?.categoryId ?? null };
+    });
   }
 
   async create(input: CreateProductRequest): Promise<HydratedProduct> {
@@ -295,14 +307,31 @@ export class ProductService {
     await this.cache.invalidateMany(['products']);
   }
 
-  async toResponse(hydrated: HydratedProduct, includeCostPrice: boolean): Promise<ProductResponse> {
+  async toResponses(rows: HydratedProduct[], includeCostPrice: boolean): Promise<ProductResponse[]> {
+    if (!rows.length) return [];
+    const products = rows.map((row) => row.product);
+    const variableIds = products.filter((product) => product.type === 'VARIABLE').map((product) => product.id);
+    const [variants, storePublicIds, brandPublicIds, taxClassPublicIds] = await Promise.all([
+      variableIds.length ? this.variantRepo.find({ where: { productId: In(variableIds) }, order: { position: 'ASC' } }) : [],
+      this.products.publicIdsFor('stores', products.map((product) => product.storeId)),
+      this.products.publicIdsFor('brands', products.map((product) => product.brandId)),
+      this.products.publicIdsFor('tax_classes', products.map((product) => product.taxClassId)),
+    ]);
+    return Promise.all(rows.map((row) => this.toResponse(row, includeCostPrice, {
+      variants: variants.filter((variant) => variant.productId === row.product.id), storePublicIds, brandPublicIds, taxClassPublicIds,
+    })));
+  }
+
+  async toResponse(hydrated: HydratedProduct, includeCostPrice: boolean, loaded?: ProductResponseData): Promise<ProductResponse> {
     const { product, categoryIds, primaryCategoryId } = hydrated;
-    const variantEntities = product.type === 'VARIABLE' ? await this.variantRepo.findByProduct(product.id) : [];
+    const variantEntities = loaded ? loaded.variants : product.type === 'VARIABLE' ? await this.variantRepo.findByProduct(product.id) : [];
 
     // KF-07: these three carry internal bigint FK ids on the entity — the response
     // contract promises public ULIDs like every other reference field, so each is
     // resolved forward here rather than passed through.
-    const [storePublicIds, brandPublicIds, taxClassPublicIds] = await Promise.all([
+    const [storePublicIds, brandPublicIds, taxClassPublicIds] = loaded
+      ? [loaded.storePublicIds, loaded.brandPublicIds, loaded.taxClassPublicIds]
+      : await Promise.all([
       this.products.publicIdsFor('stores', [product.storeId]),
       this.products.publicIdsFor('brands', [product.brandId]),
       this.products.publicIdsFor('tax_classes', [product.taxClassId]),

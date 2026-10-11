@@ -9,6 +9,7 @@ export const ErrorCode = {
   // --- Validation ---------------------------------------------------------
   VALIDATION_FAILED: 'VALIDATION_FAILED',
   MALFORMED_REQUEST: 'MALFORMED_REQUEST',
+  PAYLOAD_TOO_LARGE: 'PAYLOAD_TOO_LARGE',
 
   // --- Authentication -----------------------------------------------------
   AUTH_INVALID_CREDENTIALS: 'AUTH_INVALID_CREDENTIALS',
@@ -102,6 +103,7 @@ export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 export const ERROR_STATUS: Record<ErrorCode, number> = {
   VALIDATION_FAILED: 422,
   MALFORMED_REQUEST: 400,
+  PAYLOAD_TOO_LARGE: 413,
 
   AUTH_INVALID_CREDENTIALS: 401,
   AUTH_TOKEN_MISSING: 401,

@@ -14,7 +14,7 @@ describe('Order list public-id filters', () => {
     jest.clearAllMocks();
     service = Object.create(OrderService.prototype) as OrderService;
     resolveId.mockImplementation(async (table: string, publicId: string) =>
-      ({ 'stores:STORE_A': '7', 'customers:CUST_A': '24' })[`${table}:${publicId}`] ?? null,
+      ({ 'stores:STORE_A': '7', 'customers:CUST_A': '24' } as Record<string, string>)[`${table}:${publicId}`] ?? null,
     );
     listFiltered.mockResolvedValue({ items: [{ id: '1' }], total: 1 });
     Object.assign(service, { orders: { resolveId, listFiltered } });

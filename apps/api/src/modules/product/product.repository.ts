@@ -168,6 +168,17 @@ export class ProductRepository extends TenantScopedRepository<ProductEntity> {
     }));
   }
 
+  async categoriesForProducts(productIds: string[]): Promise<{ productId: string; categoryId: string; isPrimary: boolean }[]> {
+    if (!productIds.length) return [];
+    const rows: { productId: string; categoryId: string; isPrimary: number }[] = await this.manager.query(
+      `SELECT pc.product_id AS productId, c.public_id AS categoryId, pc.is_primary AS isPrimary
+       FROM product_categories pc JOIN categories c ON c.id = pc.category_id AND c.tenant_id = pc.tenant_id
+       WHERE pc.tenant_id = ? AND pc.product_id IN (${productIds.map(() => '?').join(',')})`,
+      [this.tenantId, ...productIds],
+    );
+    return rows.map((row) => ({ ...row, isPrimary: Boolean(row.isPrimary) }));
+  }
+
   // ---------------------------------------------------------------------------
   // Cross-table public-id → internal-id resolvers.
   //

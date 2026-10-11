@@ -39,7 +39,7 @@ export class ProductController {
     const { items, total } = await this.products.list(query);
 
     return new Paginated(
-      await Promise.all(items.map((item) => this.products.toResponse(item, true))),
+      await this.products.toResponses(items, true),
       buildPaginationMeta(query.page, query.limit, total),
     );
   }

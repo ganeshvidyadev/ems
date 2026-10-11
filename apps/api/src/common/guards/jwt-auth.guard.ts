@@ -80,6 +80,13 @@ export class JwtAuthGuard implements CanActivate {
 
     if (!claims.uid) throw new AuthTokenInvalidError('Token is missing a subject');
 
+    // The storefront tenant belongs to the resolved host. Never replace it with
+    // a customer's token from another store (including on optional-auth routes).
+    if (this.context.get()?.surface === 'storefront' &&
+      (claims.typ !== 'storefront' || !claims.tid || claims.tid !== this.context.tenantId)) {
+      throw new AuthTokenInvalidError('Token does not belong to this storefront');
+    }
+
     (request as Request & { user?: unknown }).user = {
       id: claims.uid,
       publicId: claims.sub,

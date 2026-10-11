@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { FulfilOrderRequest, OrderResponse } from '@ems/contracts';
 import { BusinessRuleError, Money, type CurrencyCode } from '@ems/kernel';
 import { InjectEntityManager } from '@nestjs/typeorm';
-import type { EntityManager } from 'typeorm';
+import { In, type EntityManager } from 'typeorm';
 import { RequestContextService } from '../../common/services/request-context.service';
 import { OutboxService } from '../../common/services/outbox.service';
 import {
@@ -27,6 +27,14 @@ import { allocationRange } from './stock-allocations';
 
 /** Assumed per-unit weight when a fulfilment request doesn't supply the real package weight. */
 const DEFAULT_ITEM_WEIGHT_GRAMS = 200;
+
+interface OrderResponseData {
+  items: OrderItemEntity[];
+  storePublicIds: Map<string, string>;
+  productPublicIds: Map<string, string>;
+  variantPublicIds: Map<string, string>;
+  customerPublicIds: Map<string, string>;
+}
 
 @Injectable()
 export class OrderService {
@@ -518,25 +526,42 @@ export class OrderService {
   // Mapping
   // =========================================================================
 
-  async toResponse(order: OrderEntity, includeTimeline = false): Promise<OrderResponse> {
+  async toResponses(orders: OrderEntity[]): Promise<OrderResponse[]> {
+    if (!orders.length) return [];
+    const items = await this.orderItems.find({ where: { orderId: In(orders.map((order) => order.id)) }, order: { id: 'ASC' } });
+    const [storePublicIds, productPublicIds, variantPublicIds, customerPublicIds] = await Promise.all([
+      this.orders.publicIdsFor('stores', orders.map((order) => order.storeId)),
+      this.orders.publicIdsFor('products', items.map((item) => item.productId)),
+      this.orders.publicIdsFor('product_variants', items.map((item) => item.variantId)),
+      this.orders.publicIdsFor('customers', orders.map((order) => order.customerId)),
+    ]);
+    return Promise.all(orders.map((order) => this.toResponse(order, false, {
+      items: items.filter((item) => item.orderId === order.id), storePublicIds, productPublicIds, variantPublicIds, customerPublicIds,
+    })));
+  }
+
+  async toResponse(order: OrderEntity, includeTimeline = false, loaded?: OrderResponseData): Promise<OrderResponse> {
     const currency = order.currency as CurrencyCode;
-    const items = await this.getItems(order.id);
+    const items = loaded ? loaded.items : await this.getItems(order.id);
     const timeline = includeTimeline ? await this.getTimeline(order.id) : undefined;
 
     // KF-07: `storeId`/`productId`/`variantId` carry internal bigint FK ids on
     // the entities — the response contract promises public ULIDs like every
     // other reference field, so each is resolved forward here.
-    const [storePublicIds, productPublicIds, variantPublicIds] = await Promise.all([
+    const [storePublicIds, productPublicIds, variantPublicIds, customerPublicIds] = loaded
+      ? [loaded.storePublicIds, loaded.productPublicIds, loaded.variantPublicIds, loaded.customerPublicIds]
+      : await Promise.all([
       this.orders.publicIdsFor('stores', [order.storeId]),
       this.orders.publicIdsFor('products', items.map((i) => i.productId)),
       this.orders.publicIdsFor('product_variants', items.map((i) => i.variantId)),
+      this.orders.publicIdsFor('customers', [order.customerId]),
     ]);
 
     return {
       id: order.publicId,
       orderNumber: order.orderNumber,
       storeId: storePublicIds.get(order.storeId) ?? order.storeId,
-      customerId: order.customerId,
+      customerId: order.customerId ? customerPublicIds.get(order.customerId) ?? null : null,
       email: order.email,
       phone: order.phoneE164,
       status: order.status,

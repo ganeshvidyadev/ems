@@ -7,7 +7,7 @@ import {
   type ExceptionFilter,
 } from '@nestjs/common';
 import * as Sentry from '@sentry/node';
-import { CrossTenantAccessError, DomainError, TenantContextMissingError } from '@ems/kernel';
+import { CrossTenantAccessError, DomainError, TenantContextMissingError, newPublicId } from '@ems/kernel';
 import {
   ErrorCode,
   docsUrlForErrorCode,
@@ -57,7 +57,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const correlationId =
       this.context.correlationId ??
       (request as Request & { correlationId?: string }).correlationId ??
-      'unknown';
+      newPublicId();
+    response.setHeader('X-Correlation-Id', correlationId);
 
     const payload: ErrorResponse = {
       success: false,
@@ -202,7 +203,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       return {
         status: parserError.status,
         body: {
-          code: ErrorCode.MALFORMED_REQUEST,
+          code: codeForHttpStatus(parserError.status),
           message:
             parserError.status === HttpStatus.PAYLOAD_TOO_LARGE
               ? 'The request body is too large'
@@ -333,6 +334,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
 function codeForHttpStatus(status: number): string {
   switch (status) {
+    case HttpStatus.PAYLOAD_TOO_LARGE:
+      return ErrorCode.PAYLOAD_TOO_LARGE;
     case HttpStatus.BAD_REQUEST:
       return ErrorCode.MALFORMED_REQUEST;
     case HttpStatus.UNAUTHORIZED:

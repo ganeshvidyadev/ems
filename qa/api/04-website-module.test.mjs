@@ -10,7 +10,12 @@ const KEYS = { hero: 'hero', features: 'features', products: 'products', plansDi
 let admin, original, preexistingRows;
 const TAG = `QA-${Date.now().toString(36)}`;
 
-const adminGet = async () => (await call('GET', '/platform/website', { token: admin })).body.data;
+const adminGet = async () => {
+  const r = await call('GET', '/platform/website', { token: admin });
+  assert.equal(r.status, 200, `website admin GET: ${r.text}`);
+  assert.ok(r.body?.data, 'website admin response must contain data');
+  return r.body.data;
+};
 const publicGet = async () => (await call('GET', '/website/content')).body.data;
 const put = (body, token = admin) => call('PUT', '/platform/website', { token, body });
 
@@ -23,7 +28,9 @@ before(async () => {
 // Restore: put the original content back, then drop rows that did not exist before this run so the
 // DB returns to its exact prior state (rows that were absent fall back to code defaults).
 after(async () => {
-  await put(original);
+  if (!original || !preexistingRows) return;
+  const restored = await put(original);
+  assert.equal(restored.status, 200, `website restore failed: ${restored.text}`);
   for (const k of Object.values(KEYS)) {
     if (!preexistingRows.has(k)) sql(`DELETE FROM website_content WHERE \`key\`='${k}'`);
   }

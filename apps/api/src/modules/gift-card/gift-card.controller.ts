@@ -4,10 +4,12 @@ import {
   buildPaginationMeta,
   checkGiftCardBalanceRequestSchema,
   issueGiftCardRequestSchema,
+  paginationQuerySchema,
 } from '@ems/contracts';
 import { Permissions, Public, RateLimit, Validate } from '../../common/decorators';
 import { Paginated } from '../../common/interceptors/response-envelope.interceptor';
 import { GiftCardService } from './gift-card.service';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 
 @ApiTags('gift-cards')
 @Controller({ version: '1' })
@@ -17,9 +19,9 @@ export class GiftCardController {
   @Get('console/gift-cards')
   @Permissions('giftcard:read')
   @ApiOperation({ summary: 'List gift cards' })
-  async list(@Query('page') page = '1', @Query('limit') limit = '25') {
-    const { items, total } = await this.giftCards.list(Number(page), Number(limit));
-    return new Paginated(items.map((c) => this.giftCards.toResponse(c)), buildPaginationMeta(Number(page), Number(limit), total));
+  async list(@Query(new ZodValidationPipe(paginationQuerySchema)) query: ReturnType<typeof paginationQuerySchema.parse>) {
+    const { items, total } = await this.giftCards.list(query.page, query.limit);
+    return new Paginated(items.map((c) => this.giftCards.toResponse(c)), buildPaginationMeta(query.page, query.limit, total));
   }
 
   @Post('console/gift-cards')

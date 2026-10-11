@@ -4,6 +4,7 @@ import type { EntityManager } from 'typeorm';
 import { RequestContextService } from '../../common/services/request-context.service';
 
 export interface CartProductRow {
+  type: string;
   id: string;
   publicId: string;
   storeId: string;
@@ -62,7 +63,7 @@ export class CartProductLookupRepository {
 
   async getProduct(publicId: string): Promise<CartProductRow | null> {
     const rows = (await this.manager.query(
-      `SELECT p.id, p.public_id AS publicId, p.store_id AS storeId, p.name,
+      `SELECT p.id, p.public_id AS publicId, p.store_id AS storeId, p.name, p.type,
               p.price_minor AS priceMinor, p.currency, p.track_inventory AS trackInventory,
               p.allow_backorder AS allowBackorder, p.status, p.sku,
               (SELECT url FROM product_media WHERE product_id = p.id ORDER BY is_primary DESC, position ASC LIMIT 1) AS imageUrl
@@ -101,7 +102,7 @@ export class CartProductLookupRepository {
    * hold the internal id from a cart line rather than a request's public id. */
   async getProductById(id: string): Promise<CartProductRow | null> {
     const rows = (await this.manager.query(
-      `SELECT p.id, p.public_id AS publicId, p.store_id AS storeId, p.name,
+      `SELECT p.id, p.public_id AS publicId, p.store_id AS storeId, p.name, p.type,
               p.price_minor AS priceMinor, p.currency, p.track_inventory AS trackInventory,
               p.allow_backorder AS allowBackorder, p.status, p.sku, p.tax_class_id AS taxClassId,
               p.weight_grams AS weightGrams,
@@ -139,7 +140,7 @@ export class CartProductLookupRepository {
    */
   private async getMarketplaceProduct(productPredicate: string, productParam: string): Promise<CartProductRow | null> {
     const rows = (await this.manager.query(
-      `SELECT p.id, p.public_id AS publicId, p.store_id AS storeId, p.name,
+      `SELECT p.id, p.public_id AS publicId, p.store_id AS storeId, p.name, p.type,
               COALESCE(s.reseller_price_minor, p.price_minor) AS priceMinor,
               p.currency, p.track_inventory AS trackInventory,
               p.allow_backorder AS allowBackorder, p.status, p.sku, p.tax_class_id AS taxClassId,
